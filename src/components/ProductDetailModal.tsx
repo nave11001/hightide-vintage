@@ -229,7 +229,7 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
 
             {/* WhatsApp Purchase button */}
             <a
-              href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "{product.name}" במידה ${selectedSize} ובכמות ${quantity} במחיר כולל של ₪${product.price * quantity}. האם הוא זמין במלאי?`)}`}
+              href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} ובכמות ${quantity} במחיר כולל של ₪${product.price * quantity}. האם הוא זמין במלאי?`)}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
