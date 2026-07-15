@@ -11,7 +11,8 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Server-side secure credentials. Falls back to a default for local testing if not set.
+// Server-side secure credentials. Set ADMIN_PASSWORD in .env; without it a
+// random password is generated each start (admin login effectively disabled).
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
 // Generate a unique random secret key on each server startup to make sessions tamper-proof
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");

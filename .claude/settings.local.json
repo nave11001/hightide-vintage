@@ -29,7 +29,19 @@
       "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login --hostname github.com --git-protocol https --web)",
       "PowerShell(npx netlify api listSiteDeploys --data '{\\\\\"site_id\\\\\":\\\\\"jovial-tulumba-290356.netlify.app\\\\\"}' 2>$null | ConvertFrom-Json | Select-Object -First 3 | ForEach-Object { \\\\\"$\\($_.created_at\\)  $\\($_.state\\)  $\\($_.branch\\)  $\\($_.context\\)\\\\\" })",
       "PowerShell(npx netlify deploy:list 2>&1)",
-      "PowerShell(npx netlify sites:list 2>&1)"
+      "PowerShell(npx netlify sites:list 2>&1)",
+      "Read(//c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide/**)",
+      "Bash(curl -s \"https://hightide-vintage.netlify.app/\")",
+      "PowerShell(npx netlify api listSiteDeploys --data \"{`\"site_id`\":`\"9477306a-137f-4bfa-b0d3-7e7407970612`\"}\" 2>$null)",
+      "PowerShell(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const a=JSON.parse\\(s\\);a.slice\\(0,4\\).forEach\\(x=>console.log\\(x.created_at,'|',x.state,'|',x.branch||'','|',\\(x.error_message||'ok'\\).slice\\(0,100\\)\\)\\)}\\)\")",
+      "PowerShell(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const a=JSON.parse\\(s.replace\\(/^?/,''\\)\\);a.slice\\(0,4\\).forEach\\(x=>console.log\\(x.created_at,'|',x.state,'|',x.branch||'','|',\\(x.error_message||'ok'\\).slice\\(0,120\\)\\)\\)}\\)\")",
+      "Bash(npx netlify *)",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('/tmp/dep.json','utf8'\\)\\);a.slice\\(0,5\\).forEach\\(x=>console.log\\(x.created_at,'|',x.state,'|',x.branch||'-','|',\\(x.error_message||'ok'\\).slice\\(0,140\\)\\)\\)\")",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('dep_tmp.json','utf8'\\)\\);a.slice\\(0,5\\).forEach\\(x=>console.log\\(x.created_at,'|',x.state,'|',x.branch||'-','|',\\(x.error_message||'ok'\\).slice\\(0,140\\)\\)\\)\")",
+      "Bash(rm dep_tmp.json)",
+      "PowerShell(git config user.email \"galnimrod9@gmail.com\")",
+      "PowerShell(git commit --amend --reset-author --no-edit 2>&1)",
+      "PowerShell(git push --force-with-lease 2>&1)"
     ]
   }
 }
