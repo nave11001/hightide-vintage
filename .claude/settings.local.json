@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Expand-Archive -Path \"higetide-vintage .zip\" -DestinationPath . -Force; Get-ChildItem -Recurse -Depth 2 | Select-Object -First 40 | ForEach-Object { $_.FullName })",
+      "PowerShell(npm install)",
+      "PowerShell($sp = \"C:\\\\Users\\\\78FC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users------OneDrive--------------------------hightide\\\\28e8c106-dbf4-4b86-ba4e-d9b1f04d3951\\\\scratchpad\"; python \"$sp\\\\remove_checkerboard.py\" \"assets\\\\logo-original.png\" \"assets\\\\logo.png\"; if \\($?\\) { python \"$sp\\\\remove_inner_checker2.py\" \"assets\\\\logo.png\" \"assets\\\\logo.png\" })",
+      "PowerShell($sp = \"C:\\\\Users\\\\78FC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users------OneDrive--------------------------hightide\\\\28e8c106-dbf4-4b86-ba4e-d9b1f04d3951\\\\scratchpad\"; python \"$sp\\\\remove_checkerboard.py\" \"assets\\\\logo-original.png\" \"assets\\\\logo.png\"; if \\($?\\) { python \"$sp\\\\fix_patches.py\" \"assets\\\\logo.png\" \"assets\\\\logo.png\" })",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(Get-ChildItem assets\\\\Inventory\\\\women, assets\\\\Inventory\\\\bordies | Select-Object Name, @{n='Dir';e={$_.Directory.Name}} | Sort-Object Dir, Name | Format-Table -AutoSize)",
+      "PowerShell($env:PYTHONUTF8='1'; python \"C:\\\\Users\\\\78FC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users------OneDrive--------------------------hightide\\\\28e8c106-dbf4-4b86-ba4e-d9b1f04d3951\\\\scratchpad\\\\toggle_sold.py\" 5 sold)",
+      "PowerShell($env:PYTHONUTF8='1'; python \"C:\\\\Users\\\\78FC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users------OneDrive--------------------------hightide\\\\28e8c106-dbf4-4b86-ba4e-d9b1f04d3951\\\\scratchpad\\\\toggle_sold.py\" 5 available; Start-Sleep -Seconds 8)",
+      "PowerShell($env:PYTHONUTF8='1'; python scripts\\\\sync_inventory.py)",
+      "PowerShell(Copy-Item \"assets\\\\inventory\\\\bordies\\\\1.jpeg\" \"assets\\\\inventory\\\\accessories\\\\1.jpeg\")",
+      "PowerShell(Remove-Item \"assets\\\\inventory\\\\accessories\\\\1.jpeg\" -Confirm:$false)",
+      "PowerShell($env:PYTHONUTF8='1'; npx vite build 2>&1 | Select-Object -Last 12)",
+      "PowerShell(npm install -D netlify-cli 2>&1)",
+      "PowerShell(npx netlify status 2>&1)",
+      "PowerShell(npx netlify login)",
+      "PowerShell(npx netlify link --name jovial-tulumba-290356 2>&1)",
+      "PowerShell($env:PYTHONUTF8='1'; npm run publish 2>&1 | Select-Object -Last 12)",
+      "PowerShell(gh --version)",
+      "PowerShell(gh auth status 2>&1)",
+      "PowerShell(winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements 2>&1)",
+      "PowerShell(git init 2>&1)",
+      "PowerShell(git add -A)",
+      "PowerShell(git commit -m \"HighTide Vintage store: Excel-driven inventory, Netlify deploy\" 2>&1)"
+    ]
+  }
+}

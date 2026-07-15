@@ -1,0 +1,6 @@
+{
+  "name": "HIGETIDE VINTAGE",
+  "description": "חנות בגדי וינטג' ו-Y2K בעיצוב מותאם אישית עם רכישה ישירה בווטסאפ ופאנל ניהול מלאי מתקדם",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
