@@ -4,7 +4,7 @@ import inventoryDb from './inventory_db.json';
 // All inventory images, auto-loaded from assets/Inventory.
 // File naming: "16.jpeg" = product 16 main photo, "16a.jpeg" = same product, second angle.
 // Spaces in filenames ("12 a.jpeg", "17 .jpeg") are tolerated.
-const inventoryImages = import.meta.glob('../assets/Inventory/*/*.{jpeg,jpg,png,webp}', {
+const inventoryImages = import.meta.glob('../assets/inventory/*/*.{jpeg,jpg,png,webp}', {
   eager: true,
   query: '?url',
   import: 'default',

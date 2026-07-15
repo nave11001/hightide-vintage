@@ -26,7 +26,10 @@
       "PowerShell(git commit -m \"HighTide Vintage store: Excel-driven inventory, Netlify deploy\" 2>&1)",
       "PowerShell(git config user.name \"Nave\")",
       "PowerShell(git config user.email \"nave1237@gmail.com\")",
-      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login --hostname github.com --git-protocol https --web)"
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login --hostname github.com --git-protocol https --web)",
+      "PowerShell(npx netlify api listSiteDeploys --data '{\\\\\"site_id\\\\\":\\\\\"jovial-tulumba-290356.netlify.app\\\\\"}' 2>$null | ConvertFrom-Json | Select-Object -First 3 | ForEach-Object { \\\\\"$\\($_.created_at\\)  $\\($_.state\\)  $\\($_.branch\\)  $\\($_.context\\)\\\\\" })",
+      "PowerShell(npx netlify deploy:list 2>&1)",
+      "PowerShell(npx netlify sites:list 2>&1)"
     ]
   }
 }
