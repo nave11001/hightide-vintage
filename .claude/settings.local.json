@@ -23,7 +23,10 @@
       "PowerShell(winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements 2>&1)",
       "PowerShell(git init 2>&1)",
       "PowerShell(git add -A)",
-      "PowerShell(git commit -m \"HighTide Vintage store: Excel-driven inventory, Netlify deploy\" 2>&1)"
+      "PowerShell(git commit -m \"HighTide Vintage store: Excel-driven inventory, Netlify deploy\" 2>&1)",
+      "PowerShell(git config user.name \"Nave\")",
+      "PowerShell(git config user.email \"nave1237@gmail.com\")",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login --hostname github.com --git-protocol https --web)"
     ]
   }
 }
