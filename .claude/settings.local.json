@@ -41,7 +41,14 @@
       "Bash(rm dep_tmp.json)",
       "PowerShell(git config user.email \"galnimrod9@gmail.com\")",
       "PowerShell(git commit --amend --reset-author --no-edit 2>&1)",
-      "PowerShell(git push --force-with-lease 2>&1)"
+      "PowerShell(git push --force-with-lease 2>&1)",
+      "PowerShell(Get-ChildItem assets\\\\inventory\\\\bordies, assets\\\\inventory\\\\T-shirts, assets\\\\inventory\\\\women, assets\\\\inventory\\\\accessories | Group-Object { $_.Directory.Name } | ForEach-Object { \"$\\($_.Name\\): $\\($_.Group.Name -join ', '\\)\" })",
+      "Bash(node -e \"const h=JSON.parse\\(require\\('fs'\\).readFileSync\\('hook_tmp.json','utf8'\\)\\);console.log\\('hook id:', h.id\\)\")",
+      "Bash(rm hook_tmp.json)",
+      "Bash(curl -s -X POST -d \"\" -o /dev/null -w \"%{http_code}\\\\n\" \"https://api.netlify.com/build_hooks/6a5764d2bcd93eac3d779fbc\")",
+      "PowerShell([Environment]::GetFolderPath\\('Desktop'\\); Test-Path \"C:\\\\Users\\\\נווה\\\\Desktop\\\\עדכון-אתר-hightide.bat\")",
+      "PowerShell(git add src/components/ProductDetailModal.tsx)",
+      "PowerShell(git push 2>&1)"
     ]
   }
 }

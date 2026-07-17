@@ -34,6 +34,12 @@ export default function App() {
   // Filtering & Search
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('none');
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+
+  // Size filter resets when switching category
+  useEffect(() => {
+    setSelectedSizes([]);
+  }, [selectedCategory]);
 
   // Interactive Media Placeholder States
   const [mediaType, setMediaType] = useState<'video' | 'image'>('video');
@@ -214,8 +220,12 @@ export default function App() {
     }
   };
 
+  // Sizes are stored inconsistently in the sheets (s / L / xl) — normalize for
+  // display and comparison
+  const normalizeSize = (s: string) => s.trim().toUpperCase();
+
   // Filter items based on selected category (All, Latest, Boardies, Shirts, Accessories)
-  const filteredProducts = products.filter((prod) => {
+  const categoryProducts = products.filter((prod) => {
     let matchesCategory = true;
     if (selectedCategory === 'latest') {
       matchesCategory = prod.isLatestDrop === true;
@@ -223,12 +233,28 @@ export default function App() {
       matchesCategory = prod.category === selectedCategory;
     }
 
-    const matchesSearch = 
+    const matchesSearch =
       prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prod.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prod.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Sizes available within the current category view, numbers first then S-XL
+  const LETTER_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const availableSizes = Array.from(new Set<string>(
+    categoryProducts.flatMap((p) => p.sizes.map(normalizeSize)).filter((s) => s && s !== 'ONE SIZE')
+  )).sort((a, b) => {
+    const na = parseInt(a, 10), nb = parseInt(b, 10);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    if (!isNaN(na)) return -1;
+    if (!isNaN(nb)) return 1;
+    return LETTER_ORDER.indexOf(a) - LETTER_ORDER.indexOf(b);
+  });
+
+  const filteredProducts = selectedSizes.length === 0
+    ? categoryProducts
+    : categoryProducts.filter((p) => p.sizes.some((s) => selectedSizes.includes(normalizeSize(s))));
 
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
@@ -459,6 +485,43 @@ export default function App() {
                 <span>חזרה לקטגוריות ←</span>
               </button>
             </div>
+
+            {/* Size filter chips */}
+            {availableSizes.length > 1 && (
+              <div dir="rtl" className="flex items-center gap-2 mb-6 flex-wrap" id="size-filter">
+                <span className="text-xs text-stone-500 font-normal ml-1">סינון לפי מידה:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSizes([])}
+                  className={`px-3 py-1.5 text-xs border transition-colors cursor-pointer ${
+                    selectedSizes.length === 0
+                      ? 'bg-stone-900 text-white border-stone-900'
+                      : 'bg-white text-stone-700 border-stone-300 hover:border-stone-900'
+                  }`}
+                >
+                  הכל
+                </button>
+                {availableSizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() =>
+                      setSelectedSizes((prev) =>
+                        prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+                      )
+                    }
+                    className={`px-3 py-1.5 text-xs font-mono border transition-colors cursor-pointer ${
+                      selectedSizes.includes(size)
+                        ? 'bg-stone-900 text-white border-stone-900'
+                        : 'bg-white text-stone-700 border-stone-300 hover:border-stone-900'
+                    }`}
+                    id={`size-chip-${size}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Grid of Items */}
             {filteredProducts.length === 0 ? (

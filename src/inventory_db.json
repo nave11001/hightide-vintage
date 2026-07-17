@@ -3,9 +3,9 @@
     "num": 28,
     "name": "PICKO",
     "size": "L",
-    "date": "2026-07-15",
+    "date": "2026-07-14",
     "sold": false,
-    "price": 250,
+    "price": 150,
     "categories": [
       "boardies",
       "shirts",
@@ -17,9 +17,9 @@
     "num": 29,
     "name": "QuickSilver",
     "size": "L",
-    "date": "2026-07-15",
+    "date": "2026-07-14",
     "sold": false,
-    "price": 150,
+    "price": 140,
     "categories": [
       "boardies",
       "shirts",
@@ -31,9 +31,345 @@
     "num": 30,
     "name": "T&C SHIRTS",
     "size": "L",
-    "date": "2026-07-15",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 140,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 31,
+    "name": "PICKO",
+    "size": "m",
+    "date": "2026-07-14",
     "sold": false,
     "price": 150,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 32,
+    "name": "tong and country",
+    "size": "xl",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 125,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 33,
+    "name": "PICKO",
+    "size": "s",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 150,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 34,
+    "name": "PICKO",
+    "size": "m",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 125,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 35,
+    "name": "PICKO",
+    "size": "s",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 150,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 36,
+    "name": "PICKO",
+    "size": "L",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 125,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 37,
+    "name": "PICKO",
+    "size": "L",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 130,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 38,
+    "name": "PICKO",
+    "size": "L",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 140,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 39,
+    "name": "billabong",
+    "size": "32",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 40,
+    "name": "billabong",
+    "size": "34",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 41,
+    "name": "billabong",
+    "size": "36",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 230,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 42,
+    "name": "billabong",
+    "size": "31",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 260,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 43,
+    "name": "fire",
+    "size": "L",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 230,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 44,
+    "name": "oniell",
+    "size": "36",
+    "date": "2026-07-14",
+    "sold": false,
+    "price": 260,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 45,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 46,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 47,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 48,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 49,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 50,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 51,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 52,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 53,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 54,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
     "categories": [
       "boardies",
       "shirts",
