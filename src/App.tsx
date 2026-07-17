@@ -35,10 +35,12 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('none');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
 
-  // Size filter resets when switching category
+  // Filters reset when switching category
   useEffect(() => {
     setSelectedSizes([]);
+    setAvailabilityFilter('');
   }, [selectedCategory]);
 
   // Interactive Media Placeholder States
@@ -252,9 +254,14 @@ export default function App() {
     return LETTER_ORDER.indexOf(a) - LETTER_ORDER.indexOf(b);
   });
 
-  const filteredProducts = selectedSizes.length === 0
-    ? categoryProducts
-    : categoryProducts.filter((p) => p.sizes.some((s) => selectedSizes.includes(normalizeSize(s))));
+  const filteredProducts = categoryProducts.filter((p) => {
+    const matchesSize =
+      selectedSizes.length === 0 || p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)));
+    const matchesAvailability =
+      availabilityFilter === '' ||
+      (availabilityFilter === 'available' ? !p.isSold : p.isSold === true);
+    return matchesSize && matchesAvailability;
+  });
 
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
@@ -486,27 +493,45 @@ export default function App() {
               </button>
             </div>
 
-            {/* Size filter dropdown (Excel data-validation style) */}
-            {availableSizes.length > 1 && (
-              <div dir="rtl" className="flex items-center gap-2 mb-6" id="size-filter">
-                <label htmlFor="size-select" className="text-xs text-stone-500 font-normal">
-                  סינון לפי מידה:
+            {/* Filters row (Excel data-validation style dropdowns) */}
+            <div dir="rtl" className="flex items-center gap-2 mb-6 flex-wrap" id="catalog-filters">
+              {availableSizes.length > 1 && (
+                <div className="flex items-center gap-2" id="size-filter">
+                  <label htmlFor="size-select" className="text-xs text-stone-500 font-normal">
+                    סינון לפי מידה:
+                  </label>
+                  <select
+                    id="size-select"
+                    value={selectedSizes[0] || ''}
+                    onChange={(e) => setSelectedSizes(e.target.value ? [e.target.value] : [])}
+                    className="border border-stone-300 bg-white text-stone-900 text-xs font-mono px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
+                  >
+                    <option value="">כל המידות</option>
+                    {availableSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2" id="availability-filter">
+                <label htmlFor="availability-select" className="text-xs text-stone-500 font-normal">
+                  זמינות:
                 </label>
                 <select
-                  id="size-select"
-                  value={selectedSizes[0] || ''}
-                  onChange={(e) => setSelectedSizes(e.target.value ? [e.target.value] : [])}
-                  className="border border-stone-300 bg-white text-stone-900 text-xs font-mono px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
+                  id="availability-select"
+                  value={availabilityFilter}
+                  onChange={(e) => setAvailabilityFilter(e.target.value as '' | 'available' | 'sold')}
+                  className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
                 >
-                  <option value="">כל המידות</option>
-                  {availableSizes.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
+                  <option value="">הכל</option>
+                  <option value="available">זמין במלאי</option>
+                  <option value="sold">נמכר</option>
                 </select>
               </div>
-            )}
+            </div>
 
             {/* Grid of Items */}
             {filteredProducts.length === 0 ? (
