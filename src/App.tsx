@@ -486,40 +486,25 @@ export default function App() {
               </button>
             </div>
 
-            {/* Size filter chips */}
+            {/* Size filter dropdown (Excel data-validation style) */}
             {availableSizes.length > 1 && (
-              <div dir="rtl" className="flex items-center gap-2 mb-6 flex-wrap" id="size-filter">
-                <span className="text-xs text-stone-500 font-normal ml-1">סינון לפי מידה:</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedSizes([])}
-                  className={`px-3 py-1.5 text-xs border transition-colors cursor-pointer ${
-                    selectedSizes.length === 0
-                      ? 'bg-stone-900 text-white border-stone-900'
-                      : 'bg-white text-stone-700 border-stone-300 hover:border-stone-900'
-                  }`}
+              <div dir="rtl" className="flex items-center gap-2 mb-6" id="size-filter">
+                <label htmlFor="size-select" className="text-xs text-stone-500 font-normal">
+                  סינון לפי מידה:
+                </label>
+                <select
+                  id="size-select"
+                  value={selectedSizes[0] || ''}
+                  onChange={(e) => setSelectedSizes(e.target.value ? [e.target.value] : [])}
+                  className="border border-stone-300 bg-white text-stone-900 text-xs font-mono px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
                 >
-                  הכל
-                </button>
-                {availableSizes.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() =>
-                      setSelectedSizes((prev) =>
-                        prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-                      )
-                    }
-                    className={`px-3 py-1.5 text-xs font-mono border transition-colors cursor-pointer ${
-                      selectedSizes.includes(size)
-                        ? 'bg-stone-900 text-white border-stone-900'
-                        : 'bg-white text-stone-700 border-stone-300 hover:border-stone-900'
-                    }`}
-                    id={`size-chip-${size}`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                  <option value="">כל המידות</option>
+                  {availableSizes.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
