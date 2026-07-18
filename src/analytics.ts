@@ -4,14 +4,20 @@ import { Product } from './types';
 // blocked (ad-blockers) — it just accumulates in the array.
 declare global {
   interface Window {
-    dataLayer?: Record<string, unknown>[];
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
 export function track(event: string, data: Record<string, unknown> = {}) {
   if (typeof window === 'undefined') return;
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event, ...data });
+  if (window.gtag) {
+    // direct GA4 event
+    window.gtag('event', event, data);
+  } else {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event, ...data });
+  }
 }
 
 export function trackProduct(event: string, product: Product, extra: Record<string, unknown> = {}) {
