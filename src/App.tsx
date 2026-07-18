@@ -13,6 +13,7 @@ import catAccessoriesImg from '@/assets/photos/accessories.jpeg';
 import catWomenImg from '@/assets/photos/Women (1).jpeg';
 import catAllImg from '@/assets/photos/all products.jpg';
 import { Info, Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
+import { track, trackProduct } from './analytics';
 
 export default function App() {
   // Store Core State
@@ -41,6 +42,9 @@ export default function App() {
   useEffect(() => {
     setSelectedSizes([]);
     setAvailabilityFilter('');
+    if (selectedCategory !== 'none') {
+      track('category_view', { category: selectedCategory });
+    }
   }, [selectedCategory]);
 
   // Interactive Media Placeholder States
@@ -143,6 +147,7 @@ export default function App() {
       showToast(`הוסר מהמועדפים: ${product.name}`);
     } else {
       updated = [...favoriteItems, product];
+      trackProduct('favorite_add', product);
       showToast(`נוסף למועדפים: ${product.name}`);
     }
     setFavoriteItems(updated);
@@ -503,7 +508,10 @@ export default function App() {
                   <select
                     id="size-select"
                     value={selectedSizes[0] || ''}
-                    onChange={(e) => setSelectedSizes(e.target.value ? [e.target.value] : [])}
+                    onChange={(e) => {
+                      setSelectedSizes(e.target.value ? [e.target.value] : []);
+                      if (e.target.value) track('size_filter', { size: e.target.value, category: selectedCategory });
+                    }}
                     className="border border-stone-300 bg-white text-stone-900 text-xs font-mono px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
                   >
                     <option value="">כל המידות</option>
@@ -523,7 +531,10 @@ export default function App() {
                 <select
                   id="availability-select"
                   value={availabilityFilter}
-                  onChange={(e) => setAvailabilityFilter(e.target.value as '' | 'available' | 'sold')}
+                  onChange={(e) => {
+                    setAvailabilityFilter(e.target.value as '' | 'available' | 'sold');
+                    if (e.target.value) track('availability_filter', { value: e.target.value, category: selectedCategory });
+                  }}
                   className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
                 >
                   <option value="">הכל</option>
@@ -561,7 +572,10 @@ export default function App() {
                     product={product}
                     isFavorite={favoriteItems.some((item) => item.id === product.id)}
                     onToggleFavorite={handleToggleFavorite}
-                    onViewDetails={(p) => setSelectedProductForDetails(p)}
+                    onViewDetails={(p) => {
+                      trackProduct('product_view', p);
+                      setSelectedProductForDetails(p);
+                    }}
                   />
                 ))}
               </div>

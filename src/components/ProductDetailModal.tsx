@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
+import { trackProduct } from '../analytics';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -232,7 +233,10 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
               href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} ובכמות ${quantity} במחיר כולל של ₪${product.price * quantity}. האם הוא זמין במלאי?`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onClose}
+              onClick={() => {
+                trackProduct('whatsapp_purchase_click', product, { source: 'detail', quantity });
+                onClose();
+              }}
               className="flex-grow h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
               id="detail-add-btn"
             >

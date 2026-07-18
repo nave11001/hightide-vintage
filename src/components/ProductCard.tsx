@@ -2,6 +2,7 @@ import React from 'react';
 import { Product } from '../types';
 import { Heart } from 'lucide-react';
 import soldStampUrl from '@/assets/photos/sold_stamp.png';
+import { trackProduct } from '../analytics';
 
 interface ProductCardProps {
   product: Product;
@@ -113,6 +114,7 @@ export default function ProductCard({
           rel="noopener noreferrer"
           onClick={(e) => {
             e.stopPropagation();
+            trackProduct('whatsapp_purchase_click', product, { source: 'card' });
           }}
           className="mt-3.5 w-full bg-white hover:bg-stone-50 text-[#128C7E] border border-stone-200 hover:border-[#128C7E] font-medium py-2 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center"
           id={`quick-buy-btn-${product.id}`}
