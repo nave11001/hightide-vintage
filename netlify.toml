@@ -3,6 +3,11 @@
   # Regenerate the inventory JSON from the Excel sheets, then build the site
   command = "pip3 install --quiet openpyxl && python3 scripts/sync_inventory.py && npm run build:static"
 
+# PostHog analytics (public client-side project token; exposed to the bundle via Vite at build time)
+[build.environment]
+  VITE_PUBLIC_POSTHOG_KEY = "phc_zH7o6KnX44jz2B3kSkJFSLXNF6ws8fc7L6N3NswCdF9Y"
+  VITE_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
+
 # SPA: every route serves the app
 [[redirects]]
   from = "/*"
