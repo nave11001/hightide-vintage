@@ -1,3 +1,4 @@
+import posthog from 'posthog-js';
 import { Product } from './types';
 
 // Push a named event into the GTM dataLayer. Safe to call even if GTM is
@@ -18,6 +19,7 @@ export function track(event: string, data: Record<string, unknown> = {}) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...data });
   }
+  posthog.capture(event, data);
 }
 
 export function trackProduct(event: string, product: Product, extra: Record<string, unknown> = {}) {
