@@ -259,6 +259,12 @@ export default function App() {
     return LETTER_ORDER.indexOf(a) - LETTER_ORDER.indexOf(b);
   });
 
+  // Favorites are stored snapshots — re-read them from the live catalog so
+  // price and sold status stay current
+  const freshFavorites = favoriteItems.map(
+    (fav) => products.find((p) => p.id === fav.id) || fav
+  );
+
   const filteredProducts = categoryProducts.filter((p) => {
     const matchesSize =
       selectedSizes.length === 0 || p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)));
@@ -279,7 +285,7 @@ export default function App() {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           categories={CATEGORIES}
-          favoriteItems={favoriteItems}
+          favoriteItems={freshFavorites}
           onToggleFavorite={handleToggleFavorite}
           isTransparent={false}
         />
@@ -316,7 +322,7 @@ export default function App() {
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
                 categories={CATEGORIES}
-                favoriteItems={favoriteItems}
+                favoriteItems={freshFavorites}
                 onToggleFavorite={handleToggleFavorite}
                 isTransparent={true}
               />

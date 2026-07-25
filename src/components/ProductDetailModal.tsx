@@ -207,7 +207,17 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons — a sold item cannot be ordered */}
+          {product.isSold ? (
+            <div className="mt-6" id="detail-sold-notice">
+              <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
+                הפריט נמכר ואינו זמין להזמנה
+              </div>
+              <p className="mt-2 text-[11px] text-stone-400 text-center">
+                פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.
+              </p>
+            </div>
+          ) : (
           <div className="mt-6 flex flex-row-reverse gap-3 items-center">
             {/* Quantity select */}
             <div className="flex items-center border border-stone-200 w-24 h-10 bg-white flex-shrink-0 select-none">
@@ -246,6 +256,7 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
               <span>רכישה בווטסאפ</span>
             </a>
           </div>
+          )}
 
           {/* Guarantee / trust statements */}
           <div className="mt-5 grid grid-cols-2 gap-2 text-[10px] text-stone-400 pt-4 border-t border-stone-100 font-normal text-center">
