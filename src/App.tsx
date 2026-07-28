@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import posthog from 'posthog-js';
 import { Product } from './types';
 import { INITIAL_PRODUCTS, CATEGORIES } from './data';
 import Header from './components/Header';
@@ -46,6 +47,19 @@ export default function App() {
       track('category_view', { category: selectedCategory });
     }
   }, [selectedCategory]);
+
+  // Debounced search tracking
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!searchTerm) return;
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      posthog.capture('search_performed', { search_term: searchTerm });
+    }, 800);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchTerm]);
 
   // Interactive Media Placeholder States
   const [mediaType, setMediaType] = useState<'video' | 'image'>('video');
@@ -144,6 +158,13 @@ export default function App() {
     let updated: Product[];
     if (isFav) {
       updated = favoriteItems.filter((item) => item.id !== product.id);
+      posthog.capture('favorite_remove', {
+        product_id: product.id,
+        product_name: product.name,
+        product_brand: product.brand,
+        product_price: product.price,
+        product_category: product.category,
+      });
       showToast(`הוסר מהמועדפים: ${product.name}`);
     } else {
       updated = [...favoriteItems, product];
@@ -177,7 +198,8 @@ export default function App() {
   const handleSaveProducts = async (newProducts: Product[]) => {
     setProducts(newProducts);
     localStorage.setItem('higetide_products_v2', JSON.stringify(newProducts));
-    
+    posthog.capture('inventory_saved', { product_count: newProducts.length });
+
     // Save to server-side if logged in
     const token = sessionStorage.getItem('hightide_admin_token');
     if (token) {
@@ -332,6 +354,7 @@ export default function App() {
             <div className="absolute bottom-6 sm:bottom-12 inset-x-0 flex justify-center z-20">
               <button 
                 onClick={() => {
+                  posthog.capture('new_drop_cta_clicked');
                   setSelectedCategory('latest');
                   setTimeout(() => {
                     document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -628,10 +651,11 @@ export default function App() {
               >
                 INSTAGRAM
               </a>
-              <a 
-                href="https://wa.me/972528879922" 
-                target="_blank" 
+              <a
+                href="https://wa.me/972528879922"
+                target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('whatsapp_contact_clicked', { source: 'footer' })}
                 className="text-xs bg-gray-900 border border-gray-800 px-3 py-1.5 hover:text-white transition-colors cursor-pointer font-mono font-bold"
               >
                 WHATSAPP
@@ -697,6 +721,7 @@ export default function App() {
           href="https://wa.me/972528879922"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => posthog.capture('whatsapp_contact_clicked', { source: 'floating_button' })}
           className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer group relative"
           title="צ׳אט איתנו ב-WhatsApp"
         >

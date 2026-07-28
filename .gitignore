@@ -16,3 +16,4 @@ coverage/
 
 # Original project export
 higetide-vintage .zip
+.env

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { Product } from '../types';
 import { X, Save, Plus, Edit2, RotateCcw, Link2, DollarSign, Image as ImageIcon, Lock, ShieldAlert } from 'lucide-react';
 
@@ -79,6 +80,7 @@ export default function AdminPanelModal({
         setIsAuthenticated(true);
         setAuthError('');
         setIsVerifying(false);
+        posthog.capture('admin_login_success', { method: 'google' });
       } else if (event.data?.type === 'GOOGLE_OAUTH_FAILURE') {
         setAuthError(event.data.error || 'התחברות Google נכשלה');
         setIsVerifying(false);
@@ -137,6 +139,8 @@ export default function AdminPanelModal({
         sessionStorage.setItem('hightide_admin_token', data.token);
         setIsAuthenticated(true);
         setShowSimulationPrompt(false);
+        posthog.identify(data.email, { email: data.email, role: 'admin' });
+        posthog.capture('admin_login_success', { method: 'simulate' });
       } else {
         setAuthError(data.error || 'שגיאה באימות מדומה');
       }
@@ -165,6 +169,7 @@ export default function AdminPanelModal({
         setIsAuthenticated(true);
         setAuthError('');
         setPasswordInput('');
+        posthog.capture('admin_login_success', { method: 'password' });
       } else {
         setAuthError(data.error || 'שגיאת אימות סיסמה');
       }
