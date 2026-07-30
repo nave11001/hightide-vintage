@@ -16,3 +16,6 @@ coverage/
 
 # Original project export
 higetide-vintage .zip
+
+# Archived photos of sold items (kept locally, out of the site)
+sold_archive/

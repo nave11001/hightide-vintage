@@ -36,12 +36,10 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('none');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
 
   // Filters reset when switching category
   useEffect(() => {
     setSelectedSizes([]);
-    setAvailabilityFilter('');
     if (selectedCategory !== 'none') {
       track('category_view', { category: selectedCategory });
     }
@@ -260,19 +258,16 @@ export default function App() {
   });
 
   // Favorites are stored snapshots — re-read them from the live catalog so
-  // price and sold status stay current
-  const freshFavorites = favoriteItems.map(
-    (fav) => products.find((p) => p.id === fav.id) || fav
-  );
+  // prices stay current, and drop anything no longer sold in the store
+  const freshFavorites = favoriteItems
+    .map((fav) => products.find((p) => p.id === fav.id))
+    .filter((p): p is Product => !!p);
 
-  const filteredProducts = categoryProducts.filter((p) => {
-    const matchesSize =
-      selectedSizes.length === 0 || p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)));
-    const matchesAvailability =
-      availabilityFilter === '' ||
-      (availabilityFilter === 'available' ? !p.isSold : p.isSold === true);
-    return matchesSize && matchesAvailability;
-  });
+  const filteredProducts = categoryProducts.filter(
+    (p) =>
+      selectedSizes.length === 0 ||
+      p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)))
+  );
 
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
@@ -529,25 +524,6 @@ export default function App() {
                   </select>
                 </div>
               )}
-
-              <div className="flex items-center gap-2" id="availability-filter">
-                <label htmlFor="availability-select" className="text-xs text-stone-500 font-normal">
-                  זמינות:
-                </label>
-                <select
-                  id="availability-select"
-                  value={availabilityFilter}
-                  onChange={(e) => {
-                    setAvailabilityFilter(e.target.value as '' | 'available' | 'sold');
-                    if (e.target.value) track('availability_filter', { value: e.target.value, category: selectedCategory });
-                  }}
-                  className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
-                >
-                  <option value="">הכל</option>
-                  <option value="available">זמין במלאי</option>
-                  <option value="sold">נמכר</option>
-                </select>
-              </div>
             </div>
 
             {/* Grid of Items */}

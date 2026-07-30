@@ -1,33 +1,5 @@
 [
   {
-    "num": 28,
-    "name": "PICKO",
-    "size": "L",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 150,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 29,
-    "name": "QuickSilver",
-    "size": "L",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 140,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
     "num": 30,
     "name": "T&C SHIRTS",
     "size": "L",
@@ -48,20 +20,6 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 150,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 32,
-    "name": "tong and country",
-    "size": "xl",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 125,
     "categories": [
       "boardies",
       "shirts",
@@ -112,34 +70,6 @@
     ]
   },
   {
-    "num": 36,
-    "name": "PICKO",
-    "size": "L",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 125,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 37,
-    "name": "PICKO",
-    "size": "L",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 130,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
     "num": 38,
     "name": "PICKO",
     "size": "L",
@@ -157,20 +87,6 @@
     "num": 39,
     "name": "billabong",
     "size": "32",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 250,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 40,
-    "name": "billabong",
-    "size": "34",
     "date": "2026-07-14",
     "sold": false,
     "price": 250,
@@ -239,25 +155,11 @@
   },
   {
     "num": 45,
-    "name": "",
-    "size": "",
-    "date": "",
+    "name": "blue",
+    "size": "29",
+    "date": "2026-07-16",
     "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 46,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
+    "price": 230,
     "categories": [
       "boardies",
       "shirts",
@@ -267,25 +169,11 @@
   },
   {
     "num": 47,
-    "name": "",
-    "size": "",
-    "date": "",
+    "name": "flowers",
+    "size": "36",
+    "date": "2026-07-16",
     "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 48,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
+    "price": 200,
     "categories": [
       "boardies",
       "shirts",
@@ -295,11 +183,11 @@
   },
   {
     "num": 49,
-    "name": "",
-    "size": "",
-    "date": "",
+    "name": "fire",
+    "size": "34",
+    "date": "2026-07-16",
     "sold": false,
-    "price": 0,
+    "price": 250,
     "categories": [
       "boardies",
       "shirts",
@@ -309,11 +197,11 @@
   },
   {
     "num": 50,
-    "name": "",
-    "size": "",
-    "date": "",
+    "name": "flowers",
+    "size": "L",
+    "date": "2026-07-16",
     "sold": false,
-    "price": 0,
+    "price": 200,
     "categories": [
       "boardies",
       "shirts",
@@ -322,82 +210,268 @@
     ]
   },
   {
-    "num": 51,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 52,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 53,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 54,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 1,
-    "name": "Quiksilver",
+    "num": 57,
+    "name": "billabong",
     "size": "30",
-    "date": "2026-07-14",
+    "date": "2026-07-16",
     "sold": false,
     "price": 250,
     "categories": [
       "boardies",
+      "shirts",
+      "accessories",
       "women"
     ]
   },
   {
-    "num": 2,
-    "name": "Quiksilver",
+    "num": 59,
+    "name": "GRAY",
     "size": "34",
-    "date": "2026-07-14",
+    "date": "2026-07-16",
     "sold": false,
     "price": 250,
     "categories": [
       "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 61,
+    "name": "oniell",
+    "size": "32",
+    "date": "2026-07-16",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 63,
+    "name": "billabong",
+    "size": "38",
+    "date": "2026-07-16",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 65,
+    "name": "billabong",
+    "size": "29",
+    "date": "2026-07-16",
+    "sold": false,
+    "price": 230,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 66,
+    "name": "billabong",
+    "size": "M",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 67,
+    "name": "billabong",
+    "size": "36",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 68,
+    "name": "billabong",
+    "size": "38",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 290,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 69,
+    "name": "QuickSilver",
+    "size": "34",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 290,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 70,
+    "name": "QuickSilver",
+    "size": "38",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 280,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 71,
+    "name": "billabong",
+    "size": "32",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 72,
+    "name": "billabong",
+    "size": "38",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 73,
+    "name": "GIRLS",
+    "size": "26",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 240,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 74,
+    "name": "ROXY",
+    "size": "34",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 240,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 75,
+    "name": "billabong",
+    "size": "34",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 76,
+    "name": "billabong",
+    "size": "31",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 77,
+    "name": "billabong",
+    "size": "36",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 250,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 78,
+    "name": "billabong",
+    "size": "36",
+    "date": "2026-07-22",
+    "sold": false,
+    "price": 270,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 79,
+    "name": "",
+    "size": "",
+    "date": "",
+    "sold": false,
+    "price": 0,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
       "women"
     ]
   },
@@ -405,7 +479,7 @@
     "num": 3,
     "name": "O'Neill",
     "size": "36",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 250,
     "categories": [
@@ -417,19 +491,7 @@
     "num": 4,
     "name": "Hurley",
     "size": "31",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 240,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 5,
-    "name": "Billabong",
-    "size": "30",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 240,
     "categories": [
@@ -441,33 +503,9 @@
     "num": 6,
     "name": "Billabong",
     "size": "33",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 250,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 7,
-    "name": "Billabong",
-    "size": "34",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 270,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 8,
-    "name": "Kirra",
-    "size": "33",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 260,
     "categories": [
       "boardies",
       "women"
@@ -477,7 +515,7 @@
     "num": 9,
     "name": "Roxy",
     "size": "31",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 240,
     "categories": [
@@ -489,7 +527,7 @@
     "num": 10,
     "name": "Hawaii",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 230,
     "categories": [
@@ -501,33 +539,9 @@
     "num": 11,
     "name": "Ripline",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 270,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 12,
-    "name": "Billabong",
-    "size": "34",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 230,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 13,
-    "name": "Billabong",
-    "size": "32",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 260,
     "categories": [
       "boardies",
       "women"
@@ -537,21 +551,9 @@
     "num": 14,
     "name": "Billabong",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 260,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 15,
-    "name": "Billabong",
-    "size": "36",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 270,
     "categories": [
       "boardies",
       "women"
@@ -561,7 +563,7 @@
     "num": 16,
     "name": "Fighters",
     "size": "29",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 230,
     "categories": [
@@ -573,7 +575,7 @@
     "num": 17,
     "name": "Billabong",
     "size": "30",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 250,
     "categories": [
@@ -585,45 +587,9 @@
     "num": 18,
     "name": "Quiksilver",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 270,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 19,
-    "name": "Billabong",
-    "size": "30",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 260,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 20,
-    "name": "Quiksilver",
-    "size": "34",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 260,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 21,
-    "name": "Billabong",
-    "size": "33",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 250,
     "categories": [
       "boardies",
       "women"
@@ -633,33 +599,9 @@
     "num": 22,
     "name": "FireFighter",
     "size": "34",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 240,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 23,
-    "name": "Rip Curl",
-    "size": "36",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 260,
-    "categories": [
-      "boardies",
-      "women"
-    ]
-  },
-  {
-    "num": 24,
-    "name": "משבצות",
-    "size": "33",
-    "date": "2026-07-14",
-    "sold": false,
-    "price": 250,
     "categories": [
       "boardies",
       "women"
@@ -669,7 +611,7 @@
     "num": 25,
     "name": "Billabong",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 250,
     "categories": [
@@ -681,7 +623,7 @@
     "num": 26,
     "name": "Quiksilver",
     "size": "33",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 250,
     "categories": [
@@ -693,7 +635,7 @@
     "num": 27,
     "name": "O'Neill",
     "size": "32",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 260,
     "categories": [
