@@ -41,28 +41,7 @@
       "Bash(rm dep_tmp.json)",
       "PowerShell(git config user.email \"galnimrod9@gmail.com\")",
       "PowerShell(git commit --amend --reset-author --no-edit 2>&1)",
-      "PowerShell(git push --force-with-lease 2>&1)",
-      "PowerShell(Get-ChildItem assets\\\\inventory\\\\bordies, assets\\\\inventory\\\\T-shirts, assets\\\\inventory\\\\women, assets\\\\inventory\\\\accessories | Group-Object { $_.Directory.Name } | ForEach-Object { \"$\\($_.Name\\): $\\($_.Group.Name -join ', '\\)\" })",
-      "Bash(node -e \"const h=JSON.parse\\(require\\('fs'\\).readFileSync\\('hook_tmp.json','utf8'\\)\\);console.log\\('hook id:', h.id\\)\")",
-      "Bash(rm hook_tmp.json)",
-      "Bash(curl -s -X POST -d \"\" -o /dev/null -w \"%{http_code}\\\\n\" \"https://api.netlify.com/build_hooks/6a5764d2bcd93eac3d779fbc\")",
-      "PowerShell([Environment]::GetFolderPath\\('Desktop'\\); Test-Path \"C:\\\\Users\\\\נווה\\\\Desktop\\\\עדכון-אתר-hightide.bat\")",
-      "PowerShell(git add src/components/ProductDetailModal.tsx)",
-      "PowerShell(git push 2>&1)",
-      "PowerShell(git pull --rebase origin master 2>&1)",
-      "PowerShell(git stash)",
-      "PowerShell(git stash pop 2>&1)",
-      "PowerShell(git add src/App.tsx)",
-      "PowerShell(git add index.html src/analytics.ts src/App.tsx src/components/ProductCard.tsx src/components/ProductDetailModal.tsx)",
-      "Bash(sed -i 's/          favoriteItems={favoriteItems}/          favoriteItems={freshFavorites}/; s/                favoriteItems={favoriteItems}/                favoriteItems={freshFavorites}/' src/App.tsx)",
-      "Bash(export PYTHONUTF8=1)",
-      "Bash(python -c ' *)",
-      "Bash(python scripts/archive_sold.py --dry-run)",
-      "Bash(python scripts/archive_sold.py)",
-      "Bash(python scripts/sync_inventory.py)",
-      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && grep -n \"availabilityFilter\\\\|availability-filter\\\\|availability-select\" src/App.tsx)",
-      "Bash(sed -i \"/const \\\\[availabilityFilter, setAvailabilityFilter\\\\]/d; /setAvailabilityFilter\\(''\\);/d\" src/App.tsx)",
-      "Bash(npx tsc *)"
+      "PowerShell(git push --force-with-lease 2>&1)"
     ]
   }
 }
