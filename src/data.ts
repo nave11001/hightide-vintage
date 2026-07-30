@@ -85,9 +85,8 @@ function buildProducts(): Product[] {
       const images = [entry.main, ...entry.angles.sort()].filter(Boolean) as string[];
       if (images.length === 0) continue;
       const detail = DB.get(`${category}-${num}`);
-      // Sold items are pulled from the store entirely (run
-      // `python scripts/archive_sold.py` to also clear their rows and photos)
-      if (detail?.sold) continue;
+      // Sold items stay listed (marked נמכר, ordering blocked) until the
+      // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
       products.push({
         id: `${category}-${num}`,
         name: detail ? `${detail.name} #${num}` : `${labels.name} #${num}`,

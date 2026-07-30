@@ -41,7 +41,13 @@
       "Bash(rm dep_tmp.json)",
       "PowerShell(git config user.email \"galnimrod9@gmail.com\")",
       "PowerShell(git commit --amend --reset-author --no-edit 2>&1)",
-      "PowerShell(git push --force-with-lease 2>&1)"
+      "PowerShell(git push --force-with-lease 2>&1)",
+      "Bash(export PYTHONUTF8=1)",
+      "Bash(python -c ' *)",
+      "Bash(python scripts/sync_inventory.py)",
+      "Bash(python scripts/reset_inventory.py --orphans-only --dry-run)",
+      "Bash(python scripts/reset_inventory.py --orphans-only)",
+      "Bash(python scripts/reset_inventory.py --dry-run)"
     ]
   }
 }

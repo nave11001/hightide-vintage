@@ -1,0 +1,43 @@
+name: איפוס מלאי אוטומטי
+
+# Runs on the 1st and the 15th of every month at 03:00 UTC (06:00 Israel).
+# Every item marked נמכר is logged to sold_log.csv, removed from the sheets,
+# its photos are archived, and the site is rebuilt with the remaining stock.
+on:
+  schedule:
+    - cron: '0 3 1,15 * *'
+  workflow_dispatch: {}   # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --quiet openpyxl
+
+      - name: Reset inventory (archive sold items)
+        run: python scripts/reset_inventory.py
+
+      - name: Rebuild inventory database
+        run: python scripts/sync_inventory.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "HighTide Inventory Bot"
+          git config user.email "galnimrod9@gmail.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing sold since the last reset — no changes."
+          else
+            git commit -m "chore: איפוס מלאי אוטומטי ($(date +%d/%m/%Y))"
+            git push
+          fi

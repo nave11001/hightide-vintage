@@ -88,7 +88,7 @@
     "name": "billabong",
     "size": "32",
     "date": "2026-07-14",
-    "sold": false,
+    "sold": true,
     "price": 250,
     "categories": [
       "boardies",
@@ -102,7 +102,7 @@
     "name": "billabong",
     "size": "36",
     "date": "2026-07-14",
-    "sold": false,
+    "sold": true,
     "price": 230,
     "categories": [
       "boardies",
@@ -116,7 +116,7 @@
     "name": "billabong",
     "size": "31",
     "date": "2026-07-14",
-    "sold": false,
+    "sold": true,
     "price": 260,
     "categories": [
       "boardies",
@@ -144,7 +144,7 @@
     "name": "oniell",
     "size": "36",
     "date": "2026-07-14",
-    "sold": false,
+    "sold": true,
     "price": 260,
     "categories": [
       "boardies",
@@ -158,7 +158,7 @@
     "name": "blue",
     "size": "29",
     "date": "2026-07-16",
-    "sold": false,
+    "sold": true,
     "price": 230,
     "categories": [
       "boardies",
@@ -270,7 +270,7 @@
     "name": "billabong",
     "size": "29",
     "date": "2026-07-16",
-    "sold": false,
+    "sold": true,
     "price": 230,
     "categories": [
       "boardies",
@@ -298,7 +298,7 @@
     "name": "billabong",
     "size": "36",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 270,
     "categories": [
       "boardies",
@@ -312,7 +312,7 @@
     "name": "billabong",
     "size": "38",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 290,
     "categories": [
       "boardies",
@@ -326,7 +326,7 @@
     "name": "QuickSilver",
     "size": "34",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 290,
     "categories": [
       "boardies",
@@ -382,7 +382,7 @@
     "name": "GIRLS",
     "size": "26",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 240,
     "categories": [
       "boardies",
@@ -410,7 +410,7 @@
     "name": "billabong",
     "size": "34",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 270,
     "categories": [
       "boardies",
@@ -424,7 +424,7 @@
     "name": "billabong",
     "size": "31",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 250,
     "categories": [
       "boardies",
@@ -438,7 +438,7 @@
     "name": "billabong",
     "size": "36",
     "date": "2026-07-22",
-    "sold": false,
+    "sold": true,
     "price": 250,
     "categories": [
       "boardies",
@@ -465,7 +465,7 @@
     "num": 79,
     "name": "",
     "size": "",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 0,
     "categories": [
@@ -479,7 +479,7 @@
     "num": 3,
     "name": "O'Neill",
     "size": "36",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 250,
     "categories": [
@@ -491,8 +491,8 @@
     "num": 4,
     "name": "Hurley",
     "size": "31",
-    "date": "",
-    "sold": false,
+    "date": "2026-07-14",
+    "sold": true,
     "price": 240,
     "categories": [
       "boardies",
@@ -503,7 +503,7 @@
     "num": 6,
     "name": "Billabong",
     "size": "33",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 250,
     "categories": [
@@ -515,7 +515,7 @@
     "num": 9,
     "name": "Roxy",
     "size": "31",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 240,
     "categories": [
@@ -527,7 +527,7 @@
     "num": 10,
     "name": "Hawaii",
     "size": "32",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 230,
     "categories": [
@@ -539,7 +539,7 @@
     "num": 11,
     "name": "Ripline",
     "size": "32",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 270,
     "categories": [
@@ -551,8 +551,8 @@
     "num": 14,
     "name": "Billabong",
     "size": "32",
-    "date": "",
-    "sold": false,
+    "date": "2026-07-14",
+    "sold": true,
     "price": 260,
     "categories": [
       "boardies",
@@ -563,7 +563,7 @@
     "num": 16,
     "name": "Fighters",
     "size": "29",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 230,
     "categories": [
@@ -575,8 +575,8 @@
     "num": 17,
     "name": "Billabong",
     "size": "30",
-    "date": "",
-    "sold": false,
+    "date": "2026-07-14",
+    "sold": true,
     "price": 250,
     "categories": [
       "boardies",
@@ -587,8 +587,8 @@
     "num": 18,
     "name": "Quiksilver",
     "size": "32",
-    "date": "",
-    "sold": false,
+    "date": "2026-07-14",
+    "sold": true,
     "price": 270,
     "categories": [
       "boardies",
@@ -599,7 +599,7 @@
     "num": 22,
     "name": "FireFighter",
     "size": "34",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 240,
     "categories": [
@@ -611,7 +611,7 @@
     "num": 25,
     "name": "Billabong",
     "size": "32",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 250,
     "categories": [
@@ -623,8 +623,8 @@
     "num": 26,
     "name": "Quiksilver",
     "size": "33",
-    "date": "",
-    "sold": false,
+    "date": "2026-07-14",
+    "sold": true,
     "price": 250,
     "categories": [
       "boardies",
@@ -635,7 +635,7 @@
     "num": 27,
     "name": "O'Neill",
     "size": "32",
-    "date": "",
+    "date": "2026-07-14",
     "sold": false,
     "price": 260,
     "categories": [
