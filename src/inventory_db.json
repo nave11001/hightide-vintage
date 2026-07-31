@@ -364,20 +364,6 @@
     ]
   },
   {
-    "num": 72,
-    "name": "billabong",
-    "size": "38",
-    "date": "2026-07-22",
-    "sold": false,
-    "price": 250,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
     "num": 73,
     "name": "GIRLS",
     "size": "26",
@@ -420,34 +406,6 @@
     ]
   },
   {
-    "num": 76,
-    "name": "billabong",
-    "size": "31",
-    "date": "2026-07-22",
-    "sold": true,
-    "price": 250,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 77,
-    "name": "billabong",
-    "size": "36",
-    "date": "2026-07-22",
-    "sold": true,
-    "price": 250,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
     "num": 78,
     "name": "billabong",
     "size": "36",
@@ -465,7 +423,7 @@
     "num": 79,
     "name": "",
     "size": "",
-    "date": "2026-07-14",
+    "date": "",
     "sold": false,
     "price": 0,
     "categories": [

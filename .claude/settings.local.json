@@ -57,7 +57,13 @@
       "Bash(python -m pip install --quiet opencv-python-headless)",
       "Bash(python -c \"import cv2; print\\('opencv ready', cv2.__version__\\)\")",
       "Bash(python \"C:/Users/78FC~1/AppData/Local/Temp/claude/C--Users------OneDrive--------------------------hightide/28e8c106-dbf4-4b86-ba4e-d9b1f04d3951/scratchpad/calibrate3.py\")",
-      "Bash(time python scripts/find_duplicates.py)"
+      "Bash(time python scripts/find_duplicates.py)",
+      "Bash(printf '\\\\n# Photos of items removed as duplicates \\(kept locally, out of the site\\)\\\\nremoved_archive/\\\\n')",
+      "Bash(python scripts/remove_items.py 77 76 72 --dry-run)",
+      "Bash(python scripts/remove_items.py 77 76 72)",
+      "Bash(powershell -NoProfile -Command \"Get-Process -Name EXCEL -ErrorAction SilentlyContinue | Select-Object -First 3 Id,MainWindowTitle\")",
+      "Bash(sed -i 's/^import tempfile$/import tempfile\\\\nimport time/' scripts/remove_items.py)",
+      "Bash(python -c \"import ast;ast.parse\\(open\\('scripts/remove_items.py',encoding='utf-8'\\).read\\(\\)\\);print\\('syntax ok'\\)\")"
     ]
   }
 }

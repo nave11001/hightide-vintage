@@ -19,3 +19,6 @@ higetide-vintage .zip
 
 # Archived photos of sold items (kept locally, out of the site)
 sold_archive/
+
+# Photos of items removed as duplicates (kept locally, out of the site)
+removed_archive/
