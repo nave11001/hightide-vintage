@@ -47,7 +47,17 @@
       "Bash(python scripts/sync_inventory.py)",
       "Bash(python scripts/reset_inventory.py --orphans-only --dry-run)",
       "Bash(python scripts/reset_inventory.py --orphans-only)",
-      "Bash(python scripts/reset_inventory.py --dry-run)"
+      "Bash(python scripts/reset_inventory.py --dry-run)",
+      "Bash(python scripts/find_duplicates.py)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && ls assets/inventory/bordies/ | grep -E '^\\(41|77\\)' )",
+      "Bash(python \"C:/Users/78FC~1/AppData/Local/Temp/claude/C--Users------OneDrive--------------------------hightide/28e8c106-dbf4-4b86-ba4e-d9b1f04d3951/scratchpad/calibrate.py\")",
+      "Bash(python \"C:/Users/78FC~1/AppData/Local/Temp/claude/C--Users------OneDrive--------------------------hightide/28e8c106-dbf4-4b86-ba4e-d9b1f04d3951/scratchpad/calibrate2.py\")",
+      "Bash(python -c \"import cv2; print\\('opencv', cv2.__version__\\)\")",
+      "Bash(python -c \"import skimage; print\\('skimage', skimage.__version__\\)\")",
+      "Bash(python -m pip install --quiet opencv-python-headless)",
+      "Bash(python -c \"import cv2; print\\('opencv ready', cv2.__version__\\)\")",
+      "Bash(python \"C:/Users/78FC~1/AppData/Local/Temp/claude/C--Users------OneDrive--------------------------hightide/28e8c106-dbf4-4b86-ba4e-d9b1f04d3951/scratchpad/calibrate3.py\")",
+      "Bash(time python scripts/find_duplicates.py)"
     ]
   }
 }

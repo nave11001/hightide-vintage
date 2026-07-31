@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "sync-inventory": "python scripts/sync_inventory.py",
     "build:static": "vite build",
-    "publish": "python scripts/sync_inventory.py && vite build && netlify deploy --prod --dir=dist"
+    "publish": "python scripts/sync_inventory.py && vite build && netlify deploy --prod --dir=dist",
+    "check-duplicates": "python scripts/find_duplicates.py"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
