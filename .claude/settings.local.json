@@ -80,7 +80,8 @@
       "Bash(PYTHONUTF8=1 python -c ' *)",
       "Bash(PYTHONUTF8=1 python scripts/migrate_to_supabase.py --dry-run)",
       "Bash(PYTHONUTF8=1 python scripts/find_duplicates.py)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; Get-ChildItem src -File | Select-Object Name | Format-Table -AutoSize | Out-String; \"--- entry ---\"; Select-String -Path \"index.html\" -Pattern \"src=\" | ForEach-Object { $_.Line.Trim\\(\\) })"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; Get-ChildItem src -File | Select-Object Name | Format-Table -AutoSize | Out-String; \"--- entry ---\"; Select-String -Path \"index.html\" -Pattern \"src=\" | ForEach-Object { $_.Line.Trim\\(\\) })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; $env:V_URL = \\(\\(Get-Content .env | Where-Object { $_ -match '^SUPABASE_URL=' }\\) -replace '^SUPABASE_URL=',''\\).Trim\\('\"'\\); $env:V_KEY = \\(\\(Get-Content .env | Where-Object { $_ -match '^SUPABASE_SERVICE_KEY=' }\\) -replace '^SUPABASE_SERVICE_KEY=',''\\).Trim\\('\"'\\); gh secret set SUPABASE_URL --repo nave11001/hightide-vintage --body $env:V_URL; gh secret set SUPABASE_SERVICE_KEY --repo nave11001/hightide-vintage --body $env:V_KEY; $env:V_URL=\"\"; $env:V_KEY=\"\"; \"\"; \"--- secrets now on the repo ---\"; gh secret list --repo nave11001/hightide-vintage)"
     ]
   }
 }
