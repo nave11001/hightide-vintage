@@ -38,6 +38,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('none');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
+  const [saleFilter, setSaleFilter] = useState<'' | 'sale'>('');
 
   // Filters reset when switching category
   useEffect(() => {
@@ -260,7 +261,10 @@ export default function App() {
     const matchesAvailability =
       availabilityFilter === '' ||
       (availabilityFilter === 'available' ? !p.isSold : p.isSold === true);
-    return matchesSize && matchesAvailability;
+    // An item counts as discounted exactly when it carries a pre-sale price,
+    // which is the same thing that draws the SALE stamp on the card.
+    const matchesSale = saleFilter === '' || Boolean(p.originalPrice);
+    return matchesSize && matchesAvailability && matchesSale;
   });
 
   return (
@@ -537,6 +541,27 @@ export default function App() {
                   <option value="sold">נמכר</option>
                 </select>
               </div>
+
+              {/* Only worth offering once something is actually discounted */}
+              {categoryProducts.some((p) => p.originalPrice) && (
+                <div className="flex items-center gap-2" id="sale-filter">
+                  <label htmlFor="sale-select" className="text-xs text-stone-500 font-normal">
+                    מבצעים:
+                  </label>
+                  <select
+                    id="sale-select"
+                    value={saleFilter}
+                    onChange={(e) => {
+                      setSaleFilter(e.target.value as '' | 'sale');
+                      if (e.target.value) track('sale_filter', { value: e.target.value, category: selectedCategory });
+                    }}
+                    className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
+                  >
+                    <option value="">הכל</option>
+                    <option value="sale">במבצע בלבד</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Grid of Items */}
