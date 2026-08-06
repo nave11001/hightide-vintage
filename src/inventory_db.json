@@ -1,11 +1,541 @@
 [
   {
+    "num": 79,
+    "name": "PIKO",
+    "size": "M",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 140,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 80,
+    "name": "PIKO",
+    "size": "M",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 82,
+    "name": "Rip curl",
+    "size": "L",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 180,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 83,
+    "name": "QuickSilver",
+    "size": "XL",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 180,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 84,
+    "name": "PICKO",
+    "size": "XL",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 180,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 85,
+    "name": "local",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 86,
+    "name": "Captain Santa",
+    "size": "L",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 250,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 87,
+    "name": "T&R",
+    "size": "M",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 160,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 88,
+    "name": "Rip curl",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 180,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 90,
+    "name": "local",
+    "size": "M",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 91,
+    "name": "PIKO",
+    "size": "36",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 160,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 92,
+    "name": "QuickSilver",
+    "size": "34",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 280,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 93,
+    "name": "QuickSilver",
+    "size": "32",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 300,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 94,
+    "name": "Andy Irons",
+    "size": "36",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 320,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 95,
+    "name": "KIRRA",
+    "size": "34",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 200,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 96,
+    "name": "Andy Irons",
+    "size": "28",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 300,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 97,
+    "name": "QuickSilver",
+    "size": "36",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 98,
+    "name": "ROXY",
+    "size": "32",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 270,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 99,
+    "name": "Oniell",
+    "size": "30",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 270,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 100,
+    "name": "Oniell",
+    "size": "29",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 280,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 101,
+    "name": "Volcom",
+    "size": "30",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 250,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 102,
+    "name": "billabong",
+    "size": "32-34",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 103,
+    "name": "QuickSilver",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 300,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 104,
+    "name": "billabong",
+    "size": "36",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 105,
+    "name": "Hawaii",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 106,
+    "name": "QuickSilver",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 260,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 107,
+    "name": "billabong",
+    "size": "34",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 108,
+    "name": "RR",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 109,
+    "name": "QuickSilver",
+    "size": "30",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 150,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 110,
+    "name": "Hawaiian",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 270,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 111,
+    "name": "Rude Boyz",
+    "size": "L",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 170,
+    "original_price": null,
+    "sale": true,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 112,
+    "name": "Hang Ten",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 200,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
+    "num": 113,
+    "name": "billabong",
+    "size": "",
+    "date": "2026-08-02",
+    "sold": false,
+    "price": 250,
+    "original_price": null,
+    "sale": false,
+    "categories": [
+      "boardies",
+      "shirts",
+      "accessories",
+      "women"
+    ]
+  },
+  {
     "num": 30,
     "name": "T&C SHIRTS",
     "size": "L",
     "date": "2026-07-14",
     "sold": false,
     "price": 140,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -20,6 +550,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 150,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -34,6 +566,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 150,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -48,6 +582,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 125,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -62,6 +598,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 150,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -76,6 +614,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 140,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -90,6 +630,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -104,6 +646,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -118,6 +662,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 260,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -132,6 +678,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -146,6 +694,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 260,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -160,6 +710,8 @@
     "date": "2026-07-16",
     "sold": true,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -174,6 +726,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 200,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -188,6 +742,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -202,6 +758,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 200,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -216,6 +774,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -230,6 +790,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -244,6 +806,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -258,6 +822,8 @@
     "date": "2026-07-16",
     "sold": false,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -272,6 +838,8 @@
     "date": "2026-07-16",
     "sold": true,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -286,6 +854,8 @@
     "date": "2026-07-22",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -300,6 +870,8 @@
     "date": "2026-07-22",
     "sold": true,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -314,6 +886,8 @@
     "date": "2026-07-22",
     "sold": true,
     "price": 290,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -328,6 +902,8 @@
     "date": "2026-07-22",
     "sold": true,
     "price": 290,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -342,6 +918,8 @@
     "date": "2026-07-22",
     "sold": false,
     "price": 280,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -356,6 +934,8 @@
     "date": "2026-07-22",
     "sold": false,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -370,6 +950,8 @@
     "date": "2026-07-22",
     "sold": true,
     "price": 240,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -384,6 +966,8 @@
     "date": "2026-07-22",
     "sold": false,
     "price": 240,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -398,6 +982,8 @@
     "date": "2026-07-22",
     "sold": true,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -412,20 +998,8 @@
     "date": "2026-07-22",
     "sold": false,
     "price": 270,
-    "categories": [
-      "boardies",
-      "shirts",
-      "accessories",
-      "women"
-    ]
-  },
-  {
-    "num": 79,
-    "name": "",
-    "size": "",
-    "date": "",
-    "sold": false,
-    "price": 0,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "shirts",
@@ -440,6 +1014,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -452,6 +1028,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 240,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -464,6 +1042,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -476,6 +1056,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 240,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -488,6 +1070,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -500,6 +1084,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -512,6 +1098,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 260,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -524,6 +1112,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 230,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -536,6 +1126,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -548,6 +1140,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 270,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -560,6 +1154,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 240,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -572,6 +1168,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -584,6 +1182,8 @@
     "date": "2026-07-14",
     "sold": true,
     "price": 250,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"
@@ -596,6 +1196,8 @@
     "date": "2026-07-14",
     "sold": false,
     "price": 260,
+    "original_price": null,
+    "sale": false,
     "categories": [
       "boardies",
       "women"

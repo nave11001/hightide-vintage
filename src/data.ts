@@ -1,21 +1,9 @@
 import { Product } from './types';
-import inventoryDb from './inventory_db.json';
+import { supabase, storageUrl } from './supabase';
 
-// All inventory images, auto-loaded from assets/Inventory.
-// File naming: "16.jpeg" = product 16 main photo, "16a.jpeg" = same product, second angle.
-// Spaces in filenames ("12 a.jpeg", "17 .jpeg") are tolerated.
-const inventoryImages = import.meta.glob('../assets/inventory/*/*.{jpeg,jpg,png,webp}', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>;
-
-const FOLDER_TO_CATEGORY: Record<string, Product['category']> = {
-  'bordies': 'boardies',
-  't-shirts': 'shirts',
-  'accessories': 'accessories',
-  'women': 'women',
-};
+// Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
+// Nothing here is baked in at build time, so marking an item sold in the
+// dashboard shows up on the site as soon as a visitor reloads.
 
 const CATEGORY_LABELS: Record<string, { name: string; description: string }> = {
   boardies: { name: 'HIGETIDE Boardies', description: 'מכנסי גלישה וינטג׳' },
@@ -24,91 +12,86 @@ const CATEGORY_LABELS: Record<string, { name: string; description: string }> = {
   women: { name: 'HIGETIDE Women', description: 'פריט נשים וינטג׳' },
 };
 
-// Inventory database synced from ALL Excel sheets in assets/Inventory.
-// Auto-refreshed by the dev server on every sheet save (npm run sync-inventory manually).
-interface DbItem {
+interface PhotoRow {
+  path: string;
+  position: number;
+}
+
+interface ItemRow {
   num: number;
+  category: string | null;
   name: string;
   size: string;
-  date: string;
-  sold: boolean;
   price: number;
-  categories: string[];
+  original_price: number | null;
+  drop_date: string | null;
+  sold: boolean;
+  item_photos: PhotoRow[];
 }
 
-// (category, number) -> item
-const DB = new Map<string, DbItem>();
-for (const item of inventoryDb as DbItem[]) {
-  for (const cat of item.categories) {
-    DB.set(`${cat}-${item.num}`, item);
-  }
+function toProduct(row: ItemRow, latestDropDate: string): Product | null {
+  // Items still waiting to be filed into a category are uploaded but not listed.
+  const category = row.category;
+  if (!category || !CATEGORY_LABELS[category]) return null;
+
+  const images = [...row.item_photos]
+    .sort((a, b) => a.position - b.position || a.path.localeCompare(b.path))
+    .map((p) => storageUrl(p.path));
+  if (images.length === 0) return null;
+
+  const labels = CATEGORY_LABELS[category];
+  return {
+    id: `${category}-${row.num}`,
+    name: `${row.name} #${row.num}`,
+    brand: row.name,
+    price: row.price,
+    // Set in the dashboard to mark a sale — renders struck through beside the price.
+    originalPrice: row.original_price ?? undefined,
+    image: images[0],
+    images,
+    borderType: 'retro-wave',
+    sizes: [row.size],
+    condition: 'וינטג׳ במצב מעולה',
+    category: category as Product['category'],
+    description: `${labels.description} — פריט מס׳ ${row.num}`,
+    colors: [],
+    // Sold items stay listed (marked נמכר, ordering blocked) until the
+    // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
+    isSold: row.sold,
+    isLatestDrop: Boolean(row.drop_date) && row.drop_date === latestDropDate,
+  };
 }
 
-// The latest drop = the most recent arrival date across all sheets
-const LATEST_DROP_DATE = (inventoryDb as DbItem[])
-  .map((i) => i.date)
-  .sort()
-  .pop() || '';
-
-function buildProducts(): Product[] {
-  // group[category][number] = { main, angles[] }
-  const groups = new Map<string, Map<number, { main?: string; angles: string[] }>>();
-
-  for (const [path, url] of Object.entries(inventoryImages)) {
-    const parts = path.split('/');
-    const folder = parts[parts.length - 2].toLowerCase();
-    const category = FOLDER_TO_CATEGORY[folder];
-    if (!category) continue;
-
-    const base = parts[parts.length - 1]
-      .replace(/\.(jpeg|jpg|png|webp)$/i, '')
-      .replace(/\s+/g, '')
-      .toLowerCase();
-    const m = base.match(/^(\d+)([a-z]?)$/);
-    if (!m) continue;
-
-    const num = parseInt(m[1], 10);
-    if (!groups.has(category)) groups.set(category, new Map());
-    const catMap = groups.get(category)!;
-    if (!catMap.has(num)) catMap.set(num, { angles: [] });
-    const entry = catMap.get(num)!;
-    if (m[2]) entry.angles.push(url);
-    else entry.main = url;
+export async function loadProducts(): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error(
+      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+    );
   }
 
-  const products: Product[] = [];
-  for (const [category, catMap] of groups) {
-    const labels = CATEGORY_LABELS[category];
-    const nums = [...catMap.keys()].sort((a, b) => a - b);
-    for (const num of nums) {
-      const entry = catMap.get(num)!;
-      const images = [entry.main, ...entry.angles.sort()].filter(Boolean) as string[];
-      if (images.length === 0) continue;
-      const detail = DB.get(`${category}-${num}`);
-      // Sold items stay listed (marked נמכר, ordering blocked) until the
-      // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
-      products.push({
-        id: `${category}-${num}`,
-        name: detail ? `${detail.name} #${num}` : `${labels.name} #${num}`,
-        brand: detail ? detail.name : 'HIGETIDE',
-        price: detail ? detail.price : 150,
-        image: images[0],
-        images,
-        borderType: 'retro-wave',
-        sizes: detail ? [detail.size] : ['ONE SIZE'],
-        condition: 'וינטג׳ במצב מעולה',
-        category: category as Product['category'],
-        description: `${labels.description} — פריט מס׳ ${num}`,
-        colors: [],
-        isSold: detail ? detail.sold : false,
-        isLatestDrop: detail ? detail.date === LATEST_DROP_DATE : false,
-      });
-    }
-  }
-  return products;
+  const { data, error } = await supabase
+    .from('items')
+    .select(
+      'num, category, name, size, price, original_price, drop_date, sold, item_photos(path, position)',
+    )
+    .order('num', { ascending: true });
+
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as ItemRow[];
+
+  // The latest drop = the most recent arrival date in the whole catalogue.
+  const latestDropDate =
+    rows
+      .map((r) => r.drop_date)
+      .filter((d): d is string => Boolean(d))
+      .sort()
+      .pop() || '';
+
+  return rows
+    .map((row) => toProduct(row, latestDropDate))
+    .filter((p): p is Product => p !== null);
 }
-
-export const INITIAL_PRODUCTS: Product[] = buildProducts();
 
 export const CATEGORIES = [
   { id: 'all', name: 'כל הפריטים' },

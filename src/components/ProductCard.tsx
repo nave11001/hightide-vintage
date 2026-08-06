@@ -2,6 +2,8 @@ import React from 'react';
 import { Product } from '../types';
 import { Heart } from 'lucide-react';
 import soldStampUrl from '@/assets/photos/sold_stamp.png';
+// Downscaled from Sale.png — the original is 1536px wide for a 40px badge.
+import saleStampUrl from '@/assets/photos/sale_stamp.png';
 import { trackProduct } from '../analytics';
 
 interface ProductCardProps {
@@ -78,13 +80,28 @@ export default function ProductCard({
 
         {/* Row 2: Price (Formatted clean) */}
         <div className="mt-1 flex items-center gap-2 justify-start flex-row-reverse">
-          <span className="text-base font-medium text-stone-900">
+          {/* On sale, the live price turns red and the old one stays struck through beside it */}
+          <span
+            className={
+              product.originalPrice
+                ? 'text-base font-bold text-red-600'
+                : 'text-base font-medium text-stone-900'
+            }
+          >
             ₪{product.price}
           </span>
           {product.originalPrice && (
-            <span className="text-xs text-gray-400 line-through">
-              ₪{product.originalPrice}
-            </span>
+            <>
+              <span className="text-xs text-gray-400 line-through">
+                ₪{product.originalPrice}
+              </span>
+              <img
+                src={saleStampUrl}
+                alt="מבצע"
+                className="h-7 w-auto select-none"
+                draggable={false}
+              />
+            </>
           )}
           {/* Small SOLD stamp at the left edge of the price row */}
           {product.isSold && (

@@ -1,140 +1,118 @@
 # -*- coding: utf-8 -*-
-"""Inventory reset — runs automatically on the 1st and 15th of every month.
+"""Scheduled inventory reset — runs on the 1st and the 15th of every month.
 
-For every item marked נמכר in the Excel sheets:
-  1. its row is appended to assets/inventory/excel/sold_log.csv (permanent
-     sales record — nothing about the sale is lost)
-  2. its row is removed from the working sheet
-  3. its photos are moved out of assets/Inventory into sold_archive/
+Everything marked sold is written to assets/inventory/excel/sold_log.csv (the
+permanent sales record, committed to the repo), then removed from Supabase:
+the item row, its item_photos rows, and the photo files in storage.
 
-Photos that have no row in any sheet ("orphans", usually left over from an
-earlier reset) are archived too, so the store never shows an item that the
-sheets don't describe.
+The sales history is never lost — only the listing is.
+
+Setup (same .env as the migration script):
+  SUPABASE_URL=https://xxxxx.supabase.co
+  SUPABASE_SERVICE_KEY=eyJhbGci...
 
 Usage:
-  python scripts/reset_inventory.py --dry-run       # show what would happen
-  python scripts/reset_inventory.py                 # full reset
-  python scripts/reset_inventory.py --orphans-only  # only clear leftover photos,
-                                                    # leave sold items on the site
+  python scripts/reset_inventory.py --dry-run
+  python scripts/reset_inventory.py
 """
 import csv
-import ctypes
-import datetime
-import glob
 import os
-import re
-import shutil
 import sys
-import tempfile
-
-import openpyxl
+from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INV = os.path.join(ROOT, "assets", "inventory")
-EXCEL_DIR = os.path.join(INV, "excel")
-LOG = os.path.join(EXCEL_DIR, "sold_log.csv")
-ARCHIVE = os.path.join(ROOT, "sold_archive")
-IMAGE_EXT = (".jpeg", ".jpg", ".png", ".webp")
-PHOTO_DIRS = ["bordies", "T-shirts", "women", "accessories"]
+SOLD_LOG = os.path.join(ROOT, "assets", "inventory", "excel", "sold_log.csv")
+BUCKET = "inventory"
+FIELDS = ["removed_on", "num", "category", "name", "size", "price", "sold_at"]
 
 DRY = "--dry-run" in sys.argv
-ORPHANS_ONLY = "--orphans-only" in sys.argv
-TODAY = datetime.date.today().isoformat()
 
 
-def copy_locked(src, dst):
-    """Copy that works even while Excel/OneDrive holds the file open."""
-    if os.name == "nt":
-        if not ctypes.windll.kernel32.CopyFileW(os.path.abspath(src), os.path.abspath(dst), False):
-            raise OSError(f"copy failed ({ctypes.GetLastError()}): {src}")
-    else:
-        shutil.copyfile(src, dst)
+def load_env():
+    """Minimal .env reader — avoids a python-dotenv dependency."""
+    path = os.path.join(ROOT, ".env")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-def item_number(filename):
-    """'16a.jpeg' -> 16, '12 a.jpeg' -> 12, '17 .jpeg' -> 17"""
-    base = os.path.splitext(filename)[0].replace(" ", "").lower()
-    m = re.match(r"^(\d+)[a-z]?$", base)
-    return int(m.group(1)) if m else None
+def append_to_log(rows):
+    os.makedirs(os.path.dirname(SOLD_LOG), exist_ok=True)
+    is_new = not os.path.exists(SOLD_LOG)
+    with open(SOLD_LOG, "a", newline="", encoding="utf-8-sig") as fh:
+        writer = csv.DictWriter(fh, fieldnames=FIELDS)
+        if is_new:
+            writer.writeheader()
+        writer.writerows(rows)
 
 
-def cell(v):
-    if hasattr(v, "strftime"):
-        return v.strftime("%Y-%m-%d")
-    return "" if v is None else str(v).strip()
+def main():
+    load_env()
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_KEY")
+    if not url or not key:
+        sys.exit("SUPABASE_URL / SUPABASE_SERVICE_KEY missing.")
+
+    try:
+        from supabase import create_client
+    except ImportError:
+        sys.exit("supabase client missing. Run: pip install supabase")
+
+    db = create_client(url, key)
+
+    sold = db.table("items").select(
+        "id, num, category, name, size, price, sold_at, item_photos(path)"
+    ).eq("sold", True).execute().data
+
+    if not sold:
+        print("nothing marked sold — inventory unchanged")
+        return
+
+    today = date.today().isoformat()
+    print(f"{len(sold)} sold item(s){' (dry run)' if DRY else ''}:\n")
+
+    log_rows, photo_paths, item_ids = [], [], []
+    for row in sold:
+        paths = [p["path"] for p in row.get("item_photos", [])]
+        print(f"  #{row['num']:<4} {row['name']:<18} {row['category'] or '-':<12} "
+              f"size {row['size']:<5} {row['price']:>4}  {len(paths)} photo(s)")
+        log_rows.append({
+            "removed_on": today,
+            "num": row["num"],
+            "category": row["category"] or "",
+            "name": row["name"],
+            "size": row["size"],
+            "price": row["price"],
+            "sold_at": (row.get("sold_at") or "")[:10],
+        })
+        photo_paths.extend(paths)
+        item_ids.append(row["id"])
+
+    if DRY:
+        print(f"\n[dry-run] would log {len(log_rows)} sales, "
+              f"delete {len(photo_paths)} photos and {len(item_ids)} items")
+        return
+
+    # Record the sale first — if anything below fails, the history still exists.
+    append_to_log(log_rows)
+    print(f"\nlogged {len(log_rows)} sales to {os.path.relpath(SOLD_LOG, ROOT)}")
+
+    if photo_paths:
+        db.storage.from_(BUCKET).remove(photo_paths)
+        print(f"deleted {len(photo_paths)} photos from storage")
+
+    # item_photos rows go with it — the foreign key is ON DELETE CASCADE.
+    db.table("items").delete().in_("id", item_ids).execute()
+    print(f"removed {len(item_ids)} items from the catalogue")
+
+    remaining = db.table("items").select("id", count="exact").execute()
+    print(f"\n{remaining.count} items remain in stock")
 
 
-sheets = [f for f in glob.glob(os.path.join(EXCEL_DIR, "*.xlsx"))
-          if not os.path.basename(f).startswith("~$")]
-if not sheets:
-    sys.exit("no Excel sheets found in assets/inventory/excel")
-
-sold_numbers = set()
-all_numbers = set()
-log_rows = []
-
-for src in sheets:
-    name = os.path.basename(src)
-    tmp = os.path.join(tempfile.gettempdir(), "reset_" + str(abs(hash(src))) + ".xlsx")
-    copy_locked(src, tmp)
-    wb = openpyxl.load_workbook(tmp)
-    removed = []
-    for ws in wb.worksheets:
-        # bottom-up so row indexes stay valid while deleting
-        for row in reversed(list(ws.iter_rows())):
-            raw = row[0].value
-            if not isinstance(raw, str):
-                continue
-            m = re.match(r"^#(\d+)$", raw.strip())
-            if not m:
-                continue
-            num = int(m.group(1))
-            all_numbers.add(num)
-            if cell(row[4].value) != "נמכר" or ORPHANS_ONLY:
-                continue
-            sold_numbers.add(num)
-            removed.append(num)
-            log_rows.append([
-                TODAY, name, num, cell(row[1].value), cell(row[2].value),
-                cell(row[3].value), cell(row[5].value),
-            ])
-            if not DRY:
-                ws.delete_rows(row[0].row)
-    print(f"{name}: {len(removed)} sold -> {sorted(removed)}")
-    if removed and not DRY:
-        wb.save(tmp)
-        copy_locked(tmp, src)
-
-# ---- permanent sales record ----
-if log_rows and not DRY:
-    new_file = not os.path.exists(LOG)
-    with open(LOG, "a", newline="", encoding="utf-8-sig") as f:
-        w = csv.writer(f)
-        if new_file:
-            w.writerow(["תאריך איפוס", "גיליון", "מספר פריט", "שם", "מידה", "תאריך דרופ", "מחיר"])
-        w.writerows(sorted(log_rows, key=lambda r: r[2]))
-print(f"logged {len(log_rows)} sales to {os.path.basename(LOG)}")
-
-# ---- move photos out of the store ----
-moved = 0
-for folder in PHOTO_DIRS:
-    d = os.path.join(INV, folder)
-    if not os.path.isdir(d):
-        continue
-    for fn in sorted(os.listdir(d)):
-        if not fn.lower().endswith(IMAGE_EXT):
-            continue
-        num = item_number(fn)
-        if num is None:
-            continue
-        # sold this cycle, or a leftover with no row in any sheet
-        if num in sold_numbers or num not in all_numbers:
-            reason = "sold" if num in sold_numbers else "orphan"
-            print(f"  archive [{reason}] {folder}/{fn}")
-            if not DRY:
-                dest = os.path.join(ARCHIVE, folder)
-                os.makedirs(dest, exist_ok=True)
-                shutil.move(os.path.join(d, fn), os.path.join(dest, fn))
-            moved += 1
-
-print(f"\n{'[dry-run] would archive' if DRY else 'archived'} {moved} photos")
+if __name__ == "__main__":
+    main()

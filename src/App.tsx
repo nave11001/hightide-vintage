@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Product } from './types';
-import { INITIAL_PRODUCTS, CATEGORIES } from './data';
+import { loadProducts, CATEGORIES } from './data';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -18,6 +18,7 @@ import { track, trackProduct } from './analytics';
 export default function App() {
   // Store Core State
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminSession, setIsAdminSession] = useState(() => {
     return !!sessionStorage.getItem('hightide_admin_token');
@@ -97,37 +98,33 @@ export default function App() {
     setLastBrandClickTime(now);
   };
 
-  // Load cart, favorites, and custom products from server, falling back to localStorage
+  // The catalogue is read live from Supabase on every visit, so an item marked
+  // sold in the dashboard disappears from the shop on the next reload.
   useEffect(() => {
-    const loadProducts = async () => {
+    let cancelled = false;
+
+    (async () => {
       try {
-        const res = await fetch('/api/products');
-        if (res.ok) {
-          const serverProducts = await res.json();
-          if (serverProducts && Array.isArray(serverProducts) && serverProducts.length > 0) {
-            setProducts(serverProducts);
-            localStorage.setItem('higetide_products_v2', JSON.stringify(serverProducts));
-            return;
+        const live = await loadProducts();
+        if (cancelled) return;
+        setProducts(live);
+        // Kept only so the shop still renders if Supabase is unreachable later
+        localStorage.setItem('higetide_products_v2', JSON.stringify(live));
+      } catch (e) {
+        console.error('Failed to load inventory from Supabase:', e);
+        if (cancelled) return;
+        const cached = localStorage.getItem('higetide_products_v2');
+        if (cached) {
+          try {
+            setProducts(JSON.parse(cached));
+          } catch {
+            /* corrupt cache — show the empty state */
           }
         }
-      } catch (e) {
-        console.error('Failed to load products from server, trying local storage:', e);
+      } finally {
+        if (!cancelled) setIsLoadingProducts(false);
       }
-
-      // Fallback
-      const savedProducts = localStorage.getItem('higetide_products_v2');
-      if (savedProducts) {
-        try {
-          setProducts(JSON.parse(savedProducts));
-        } catch (e) {
-          setProducts(INITIAL_PRODUCTS);
-        }
-      } else {
-        setProducts(INITIAL_PRODUCTS);
-      }
-    };
-
-    loadProducts();
+    })();
 
     const savedFavs = localStorage.getItem('higetide_favorites');
     if (savedFavs) {
@@ -137,6 +134,10 @@ export default function App() {
         console.error('Failed to load favorites state', e);
       }
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleToggleFavorite = (product: Product) => {
@@ -201,29 +202,17 @@ export default function App() {
     }
   };
 
+  // Discards any local edits and re-reads the catalogue from Supabase,
+  // which is the only source of truth for the inventory.
   const handleResetToDefaultProducts = async () => {
-    setProducts(INITIAL_PRODUCTS);
-    localStorage.removeItem('higetide_products_v2');
-    
-    // Reset on server-side if logged in
-    const token = sessionStorage.getItem('hightide_admin_token');
-    if (token) {
-      try {
-        const res = await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: INITIAL_PRODUCTS, token })
-        });
-        if (res.ok) {
-          showToast('מלאי החנות שוחזר לברירת המחדל בשרת!');
-        } else {
-          showToast('שגיאה בשחזור המלאי בשרת');
-        }
-      } catch (e) {
-        showToast('שגיאה בתקשורת עם השרת');
-      }
-    } else {
-      showToast('מלאי החנות שוחזר לברירת המחדל מקומית!');
+    try {
+      const live = await loadProducts();
+      setProducts(live);
+      localStorage.setItem('higetide_products_v2', JSON.stringify(live));
+      showToast(`המלאי רוענן מהדאטהבייס — ${live.length} פריטים`);
+    } catch (e) {
+      console.error('Failed to refresh inventory from Supabase:', e);
+      showToast('שגיאה בטעינת המלאי מהדאטהבייס');
     }
   };
 
@@ -551,7 +540,12 @@ export default function App() {
             </div>
 
             {/* Grid of Items */}
-            {filteredProducts.length === 0 ? (
+            {isLoadingProducts ? (
+              <div className="text-center py-24" id="catalog-loading">
+                <div className="inline-block w-8 h-8 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin"></div>
+                <p className="text-sm text-stone-400 mt-4 tracking-widest uppercase font-mono">טוען מלאי…</p>
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center py-24 bg-white border border-dashed border-gray-200 p-8 rounded-none">
                 <p className="text-lg font-normal text-gray-700">לא נמצאו פריטים העונים לחיפוש שלך</p>
                 <p className="text-sm text-gray-400 mt-1">נסו לשנות את מילות החיפוש או לבחור קטגוריה אחרת</p>

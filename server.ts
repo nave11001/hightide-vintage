@@ -337,91 +337,6 @@ function generateCallbackHtml({ success, token, email, error }: { success?: bool
   `;
 }
 
-// LIVE INVENTORY SYNC (dev): poll the whole assets/Inventory tree.
-// Any .xlsx save/add/remove -> regenerate src/inventory_db.json + reload browser.
-// Any image add/remove/change -> reload browser (vite re-runs the glob import).
-// Poll-based because OneDrive file events are unreliable.
-const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
-
-function watchInventory(onChanged: () => void) {
-  const invDir = path.join(process.cwd(), "assets", "Inventory");
-  let syncing = false;
-
-  const runSync = () => {
-    if (syncing) return;
-    syncing = true;
-    execFile(
-      "python",
-      [path.join(process.cwd(), "scripts", "sync_inventory.py")],
-      { env: { ...process.env, PYTHONUTF8: "1" } },
-      (err: Error | null, stdout: string, stderr: string) => {
-        syncing = false;
-        if (err) {
-          console.error("[Inventory Sync] failed:", stderr || err.message);
-        } else {
-          console.log("[Inventory Sync]", String(stdout).trim());
-          onChanged();
-        }
-      }
-    );
-  };
-
-  const snapshot = (): Map<string, number> => {
-    const files = new Map<string, number>();
-    const stack = [invDir];
-    while (stack.length) {
-      const dir = stack.pop()!;
-      let entries;
-      try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-      } catch {
-        continue;
-      }
-      for (const entry of entries) {
-        if (entry.name.startsWith("~$")) continue; // Excel lock files
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-        } else if (entry.name.toLowerCase().endsWith(".xlsx") || IMAGE_EXT.test(entry.name)) {
-          try {
-            files.set(full, fs.statSync(full).mtimeMs);
-          } catch { /* file mid-write, next poll catches it */ }
-        }
-      }
-    }
-    return files;
-  };
-
-  let prev = snapshot();
-  setInterval(() => {
-    const curr = snapshot();
-    let excelChanged = false;
-    let imagesChanged = false;
-
-    for (const [file, mtime] of curr) {
-      if (prev.get(file) !== mtime) {
-        if (file.toLowerCase().endsWith(".xlsx")) excelChanged = true;
-        else imagesChanged = true;
-      }
-    }
-    for (const file of prev.keys()) {
-      if (!curr.has(file)) {
-        if (file.toLowerCase().endsWith(".xlsx")) excelChanged = true;
-        else imagesChanged = true;
-      }
-    }
-    prev = curr;
-
-    if (excelChanged) runSync(); // reload fires after the sync finishes
-    else if (imagesChanged) {
-      console.log("[Inventory Sync] image change detected, reloading");
-      onChanged();
-    }
-  }, 2500);
-
-  console.log(`[Inventory Sync] watching assets/Inventory (excel + images) for live updates`);
-}
-
 // VITE MIDDLEWARE AND SPA FALLBACK ROUTING
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
@@ -430,10 +345,6 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-    watchInventory(() => {
-      vite.moduleGraph.invalidateAll();
-      vite.ws.send({ type: "full-reload" });
-    });
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));

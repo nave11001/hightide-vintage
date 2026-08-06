@@ -1,7 +1,8 @@
 [build]
   publish = "dist"
-  # Regenerate the inventory JSON from the Excel sheets, then build the site
-  command = "pip3 install --quiet openpyxl && python3 scripts/sync_inventory.py && npm run build:static"
+  # The inventory is read from Supabase at runtime, so the build is just the site.
+  # Requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the Netlify env vars.
+  command = "npm run build:static"
 
 # SPA: every route serves the app
 [[redirects]]

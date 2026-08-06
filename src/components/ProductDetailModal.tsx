@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
+import saleStampUrl from '@/assets/photos/sale_stamp.png';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -107,14 +108,29 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
           </h2>
 
           {/* Price display */}
-          <div className="mt-2 flex items-baseline gap-3 justify-start flex-row-reverse">
-            <span className="text-xl font-normal text-stone-900 font-mono">
+          <div className="mt-2 flex items-center gap-3 justify-start flex-row-reverse">
+            {/* On sale, the live price turns red and the old one stays struck through beside it */}
+            <span
+              className={
+                product.originalPrice
+                  ? 'text-xl font-bold font-mono text-red-600'
+                  : 'text-xl font-normal font-mono text-stone-900'
+              }
+            >
               ₪{product.price}
             </span>
             {product.originalPrice && (
-              <span className="text-xs text-stone-400 line-through font-mono">
-                ₪{product.originalPrice}
-              </span>
+              <>
+                <span className="text-xs text-stone-400 line-through font-mono">
+                  ₪{product.originalPrice}
+                </span>
+                <img
+                  src={saleStampUrl}
+                  alt="מבצע"
+                  className="h-8 w-auto select-none"
+                  draggable={false}
+                />
+              </>
             )}
           </div>
 

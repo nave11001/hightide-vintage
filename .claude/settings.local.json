@@ -63,7 +63,23 @@
       "Bash(python scripts/remove_items.py 77 76 72)",
       "Bash(powershell -NoProfile -Command \"Get-Process -Name EXCEL -ErrorAction SilentlyContinue | Select-Object -First 3 Id,MainWindowTitle\")",
       "Bash(sed -i 's/^import tempfile$/import tempfile\\\\nimport time/' scripts/remove_items.py)",
-      "Bash(python -c \"import ast;ast.parse\\(open\\('scripts/remove_items.py',encoding='utf-8'\\).read\\(\\)\\);print\\('syntax ok'\\)\")"
+      "Bash(python -c \"import ast;ast.parse\\(open\\('scripts/remove_items.py',encoding='utf-8'\\).read\\(\\)\\);print\\('syntax ok'\\)\")",
+      "mcp__claude-in-chrome__list_connected_browsers",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__browser_batch",
+      "Bash(python -c \"import json;d=json.load\\(open\\('src/inventory_db.json',encoding='utf-8'\\)\\);print\\(len\\(d\\),'items'\\)\")",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(python -)",
+      "Bash(npm run *)",
+      "Bash(PYTHONUTF8=1 python scripts/sync_inventory.py)",
+      "Bash(PYTHONUTF8=1 python -c ' *)",
+      "Bash(PYTHONUTF8=1 python scripts/migrate_to_supabase.py --dry-run)",
+      "Bash(PYTHONUTF8=1 python scripts/find_duplicates.py)"
     ]
   }
 }
