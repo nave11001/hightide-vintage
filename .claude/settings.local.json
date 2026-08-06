@@ -79,7 +79,8 @@
       "Bash(PYTHONUTF8=1 python scripts/sync_inventory.py)",
       "Bash(PYTHONUTF8=1 python -c ' *)",
       "Bash(PYTHONUTF8=1 python scripts/migrate_to_supabase.py --dry-run)",
-      "Bash(PYTHONUTF8=1 python scripts/find_duplicates.py)"
+      "Bash(PYTHONUTF8=1 python scripts/find_duplicates.py)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; Get-ChildItem src -File | Select-Object Name | Format-Table -AutoSize | Out-String; \"--- entry ---\"; Select-String -Path \"index.html\" -Pattern \"src=\" | ForEach-Object { $_.Line.Trim\\(\\) })"
     ]
   }
 }

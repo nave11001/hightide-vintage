@@ -1,4 +1,5 @@
 import { Product } from './types';
+import { capture } from './posthog';
 
 // Push a named event into the GTM dataLayer. Safe to call even if GTM is
 // blocked (ad-blockers) — it just accumulates in the array.
@@ -18,6 +19,9 @@ export function track(event: string, data: Record<string, unknown> = {}) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...data });
   }
+  // Same event, second destination. Everything already instrumented for GA4
+  // reaches PostHog without touching a single call site.
+  capture(event, data);
 }
 
 export function trackProduct(event: string, product: Product, extra: Record<string, unknown> = {}) {
