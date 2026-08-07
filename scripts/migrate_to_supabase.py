@@ -162,7 +162,7 @@ def main():
         item = {
             "num": num,
             "category": category,
-            "name": row.get("name") or "HIGETIDE",
+            "name": row.get("name") or "HIGHTIDE",
             "size": row.get("size") or "ONE SIZE",
             "price": row.get("price") or 150,
             # Set only for items on sale — the shop strikes it through

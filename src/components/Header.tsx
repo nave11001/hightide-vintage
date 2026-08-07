@@ -391,7 +391,7 @@ export default function Header({
               >
                 עמוד הבית
               </button>
-              <a href="#" className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors">אודות HIGETIDE VINTAGE</a>
+              <a href="#" className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors">אודות HIGHTIDE VINTAGE</a>
               <a 
                 href="#store-footer" 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -403,7 +403,7 @@ export default function Header({
 
             {/* Footer */}
             <div className="mt-auto text-[10px] text-stone-400 font-mono text-center pt-5 border-t border-stone-100">
-              © 2026 HIGETIDE VINTAGE LTD.
+              © 2026 HIGHTIDE VINTAGE LTD.
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ create table items (
   id         bigint generated always as identity primary key,
   num        integer not null,
   category   text    check (category in ('boardies','shirts','accessories','women')),
-  name       text    not null default 'HIGETIDE',
+  name       text    not null default 'HIGHTIDE',
   size       text    not null default 'ONE SIZE',
   price      integer not null default 150,
   -- Fill this in to put an item on sale: the shop shows `price` next to

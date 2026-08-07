@@ -300,7 +300,7 @@ export default function App() {
             {/* Background Editorial Image - Warm-toned sun-soaked fashion group */}
             <img
               src={heroImageUrl}
-              alt="Higetide Vintage New Drop Editorial"
+              alt="HighTide Vintage New Drop Editorial"
               className="absolute inset-0 w-full h-full object-cover object-[40%_75%]"
             />
 
@@ -680,7 +680,7 @@ export default function App() {
         </div>
 
         <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-500 font-mono">
-          © 2026 HIGETIDE VINTAGE LTD. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
+          © 2026 HIGHTIDE VINTAGE LTD. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
         </div>
       </footer>
 

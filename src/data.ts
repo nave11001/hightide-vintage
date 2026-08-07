@@ -6,10 +6,10 @@ import { supabase, storageUrl } from './supabase';
 // dashboard shows up on the site as soon as a visitor reloads.
 
 const CATEGORY_LABELS: Record<string, { name: string; description: string }> = {
-  boardies: { name: 'HIGETIDE Boardies', description: 'מכנסי גלישה וינטג׳' },
-  shirts: { name: 'HIGETIDE Tee', description: 'חולצת וינטג׳' },
-  accessories: { name: 'HIGETIDE Accessory', description: 'אקססורי וינטג׳' },
-  women: { name: 'HIGETIDE Women', description: 'פריט נשים וינטג׳' },
+  boardies: { name: 'HIGHTIDE Boardies', description: 'מכנסי גלישה וינטג׳' },
+  shirts: { name: 'HIGHTIDE Tee', description: 'חולצת וינטג׳' },
+  accessories: { name: 'HIGHTIDE Accessory', description: 'אקססורי וינטג׳' },
+  women: { name: 'HIGHTIDE Women', description: 'פריט נשים וינטג׳' },
 };
 
 interface PhotoRow {
