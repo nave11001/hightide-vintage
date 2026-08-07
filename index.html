@@ -19,14 +19,59 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HIGETIDE VINTAGE</title>
+
+    <!-- Search results. The title is what Google prints as the blue link and
+         the description is the grey line under it; without them Google has to
+         invent both from whatever it can scrape. -->
+    <title>HIGETIDE VINTAGE — מכנסי גלישה וחולצות וינטג׳ | בורדשורטס אורגינל</title>
+    <meta
+      name="description"
+      content="חנות וינטג׳ ישראלית למכנסי גלישה, חולצות ואקססוריז מקוריים של תור הזהב — Billabong, Quiksilver, O'Neill, Rip Curl ו-Roxy. דרופ חדש כל שבוע, כל פריט יחיד במלאי."
+    />
+    <link rel="canonical" href="https://hightide-vintage.netlify.app/" />
+
+    <!-- Link previews in WhatsApp, Instagram and Facebook read these. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HIGETIDE VINTAGE" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:url" content="https://hightide-vintage.netlify.app/" />
+    <meta property="og:title" content="HIGETIDE VINTAGE — בורדשורטס וחולצות וינטג׳" />
+    <meta
+      property="og:description"
+      content="מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים. דרופ חדש כל שבוע, כל פריט יחיד במלאי."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Tells Google this is a shop rather than a personal page. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Store",
+        "name": "HIGETIDE VINTAGE",
+        "description": "חנות וינטג׳ למכנסי גלישה, חולצות ואקססוריז מקוריים של תור הזהב.",
+        "url": "https://hightide-vintage.netlify.app/",
+        "inLanguage": "he",
+        "areaServed": "IL",
+        "currenciesAccepted": "ILS"
+      }
+    </script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PTMZNN4M"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <div id="root"></div>
+    <!-- React replaces this the moment it mounts. It exists so that a crawler
+         which does not execute JavaScript still gets a heading and a sentence
+         instead of a blank page. -->
+    <div id="root">
+      <h1>HIGETIDE VINTAGE — מכנסי גלישה וחולצות וינטג׳</h1>
+      <p>
+        חנות הוינטג׳ הבלעדית למכנסי גלישה, חולצות, סווטשרטים ואקססוריז של תור הזהב.
+        Billabong, Quiksilver, O'Neill, Rip Curl, Roxy. דרופ חדש כל שבוע, וכל פריט קיים
+        ביחידה אחת בלבד.
+      </p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
