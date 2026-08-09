@@ -19,6 +19,11 @@ create table items (
   -- `original_price` struck through. Leave empty for a normal item.
   original_price integer,
   drop_date  date,
+  -- Measured on the garment laid flat. The label size on vintage says little,
+  -- so these are what the shop's size finder actually works from. Leave them
+  -- empty and the size block simply does not render.
+  waist_cm   integer,   -- across the waistband; circumference is double
+  length_cm  integer,   -- waistband to hem
   sold       boolean not null default false,
   sold_at    timestamptz,
   created_at timestamptz not null default now(),

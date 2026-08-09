@@ -15,6 +15,10 @@ export interface Product {
   isRare?: boolean;
   isLatestDrop?: boolean;
   isSold?: boolean;
+  // Measured on the garment laid flat, in cm. Vintage is one-of-a-kind, so the
+  // label size means little — these are what actually answer "will it fit me".
+  waistCm?: number;  // across the waistband, edge to edge; circumference is double
+  lengthCm?: number; // waistband to hem
 }
 
 export interface CartItem {

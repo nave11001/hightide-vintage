@@ -26,6 +26,8 @@ interface ItemRow {
   original_price: number | null;
   drop_date: string | null;
   sold: boolean;
+  waist_cm: number | null;
+  length_cm: number | null;
   item_photos: PhotoRow[];
 }
 
@@ -59,6 +61,9 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
     // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
     isSold: row.sold,
     isLatestDrop: Boolean(row.drop_date) && row.drop_date === latestDropDate,
+    // Left out until measured — the size block hides itself rather than guess.
+    waistCm: row.waist_cm ?? undefined,
+    lengthCm: row.length_cm ?? undefined,
   };
 }
 
@@ -72,7 +77,7 @@ export async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('items')
     .select(
-      'num, category, name, size, price, original_price, drop_date, sold, item_photos(path, position)',
+      'num, category, name, size, price, original_price, drop_date, sold, waist_cm, length_cm, item_photos(path, position)',
     )
     .order('num', { ascending: true });
 
