@@ -14,6 +14,7 @@ import catWomenImg from '@/assets/photos/Women (1).jpeg';
 import catAllImg from '@/assets/photos/all products.jpg';
 import { Info, Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
+import MySizePanel, { readMySize } from './components/MySizePanel';
 
 export default function App() {
   // Store Core State
@@ -39,6 +40,9 @@ export default function App() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
   const [saleFilter, setSaleFilter] = useState<'' | 'sale'>('');
+  // The shopper's own waist, entered once and remembered. Drives the "how does
+  // each size sit on me" panel and the badge on matching cards.
+  const [myWaistInches, setMyWaistInches] = useState<number | null>(() => readMySize());
 
   // Filters reset when switching category
   useEffect(() => {
@@ -499,6 +503,11 @@ export default function App() {
 
             {/* Filters row (Excel data-validation style dropdowns) */}
             <div dir="rtl" className="flex items-center gap-2 mb-6 flex-wrap" id="catalog-filters">
+              <MySizePanel
+                availableSizes={availableSizes}
+                waistInches={myWaistInches}
+                onChange={setMyWaistInches}
+              />
               {availableSizes.length > 1 && (
                 <div className="flex items-center gap-2" id="size-filter">
                   <label htmlFor="size-select" className="text-xs text-stone-500 font-normal">
@@ -601,6 +610,7 @@ export default function App() {
                       trackProduct('product_view', p);
                       setSelectedProductForDetails(p);
                     }}
+                    myWaistInches={myWaistInches}
                   />
                 ))}
               </div>
