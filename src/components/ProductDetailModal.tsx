@@ -42,7 +42,10 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
         </button>
 
         {/* Product Visual Container */}
-        <div className="w-full md:w-1/2 p-4 sm:p-6 bg-stone-50/50 flex flex-col justify-center border-b md:border-b-0 md:border-l border-stone-100 min-h-[300px]">
+        {/* shrink-0 so the modal's flex column cannot squeeze this panel below
+            the height its aspect-ratio image needs — without it the image
+            overflowed the panel and landed on top of the title and thumbnails. */}
+        <div className="w-full md:w-1/2 shrink-0 p-4 sm:p-6 bg-stone-50/50 flex flex-col border-b md:border-b-0 md:border-l border-stone-100">
           <div 
             onClick={() => onEditProduct && onEditProduct(product)}
             className={`relative w-full shrink-0 bg-stone-50 flex items-center justify-center overflow-hidden aspect-[4/5] border border-stone-100 group ${
