@@ -45,16 +45,19 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
         <div className="w-full md:w-1/2 p-4 sm:p-6 bg-stone-50/50 flex flex-col justify-center border-b md:border-b-0 md:border-l border-stone-100 min-h-[300px]">
           <div 
             onClick={() => onEditProduct && onEditProduct(product)}
-            className={`relative w-full h-full bg-stone-50 flex items-center justify-center overflow-hidden aspect-square border border-stone-100 group ${
+            className={`relative w-full shrink-0 bg-stone-50 flex items-center justify-center overflow-hidden aspect-[4/5] border border-stone-100 group ${
               onEditProduct ? 'cursor-pointer' : ''
             }`}
             title="לחץ לעריכת הפריט (תמונה ומחיר)"
           >
+            {/* The detail view is where the buyer decides, so nothing is cropped
+                here: a square frame with object-cover took 20% off a 4:5 photo,
+                usually the waistband. Contain fits whatever shape came in. */}
             <img
               src={gallery[activeImage] || product.image}
               alt={product.name}
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-103"
             />
             {onEditProduct && (
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1.5 p-4 text-center">
@@ -78,7 +81,7 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
                     i === activeImage ? 'border-stone-900' : 'border-stone-200 hover:border-stone-400'
                   }`}
                 >
-                  <img src={img} alt={`זווית ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`זווית ${i + 1}`} className="w-full h-full object-contain bg-white" />
                 </button>
               ))}
             </div>
