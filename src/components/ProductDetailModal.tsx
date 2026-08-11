@@ -3,7 +3,6 @@ import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.png';
-import SizeFinder from './SizeFinder';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -147,8 +146,6 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
             <span>מצב הפריט: {product.condition}</span>
           </div>
 
-          {/* Hides itself on items that have not been measured yet */}
-          <SizeFinder product={product} />
 
           {/* Navigation tabs inside detail card */}
           <div className="mt-6 border-b border-stone-200 flex gap-1 justify-start">

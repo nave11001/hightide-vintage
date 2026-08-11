@@ -4,7 +4,6 @@ import { Heart } from 'lucide-react';
 import soldStampUrl from '@/assets/photos/sold_stamp.png';
 // Downscaled from Sale.png — the original is 1536px wide for a 40px badge.
 import saleStampUrl from '@/assets/photos/sale_stamp.png';
-import { sizeToInches, isMySize } from './MySizePanel';
 import { trackProduct } from '../analytics';
 
 interface ProductCardProps {
@@ -12,8 +11,6 @@ interface ProductCardProps {
   isFavorite: boolean;
   onToggleFavorite: (product: Product) => void;
   onViewDetails: (product: Product) => void;
-  /** Set once the shopper has told us their waist — see MySizePanel. */
-  myWaistInches?: number | null;
   key?: string;
 }
 
@@ -22,14 +19,7 @@ export default function ProductCard({
   isFavorite,
   onToggleFavorite,
   onViewDetails,
-  myWaistInches,
 }: ProductCardProps) {
-  // Only shout about the sizes that actually suit them; everything else stays
-  // quiet so the badge keeps meaning something.
-  const sizeInches = sizeToInches(product.sizes[0] || '');
-  const fitsMe =
-    myWaistInches != null && sizeInches != null && isMySize(sizeInches, myWaistInches);
-
   return (
     <div
       className="flex flex-col group h-full bg-[#fdfcf9] border border-gray-100 rounded-none overflow-hidden transition-all duration-300 hover:shadow-sm"
@@ -47,14 +37,6 @@ export default function ProductCard({
           className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
           id={`product-img-${product.id}`}
         />
-        {fitsMe && (
-          <span
-            className="absolute top-2 right-2 z-10 bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 tracking-wide select-none"
-            id={`fits-badge-${product.id}`}
-          >
-            מתאים לך
-          </span>
-        )}
         {/* Second angle revealed on hover */}
         {product.images && product.images[1] && (
           <img
