@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Product } from './types';
 import { loadProducts, CATEGORIES } from './data';
+import TopWanted from './components/TopWanted';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -143,6 +144,14 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  // The product_view event is the only thing recorded here. items.views is
+  // filled from PostHog by scripts/sync_top_wanted.py, counting distinct
+  // people — a second counter running in the browser would fight it.
+  const openProduct = (product: Product) => {
+    trackProduct('product_view', product);
+    setSelectedProductForDetails(product);
+  };
 
   const handleToggleFavorite = (product: Product) => {
     const isFav = favoriteItems.some((item) => item.id === product.id);
@@ -396,6 +405,8 @@ export default function App() {
         {/* Homepage Category Navigation OR Filtered Product Catalog */}
         {selectedCategory === 'none' && searchTerm === '' ? (
           <section className="space-y-6 sm:space-y-8 animate-fade-in" id="homepage-categories">
+            <TopWanted products={products} onViewDetails={openProduct} />
+
             <div className="text-center mb-8 max-w-lg mx-auto">
               <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 mt-1 uppercase">Choose Your Vintage</h2>
               <div className="w-12 h-[1px] bg-stone-800 mx-auto mt-3"></div>
@@ -600,10 +611,7 @@ export default function App() {
                     product={product}
                     isFavorite={favoriteItems.some((item) => item.id === product.id)}
                     onToggleFavorite={handleToggleFavorite}
-                    onViewDetails={(p) => {
-                      trackProduct('product_view', p);
-                      setSelectedProductForDetails(p);
-                    }}
+                    onViewDetails={openProduct}
                   />
                 ))}
               </div>

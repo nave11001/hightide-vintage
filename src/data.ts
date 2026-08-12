@@ -28,6 +28,7 @@ interface ItemRow {
   sold: boolean;
   waist_cm: number | null;
   length_cm: number | null;
+  views: number | null;
   item_photos: PhotoRow[];
 }
 
@@ -64,6 +65,7 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
     // Left out until measured — the size block hides itself rather than guess.
     waistCm: row.waist_cm ?? undefined,
     lengthCm: row.length_cm ?? undefined,
+    views: row.views ?? 0,
   };
 }
 
@@ -77,7 +79,7 @@ export async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('items')
     .select(
-      'num, category, name, size, price, original_price, drop_date, sold, waist_cm, length_cm, item_photos(path, position)',
+      'num, category, name, size, price, original_price, drop_date, sold, waist_cm, length_cm, views, item_photos(path, position)',
     )
     .order('num', { ascending: true });
 

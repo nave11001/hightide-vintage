@@ -113,31 +113,54 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
             {product.name}
           </h2>
 
-          {/* Price display */}
-          <div className="mt-2 flex items-center gap-3 justify-start flex-row-reverse">
-            {/* On sale, the live price turns red and the old one stays struck through beside it */}
-            <span
-              className={
-                product.originalPrice
-                  ? 'text-xl font-bold font-mono text-red-600'
-                  : 'text-xl font-normal font-mono text-stone-900'
-              }
-            >
-              ₪{product.price}
-            </span>
-            {product.originalPrice && (
-              <>
-                <span className="text-xs text-stone-400 line-through font-mono">
-                  ₪{product.originalPrice}
-                </span>
-                <img
-                  src={saleStampUrl}
-                  alt="מבצע"
-                  className="h-8 w-auto select-none"
-                  draggable={false}
-                />
-              </>
-            )}
+          {/* Price on one side, the size on the other — the two facts a shopper
+              checks together, so they sit on the same line instead of being
+              separated by three tabs of copy. */}
+          <div className="mt-3 flex items-center justify-between gap-4 flex-row-reverse">
+            <div className="flex items-center gap-3 flex-row-reverse">
+              {/* On sale, the live price turns red and the old one stays struck through beside it */}
+              <span
+                className={
+                  product.originalPrice
+                    ? 'text-xl font-bold font-mono text-red-600'
+                    : 'text-xl font-normal font-mono text-stone-900'
+                }
+              >
+                ₪{product.price}
+              </span>
+              {product.originalPrice && (
+                <>
+                  <span className="text-xs text-stone-400 line-through font-mono">
+                    ₪{product.originalPrice}
+                  </span>
+                  <img
+                    src={saleStampUrl}
+                    alt="מבצע"
+                    className="h-8 w-auto select-none"
+                    draggable={false}
+                  />
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 flex-row-reverse">
+              <span className="text-[11px] text-stone-400 uppercase tracking-wide">מידה</span>
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setSelectedSize(size)}
+                  className={`min-w-[44px] h-9 px-3 font-mono text-sm font-bold border transition-colors ${
+                    selectedSize === size
+                      ? 'bg-stone-900 text-white border-stone-900'
+                      : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                  }`}
+                  id={`detail-size-btn-${size}`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Condition banner */}
@@ -206,28 +229,6 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
                 <p>מאחר ומדובר בפריטי וינטג׳ ייחודיים (One of One), לא ניתן לבצע החלפה של אותו הפריט במידה אחרת.</p>
               </div>
             )}
-          </div>
-
-          {/* Size Selector */}
-          <div className="mt-4 pt-4 border-t border-stone-100">
-            <span className="block text-xs font-normal text-stone-500 uppercase mb-2">מידה קיימת במלאי:</span>
-            <div className="flex gap-2 justify-start">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setSelectedSize(size)}
-                  className={`min-w-[44px] h-9 px-3 font-mono text-xs font-normal border transition-colors ${
-                    selectedSize === size
-                      ? 'bg-stone-900 text-white border-stone-900'
-                      : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                  }`}
-                  id={`detail-size-btn-${size}`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Action buttons — a sold item cannot be ordered */}

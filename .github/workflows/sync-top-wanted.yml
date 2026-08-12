@@ -1,0 +1,29 @@
+name: סנכרון פריטים מבוקשים
+
+# Copies PostHog's product_view counts into items.views so the shop's
+# "Our Top Wanted Pieces" rail reflects what people actually opened.
+# No site rebuild is needed — the shop reads the numbers from Supabase live.
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every six hours; the ranking does not move fast
+  workflow_dispatch: {}     # or run it on demand from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --quiet supabase
+
+      - name: Pull view counts from PostHog into Supabase
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/sync_top_wanted.py

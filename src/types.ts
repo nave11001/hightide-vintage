@@ -19,6 +19,8 @@ export interface Product {
   // label size means little — these are what actually answer "will it fit me".
   waistCm?: number;  // across the waistband, edge to edge; circumference is double
   lengthCm?: number; // waistband to hem
+  // How many times the item has been opened. Drives the top-wanted rail.
+  views?: number;
 }
 
 export interface CartItem {
