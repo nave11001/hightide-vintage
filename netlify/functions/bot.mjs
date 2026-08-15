@@ -136,7 +136,10 @@ export default async (request) => {
   if (wantedItem) {
     const num = parseInt(String(wantedItem).replace(/[^\d]/g, ''), 10);
     if (!num) {
-      return send(request, 'לא זיהיתי את המספר. אפשר לשלוח רק את הספרות? למשל 126');
+      return send(
+        request,
+        `לא זיהיתי את המספר. אפשר לשלוח רק את הספרות? למשל 126\n\n${SHOP}`,
+      );
     }
     const found = items.find((i) => i.num === num);
     if (!found) {
@@ -179,7 +182,8 @@ export default async (request) => {
         request,
         'לא זיהיתי את המידות 🤔\n\n' +
           'למכנסיים — מספר באינצ׳ים (למשל 32)\n' +
-          'לחולצה — אות (S / M / L / XL)',
+          'לחולצה — אות (S / M / L / XL)\n\n' +
+          `בינתיים אפשר לראות הכל כאן 👇\n${SHOP}`,
       );
     }
 
@@ -233,7 +237,8 @@ export default async (request) => {
         request,
         'לא זיהיתי את המידה 🤔\n\n' +
           'למכנסיים — מספר באינצ׳ים (למשל 32)\n' +
-          'לחולצה — אות (S / M / L / XL)',
+          'לחולצה — אות (S / M / L / XL)\n\n' +
+          `בינתיים אפשר לראות הכל כאן 👇\n${SHOP}`,
       );
     }
 
@@ -303,6 +308,6 @@ export default async (request) => {
 
   return send(
     request,
-    'שלחו מידה (למשל 32) או מספר פריט (למשל 126) ואבדוק במלאי.',
+    `שלחו מידה (למשל 32) או מספר פריט (למשל 126) ואבדוק במלאי.\n\n${SHOP}`,
   );
 };
