@@ -61,19 +61,24 @@ function priceText(item) {
     : `${item.price}₪`;
 }
 
+// Dynamic Block v2. `type` names the channel and is required — without it
+// ManyChat does not know where to send the message and drops to the block's
+// fallback step, which reads exactly like the server being down.
+// https://manychat.github.io/dynamic_block_docs/
 function manyChatBody(text, quickReplies) {
-  return {
-    version: 'v2',
-    content: {
-      messages: [{ type: 'text', text }],
-      actions: [],
-      quick_replies: quickReplies.map((title) => ({
-        type: 'node',
-        caption: title,
-        target: '',
-      })),
-    },
+  const content = {
+    type: 'instagram',
+    messages: [{ type: 'text', text }],
   };
+  // Both arrays are optional; send them only when they carry something.
+  if (quickReplies.length > 0) {
+    content.quick_replies = quickReplies.map((title) => ({
+      type: 'node',
+      caption: title,
+      target: '',
+    }));
+  }
+  return { version: 'v2', content };
 }
 
 const esc = (s) =>
