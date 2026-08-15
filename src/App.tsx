@@ -49,7 +49,8 @@ export default function App() {
   // the homepage with everything that fits them; null means browse as usual.
   const [sizeLanding, setSizeLanding] = useState<{
     gender: 'men' | 'women';
-    query: { kind: 'waist'; waist: number } | { kind: 'letter'; letter: string };
+    waist?: number;
+    shirt?: string;
   } | null>(null);
 
   // Sizes the size-landing page wants applied to the catalogue it is handing
@@ -173,11 +174,14 @@ export default function App() {
   };
 
   // Links the Instagram bot hands out:
-  //   ?item=boardies-126        opens straight onto that garment
-  //   ?size=32&gender=men       lands on everything that fits them
-  //   ?size=L                   the same, for shirts
+  //   ?item=boardies-126               opens straight onto that garment
+  //   ?waist=32&shirt=L&gender=men     both sizes the bot asked for, one page
+  //   ?size=32&gender=men              older single-size links still work
   // Either way the shopper arrives at what they asked about instead of at the
   // homepage holding a number.
+  //
+  // waist and shirt are read strictly: ?waist=L is ignored rather than guessed
+  // at, so whichever branch the customer picked in the bot is what they get.
   useEffect(() => {
     if (products.length === 0) return;
     const params = new URLSearchParams(window.location.search);
@@ -191,12 +195,29 @@ export default function App() {
         openProduct(match);
         track('deep_link_open', { product_id: match.id });
       }
-    } else if (wantedSize) {
-      const query = parseSizeQuery(wantedSize);
-      if (query) {
+    } else {
+      const asWaist = (raw: string | null) => {
+        const q = raw ? parseSizeQuery(raw) : null;
+        return q?.kind === 'waist' ? (q.waist as number) : undefined;
+      };
+      const asShirt = (raw: string | null) => {
+        const q = raw ? parseSizeQuery(raw) : null;
+        return q?.kind === 'letter' ? (q.letter as string) : undefined;
+      };
+
+      let waist = asWaist(params.get('waist'));
+      let shirt = asShirt(params.get('shirt'));
+
+      // An older link carries a single ?size= and lets its shape decide.
+      if (waist === undefined && shirt === undefined && wantedSize) {
+        waist = asWaist(wantedSize);
+        shirt = asShirt(wantedSize);
+      }
+
+      if (waist !== undefined || shirt !== undefined) {
         const gender = parseGender(params.get('gender'));
-        setSizeLanding({ gender, query });
-        track('size_landing_open', { size: wantedSize, gender });
+        setSizeLanding({ gender, waist, shirt });
+        track('size_landing_open', { waist: waist ?? null, shirt: shirt ?? null, gender });
       }
     }
 
@@ -459,7 +480,8 @@ export default function App() {
           <SizeLanding
             products={products}
             gender={sizeLanding.gender}
-            query={sizeLanding.query}
+            waist={sizeLanding.waist}
+            shirt={sizeLanding.shirt}
             onViewDetails={openProduct}
             onShowAll={(sizes, category) => {
               carriedSizes.current = Array.from(new Set(sizes.map(normalizeSize)));
@@ -470,9 +492,14 @@ export default function App() {
               setSizeLanding(null);
               setSelectedCategory('none');
             }}
-            onPickSize={(size) => {
+            onPickSize={(kind, size) => {
               const next = parseSizeQuery(size);
-              if (next) setSizeLanding({ ...sizeLanding, query: next });
+              if (!next) return;
+              if (kind === 'waist' && next.kind === 'waist') {
+                setSizeLanding({ ...sizeLanding, waist: next.waist });
+              } else if (kind === 'shirt' && next.kind === 'letter') {
+                setSizeLanding({ ...sizeLanding, shirt: next.letter });
+              }
             }}
           />
         ) : selectedCategory === 'none' && searchTerm === '' ? (

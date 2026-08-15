@@ -47,6 +47,14 @@ const CATEGORY_LABEL = {
   women: 'נשים',
 };
 
+/** Hebrew takes a hyphen after the vav before a numeral, but not before a word. */
+function joinHe(parts) {
+  return parts.reduce(
+    (acc, part, i) => (i === 0 ? part : `${acc} ${/^\d/.test(part) ? 'ו-' : 'ו'}${part}`),
+    '',
+  );
+}
+
 function priceText(item) {
   return item.original_price
     ? `${item.price}₪ (במקום ${item.original_price}₪)`
@@ -149,7 +157,75 @@ export default async (request) => {
     );
   }
 
-  // ── everything in a size ───────────────────────────────────────────────
+  // ── both sizes at once: one short line and one link ────────────────────
+  //
+  // The bot asks for a waist and then a shirt letter, so by this point it
+  // holds both. Rather than pasting two lists into a DM, it hands over the
+  // landing page, where each type gets its own rail of the five most-wanted.
+  const rawWaist = params.get('waist');
+  const rawShirt = params.get('shirt');
+  if (rawWaist || rawShirt) {
+    const gender = parseGender(params.get('gender'));
+    const category = categoryForGender(gender);
+    const trouserWord = gender === 'women' ? 'מכנסי נשים' : 'מכנסיים';
+
+    const waistQuery = rawWaist ? parseSizeQuery(rawWaist) : null;
+    const shirtQuery = rawShirt ? parseSizeQuery(rawShirt) : null;
+    const waist = waistQuery?.kind === 'waist' ? waistQuery.waist : null;
+    const shirt = shirtQuery?.kind === 'letter' ? shirtQuery.letter : null;
+
+    if (waist === null && shirt === null) {
+      return send(
+        request,
+        'לא זיהיתי את המידות 🤔\n\n' +
+          'למכנסיים — מספר באינצ׳ים (למשל 32)\n' +
+          'לחולצה — אות (S / M / L / XL)',
+      );
+    }
+
+    const pants = waist === null ? { exact: [], maybe: [] } : splitByWaist(items, waist, { category });
+    const shirts = shirt === null ? [] : shirtsByLetter(items, shirt);
+
+    const link =
+      `${SHOP}/?` +
+      [
+        waist === null ? '' : `waist=${waist}&gender=${gender}`,
+        shirt === null ? '' : `shirt=${shirt}`,
+      ]
+        .filter(Boolean)
+        .join('&');
+
+    const found = [
+      pants.exact.length === 1 ? 'מכנס אחד' : pants.exact.length ? `${pants.exact.length} ${trouserWord}` : '',
+      shirts.length === 1 ? 'חולצה אחת' : shirts.length ? `${shirts.length} חולצות` : '',
+    ].filter(Boolean);
+
+    if (found.length === 0) {
+      const near = waist === null ? [] : nearestWaists(items, waist, { category });
+      const options = near
+        .map((s) => `מידה ${s.size} — ${s.count === 1 ? 'פריט אחד' : `${s.count} פריטים`}`)
+        .join('\n');
+      return send(
+        request,
+        'אין לנו כרגע במידות שלך 😔\n\n' +
+          (options ? `אבל יש במידות האלה:\n${options}\n\n` : 'דרופ חדש נכנס כל שבוע.\n\n') +
+          link,
+      );
+    }
+
+    const extra = pants.maybe.length
+      ? `\nועוד ${pants.maybe.length} שעשויים להתאים לך.`
+      : '';
+
+    const yours = waist !== null && shirt !== null ? 'במידות שלך' : 'במידה שלך';
+    return send(
+      request,
+      `מצאתי ${joinHe(found)} ${yours} 🤙${extra}\n\n` +
+        `הכל מחכה לך כאן 👇\n${link}`,
+    );
+  }
+
+  // ── a single size, the older one-question flow ─────────────────────────
   if (wantedSize) {
     const query = parseSizeQuery(wantedSize);
     if (!query) {

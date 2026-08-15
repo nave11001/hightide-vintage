@@ -11,33 +11,20 @@ import {
   byViews,
 } from '@/shared/sizing.mjs';
 
-// Where a shopper lands when the Instagram bot sends them here with their size.
-// The shop's own filters are for browsing; this is for someone who already
-// knows their number and wants to see what of it exists.
+// Where a shopper lands when the Instagram bot sends them here with their
+// sizes. The bot asks for a waist and a shirt letter, then hands over a single
+// link — so this page has to answer both in one screen.
 //
-// Two rails, because two different claims are being made. The first is pieces
-// labelled that size. The second is pieces labelled with a letter that covers
-// it — true, but a weaker claim, so it gets its own heading rather than being
-// blended in.
+// Each garment type gets its own rail. Within the trousers, pieces labelled
+// the size asked for are separated from pieces whose letter merely covers it:
+// both are true, but the second is a weaker claim and saying so is the honest
+// version.
 
 const HOW_MANY = 5;
 
-interface SizeLandingProps {
-  products: Product[];
-  gender: 'men' | 'women';
-  /** A waist in inches, or a shirt letter. */
-  query: { kind: 'waist'; waist: number } | { kind: 'letter'; letter: string };
-  onViewDetails: (product: Product) => void;
-  /** Show every match, not just the top five. */
-  onShowAll: (sizes: string[], category: string) => void;
-  onBrowseAll: () => void;
-  /** Jump to a size that does have stock. */
-  onPickSize: (size: string) => void;
-}
-
 interface CardProps {
   product: Product;
-  /** A rank in the first rail, the garment's own letter in the second. */
+  /** A rank in the main rail, the garment's own letter in the wider one. */
   badge: string;
   onViewDetails: (p: Product) => void;
   // Declared here because the project carries no @types/react — same as ProductCard.
@@ -109,40 +96,105 @@ function Heading({ en, he }: { en: string; he: string }) {
   );
 }
 
+/** The sizes that do have stock, when the one asked for has none. */
+function Suggestions({
+  options,
+  onPick,
+}: {
+  options: { size: string; count: number }[];
+  onPick: (size: string) => void;
+}) {
+  if (options.length === 0) {
+    return <p className="text-center text-[15px] text-stone-600 mt-4">דרופ חדש נכנס כל שבוע — שווה לעקוב.</p>;
+  }
+  return (
+    <>
+      <p className="text-center text-[15px] text-stone-800 mt-4">אבל יש לנו במידות האלה:</p>
+      <div className="flex flex-wrap justify-center gap-3 mt-4">
+        {options.map((o) => (
+          <button
+            key={o.size}
+            type="button"
+            onClick={() => onPick(o.size)}
+            className="px-5 py-3 border border-stone-300 hover:border-stone-900 text-stone-900 text-sm cursor-pointer"
+          >
+            <span className="font-medium">מידה {o.size}</span>
+            <span className="text-stone-500"> · {o.count}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+interface SizeLandingProps {
+  products: Product[];
+  gender: 'men' | 'women';
+  /** A waist in inches. Absent when the shopper only gave a shirt size. */
+  waist?: number;
+  /** A shirt letter. Absent when the shopper only gave a waist. */
+  shirt?: string;
+  onViewDetails: (product: Product) => void;
+  /** Show every match, not just the top five. */
+  onShowAll: (sizes: string[], category: string) => void;
+  onBrowseAll: () => void;
+  /** Jump to a size that does have stock. */
+  onPickSize: (kind: 'waist' | 'shirt', size: string) => void;
+}
+
 export default function SizeLanding({
   products,
   gender,
-  query,
+  waist,
+  shirt,
   onViewDetails,
   onShowAll,
   onBrowseAll,
   onPickSize,
 }: SizeLandingProps) {
-  const isWaist = query.kind === 'waist';
-  const category = isWaist ? categoryForGender(gender) : 'shirts';
-  const label = isWaist ? String(query.waist) : query.letter;
+  const bottomsCategory = categoryForGender(gender);
+  const trouserWord = gender === 'women' ? 'מכנסי נשים' : 'מכנסיים';
 
-  // The rules live in shared/sizing.mjs so the bot and the shop cannot drift
-  // apart; it is plain JS, so name the shapes on the way back in.
-  const { exact, maybe } = (
-    isWaist
-      ? splitByWaist(products, query.waist, { category })
-      : { exact: shirtsByLetter(products, query.letter), maybe: [] }
+  const { exact: pants, maybe: alsoPants } = (
+    waist !== undefined
+      ? splitByWaist(products, waist, { category: bottomsCategory })
+      : { exact: [], maybe: [] }
   ) as { exact: Product[]; maybe: Product[] };
 
-  const top = [...exact].sort(byViews);
-  const alsoFits = [...maybe].sort(byViews).slice(0, HOW_MANY);
+  const shirts = (shirt ? shirtsByLetter(products, shirt) : []) as Product[];
 
-  const who = isWaist ? (gender === 'women' ? 'מכנסי נשים' : 'מכנסי גברים') : 'חולצות';
-  const noun = isWaist ? 'מכנסיים' : 'חולצות';
+  const nearerWaists = (
+    waist !== undefined && pants.length === 0 && alsoPants.length === 0
+      ? nearestWaists(products, waist, { category: bottomsCategory })
+      : []
+  ) as { size: number; count: number }[];
 
-  // Nothing at all in this size — offer the sizes that do have stock rather
-  // than a dead end.
-  const suggestions = isWaist
-    ? nearestWaists(products, query.waist, { category })
-    : availableShirtLetters(products)
-        .filter((s) => s.letter !== query.letter)
-        .map((s) => ({ size: s.letter, count: s.count }));
+  const nearerShirts = (
+    shirt && shirts.length === 0
+      ? availableShirtLetters(products).filter((s: { letter: string }) => s.letter !== shirt)
+      : []
+  ) as { letter: string; count: number }[];
+
+  const both = waist !== undefined && shirt !== undefined;
+  const totals = [
+    pants.length > 0 ? `${pants.length} ${trouserWord}` : '',
+    shirts.length > 0 ? `${shirts.length} חולצות` : '',
+  ].filter(Boolean);
+
+  const showAll = (list: Product[], category: string, label: string, noun: string) =>
+    list.length > HOW_MANY ? (
+      <button
+        type="button"
+        onClick={() => {
+          track('size_landing_show_all', { size: label, category, count: list.length });
+          onShowAll(list.flatMap((p) => p.sizes), category);
+        }}
+        className="block w-full mt-5 py-4 bg-stone-900 hover:bg-black text-white text-[15px] cursor-pointer"
+        id={`size-landing-show-all-${category}`}
+      >
+        {`לכל ${list.length} ה${noun} במידה ${label} ←`}
+      </button>
+    ) : null;
 
   return (
     <div className="max-w-6xl mx-auto px-4 pb-16" id="size-landing" dir="rtl">
@@ -151,97 +203,141 @@ export default function SizeLanding({
           <Logo className="w-14 h-14 mx-auto" />
         </button>
         <p className="mt-3 text-[15px] tracking-[0.16em] uppercase text-stone-500 font-groovy">
-          Your Size
+          {both ? 'Your Sizes' : 'Your Size'}
         </p>
-        <p className="text-5xl sm:text-6xl font-light leading-none mt-1 text-stone-900">{label}</p>
-        <p className="mt-1.5 text-[13px] text-stone-500">{who}</p>
+
+        {both ? (
+          <div className="flex items-start justify-center gap-8 mt-2">
+            <div>
+              <p className="text-4xl sm:text-5xl font-light leading-none text-stone-900">{waist}</p>
+              <p className="mt-1.5 text-[13px] text-stone-500">{trouserWord}</p>
+            </div>
+            <div className="w-[1px] self-stretch bg-stone-200"></div>
+            <div>
+              <p className="text-4xl sm:text-5xl font-light leading-none text-stone-900">{shirt}</p>
+              <p className="mt-1.5 text-[13px] text-stone-500">חולצות</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-5xl sm:text-6xl font-light leading-none mt-1 text-stone-900">
+              {waist !== undefined ? waist : shirt}
+            </p>
+            <p className="mt-1.5 text-[13px] text-stone-500">
+              {waist !== undefined ? trouserWord : 'חולצות'}
+            </p>
+          </>
+        )}
+
         <div className="w-12 h-[1px] bg-stone-800 mx-auto my-4"></div>
         <p className="text-[15px] text-stone-800">
-          {exact.length > 0
-            ? `${exact.length} ${noun} במידה שלך`
-            : `אין כרגע ${noun} במידה ${label}`}
+          {totals.length > 0 ? `${totals.join(' ו-')} במידות שלך` : 'אין כרגע פריטים במידות שלך'}
         </p>
       </header>
 
-      {exact.length > 0 && (
-        <section className="mt-8" id="size-landing-exact">
-          <Heading en="Most Wanted In Your Size" he={`המבוקשים ביותר במידה ${label}`} />
-          <Rail>
-            {top.slice(0, HOW_MANY).map((product, i) => (
-              <Card
-                key={product.id}
-                product={product}
-                badge={String(i + 1)}
-                onViewDetails={onViewDetails}
+      {/* ── trousers ─────────────────────────────────────────────────────── */}
+      {waist !== undefined && (
+        <>
+          {pants.length > 0 && (
+            <section className="mt-8" id="size-landing-exact">
+              <Heading
+                en="Most Wanted In Your Size"
+                he={`${trouserWord} — המבוקשים ביותר במידה ${waist}`}
               />
-            ))}
-          </Rail>
-          {exact.length > HOW_MANY && (
-            <button
-              type="button"
-              onClick={() => {
-                track('size_landing_show_all', { size: label, category, count: exact.length });
-                onShowAll(exact.flatMap((p) => p.sizes), category);
-              }}
-              className="block w-full mt-5 py-4 bg-stone-900 hover:bg-black text-white text-[15px] cursor-pointer"
-              id="size-landing-show-all"
-            >
-              {`לכל ${exact.length} ה${noun} במידה ${label} ←`}
-            </button>
+              <Rail>
+                {pants
+                  .slice()
+                  .sort(byViews)
+                  .slice(0, HOW_MANY)
+                  .map((product, i) => (
+                    <Card
+                      key={product.id}
+                      product={product}
+                      badge={String(i + 1)}
+                      onViewDetails={onViewDetails}
+                    />
+                  ))}
+              </Rail>
+              {showAll(pants, bottomsCategory, String(waist), trouserWord)}
+            </section>
           )}
-        </section>
-      )}
 
-      {alsoFits.length > 0 && (
-        <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-maybe">
-          <Heading en="Might Also Fit" he={`מסומנים באות שמכסה מותן ${label}`} />
-          <Rail>
-            {alsoFits.map((product) => (
-              <Card
-                key={product.id}
-                product={product}
-                badge={String(product.sizes[0] ?? '').toUpperCase()}
-                onViewDetails={onViewDetails}
+          {alsoPants.length > 0 && (
+            <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-maybe">
+              <Heading en="Might Also Fit" he={`מסומנים באות שמכסה מותן ${waist}`} />
+              <Rail>
+                {alsoPants
+                  .slice()
+                  .sort(byViews)
+                  .slice(0, HOW_MANY)
+                  .map((product) => (
+                    <Card
+                      key={product.id}
+                      product={product}
+                      badge={String(product.sizes[0] ?? '').toUpperCase()}
+                      onViewDetails={onViewDetails}
+                    />
+                  ))}
+              </Rail>
+            </section>
+          )}
+
+          {pants.length === 0 && alsoPants.length === 0 && (
+            <section className="mt-8" id="size-landing-empty-pants">
+              <Heading en="Nothing In That Waist" he={`אין כרגע ${trouserWord} במידה ${waist}`} />
+              <Suggestions
+                options={nearerWaists.map((s) => ({ size: String(s.size), count: s.count }))}
+                onPick={(size) => {
+                  track('size_landing_suggestion', { from: String(waist), to: size });
+                  onPickSize('waist', size);
+                }}
               />
-            ))}
-          </Rail>
-        </section>
+            </section>
+          )}
+        </>
       )}
 
-      {exact.length === 0 && alsoFits.length === 0 && (
-        <section className="mt-8 text-center" id="size-landing-empty">
-          {suggestions.length > 0 ? (
-            <>
-              <p className="text-[15px] text-stone-800">אבל יש לנו במידות האלה:</p>
-              <div className="flex flex-wrap justify-center gap-3 mt-5">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.size}
-                    type="button"
-                    onClick={() => {
-                      track('size_landing_suggestion', { from: label, to: String(s.size) });
-                      onPickSize(String(s.size));
-                    }}
-                    className="px-5 py-3 border border-stone-300 hover:border-stone-900 text-stone-900 text-sm cursor-pointer"
-                  >
-                    <span className="font-medium">מידה {s.size}</span>
-                    <span className="text-stone-500"> · {s.count}</span>
-                  </button>
-                ))}
-              </div>
-            </>
+      {/* ── shirts ───────────────────────────────────────────────────────── */}
+      {shirt !== undefined && (
+        <>
+          {shirts.length > 0 ? (
+            <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-shirts">
+              <Heading en="Shirts In Your Size" he={`חולצות — המבוקשות ביותר במידה ${shirt}`} />
+              <Rail>
+                {shirts
+                  .slice()
+                  .sort(byViews)
+                  .slice(0, HOW_MANY)
+                  .map((product, i) => (
+                    <Card
+                      key={product.id}
+                      product={product}
+                      badge={String(i + 1)}
+                      onViewDetails={onViewDetails}
+                    />
+                  ))}
+              </Rail>
+              {showAll(shirts, 'shirts', shirt, 'חולצות')}
+            </section>
           ) : (
-            <p className="text-[15px] text-stone-600">
-              דרופ חדש נכנס כל שבוע — שווה לעקוב.
-            </p>
+            <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-empty-shirts">
+              <Heading en="Nothing In That Size" he={`אין כרגע חולצות במידה ${shirt}`} />
+              <Suggestions
+                options={nearerShirts.map((s) => ({ size: s.letter, count: s.count }))}
+                onPick={(size) => {
+                  track('size_landing_suggestion', { from: shirt, to: size });
+                  onPickSize('shirt', size);
+                }}
+              />
+            </section>
           )}
-        </section>
+        </>
       )}
 
       <button
         type="button"
         onClick={onBrowseAll}
-        className="block mx-auto mt-8 text-[13px] text-stone-500 underline hover:text-stone-900 cursor-pointer"
+        className="block mx-auto mt-10 text-[13px] text-stone-500 underline hover:text-stone-900 cursor-pointer"
       >
         לחנות המלאה
       </button>
