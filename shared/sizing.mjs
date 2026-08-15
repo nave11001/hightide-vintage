@@ -78,13 +78,24 @@ const covers = (span, n) => Boolean(span) && n >= span[0] && n <= span[1];
 // Real replies to "what size are you" include אל, לארג׳, W32, "32 אינץ",
 // and "בערך 33". Each of these is a clear answer; refusing them would be the
 // bot being difficult.
-const HEBREW_LETTER = {
-  'סמול': 'S', 'אס': 'S',
-  'מדיום': 'M', 'אם': 'M', 'אמ': 'M',
-  'לארג': 'L', 'אל': 'L',
-  'אקסל': 'XL', 'אקסלארג': 'XL', 'איקסאל': 'XL',
-  'אקסאקסל': 'XXL',
+//
+// These are dictionaries rather than clever matching on purpose: a wrong guess
+// here quietly shows a woman men's trousers, so every accepted spelling is one
+// somebody decided to accept. Add to them as real replies come in.
+const SIZE_WORDS = {
+  S: ['S', 'SM', 'SMALL', 'XS', 'סמול', 'אס', 'ס', 'קטן', 'קטנה'],
+  M: ['M', 'MED', 'MEDIUM', 'מדיום', 'אם', 'אמ', 'מ', 'בינוני', 'בינונית', 'אמצע'],
+  L: ['L', 'LG', 'LARGE', 'לארג', 'לרג', 'אל', 'ל', 'גדול', 'גדולה'],
+  XL: ['XL', 'XLARGE', 'EXTRALARGE', 'אקסל', 'אקסלארג', 'איקסאל', 'אקסאל', 'אקסטרהלארג'],
+  XXL: ['XXL', '2XL', 'XXLARGE', 'אקסאקסל', 'אקסאקסאל', 'אקסאקסלארג', 'איקסאיקסאל', '2אקסל'],
 };
+
+/** Every spelling above, flattened to the letter it means. */
+const SIZE_LOOKUP = Object.fromEntries(
+  Object.entries(SIZE_WORDS).flatMap(([letter, spellings]) =>
+    spellings.map((word) => [word, letter]),
+  ),
+);
 
 /** Drop the words and marks people wrap a size in, leaving the size itself. */
 function tidySize(raw) {
@@ -104,7 +115,8 @@ export function parseSizeQuery(raw) {
   const s = tidySize(raw);
   if (!s) return null;
 
-  const letter = letterOf(s) ?? HEBREW_LETTER[s.replace(/\s/g, '')];
+  // "אקס אל" and "אקסאל" are the same answer; close the gaps before looking up.
+  const letter = letterOf(s) ?? SIZE_LOOKUP[s.replace(/[\s-]/g, '')];
   if (letter) return { kind: 'letter', letter };
 
   // First number wins: "32-34" and "בערך 33" both name a waist to search from.
@@ -116,13 +128,50 @@ export function parseSizeQuery(raw) {
   return null;
 }
 
-// The bot's buttons are written for the customer, so they send back Hebrew.
-// Anything that is not clearly a woman is treated as the men's rail, which is
-// where the bulk of the stock is.
-const WOMEN_WORDS = new Set(['WOMEN', 'WOMAN', 'FEMALE', 'F', 'W', 'נקבה', 'אישה', 'נשים', 'בת']);
+// The bot's buttons are written for the customer, so they send back Hebrew —
+// but Instagram lets anyone type instead of tapping, and they do.
+const GENDER_WORDS = {
+  women: [
+    'WOMEN', 'WOMAN', 'WOMENS', 'FEMALE', 'F', 'W', 'GIRL', 'GIRLS', 'LADY', 'LADIES',
+    'נקבה', 'אישה', 'אשה', 'נשים', 'בת', 'בנות', 'גברת', 'ליידי', 'נשי', 'נשית',
+    'לאישה', 'לאשה', 'לנשים', 'לבת', 'חברה', 'אשתי', 'בחורה', 'בחורות',
+  ],
+  men: [
+    'MEN', 'MAN', 'MENS', 'MALE', 'M', 'BOY', 'BOYS', 'GUY', 'GUYS', 'GENTLEMAN',
+    'זכר', 'גבר', 'גברים', 'בן', 'בנים', 'אדון', 'גברי', 'לגבר', 'לגברים',
+    'לבן', 'חבר', 'בעלי', 'בחור', 'בחורים',
+  ],
+};
 
+const GENDER_LOOKUP = Object.fromEntries(
+  Object.entries(GENDER_WORDS).flatMap(([gender, spellings]) =>
+    spellings.map((word) => [word, gender]),
+  ),
+);
+
+/** Split an answer into comparable pieces: "בשביל אישה" should still read. */
+function tokens(raw) {
+  return norm(raw)
+    .replace(/["'`׳״\-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/**
+ * Which rail to show. Anything unrecognised falls to the men's side, where the
+ * bulk of the stock is — see genderIsClear for telling that apart from a real
+ * answer.
+ */
 export function parseGender(raw) {
-  return WOMEN_WORDS.has(norm(raw)) ? 'women' : 'men';
+  const parts = tokens(raw);
+  const whole = parts.join('');
+  return GENDER_LOOKUP[whole] ?? parts.map((t) => GENDER_LOOKUP[t]).find(Boolean) ?? 'men';
+}
+
+/** False when nothing in the answer was recognised, so the caller can say so. */
+export function genderIsClear(raw) {
+  const parts = tokens(raw);
+  return Boolean(GENDER_LOOKUP[parts.join('')] ?? parts.map((t) => GENDER_LOOKUP[t]).find(Boolean));
 }
 
 /** Which catalogue category a gender choice means. */

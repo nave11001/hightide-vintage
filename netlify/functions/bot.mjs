@@ -19,6 +19,7 @@ import {
   availableShirtLetters,
   categoryForGender,
   parseGender,
+  genderIsClear,
   byViews,
 } from '../../shared/sizing.mjs';
 
@@ -227,10 +228,19 @@ export default async (request) => {
       : '';
 
     const yours = waist !== null && shirt !== null ? 'במידות שלך' : 'במידה שלך';
+
+    // Gender only decides which trouser rail to read, so only say anything when
+    // trousers were asked for and the answer was not one we recognise. Showing
+    // the men's rail to a woman without a word is the failure worth avoiding.
+    const unsure =
+      waist !== null && !genderIsClear(params.get('gender'))
+        ? `\n\nלא הייתי בטוח לגבי המין, אז הצגתי ${trouserWord}.\nאם התכוונת אחרת — כתבו "נשים" או "גברים" ואשלח שוב.`
+        : '';
+
     return send(
       request,
       `מצאתי ${joinHe(found)} ${yours} 🤙${extra}\n\n` +
-        `הכל מחכה לך כאן 👇\n${link}`,
+        `הכל מחכה לך כאן 👇\n${link}${unsure}`,
     );
   }
 
