@@ -34,14 +34,26 @@ function sizeToInches(size) {
   return LETTER_INCHES[s] ?? null;
 }
 
-/** Drawstrings forgive slack, not tightness. */
+// A waist measurement only means something on the bottom half. A shirt marked
+// M is not a 32in waist, and treating it as one filled the answer with
+// garments that have nothing to do with what was asked.
+const BOTTOMS = new Set(['boardies', 'women']);
+
+/** Drawstrings forgive slack, not tightness. Kept tight so a reply is a
+ *  recommendation and not a catalogue dump. */
 function fitLabel(sizeInches, waistInches) {
   const slack = sizeInches - waistInches;
-  if (slack < -2) return null;              // will not close, do not offer it
-  if (slack < 0) return 'צמוד';
-  if (slack <= 2) return 'מתאים';
-  if (slack <= 4) return 'רפוי';
+  if (slack < -1) return null;              // will not close, do not offer it
+  if (slack < 1) return 'מתאים';
+  if (slack <= 2) return 'רפוי מעט';
   return null;                              // too big to bother suggesting
+}
+
+/** 'M' -> 'm', 'Small' -> 's', '32' -> null */
+function letterOf(size) {
+  const s = String(size || '').trim().toLowerCase();
+  const map = { small: 's', s: 's', medium: 'm', m: 'm', large: 'l', l: 'l', xl: 'xl', xxl: 'xxl' };
+  return map[s] ?? null;
 }
 
 async function catalogue() {
@@ -129,7 +141,10 @@ export default async (request) => {
 
   // ── everything that fits a waist ───────────────────────────────────────
   if (wantedSize) {
-    const waist = sizeToInches(wantedSize);
+    const asked = String(wantedSize).trim();
+    const askedLetter = letterOf(asked);
+    const waist = sizeToInches(asked);
+
     if (!waist) {
       return Response.json(
         reply(
@@ -142,6 +157,16 @@ export default async (request) => {
 
     const matches = [];
     for (const item of items) {
+      const isBottom = BOTTOMS.has(item.category);
+      // A number is a waist, so it only speaks to bottoms. A letter matches
+      // tops letter-for-letter, and bottoms through the waist it stands for.
+      if (!isBottom && !askedLetter) continue;
+      if (!isBottom) {
+        if (letterOf(item.size) === askedLetter) {
+          matches.push({ item, label: 'מתאים', gap: 0 });
+        }
+        continue;
+      }
       const inches = sizeToInches(item.size);
       if (inches === null) continue;
       const label = fitLabel(inches, waist);
@@ -149,10 +174,11 @@ export default async (request) => {
     }
     matches.sort((a, b) => a.gap - b.gap);
 
+    const what = askedLetter ? asked.toUpperCase() : `${waist}`;
     if (matches.length === 0) {
       return Response.json(
         reply(
-          `לא מצאתי כרגע פריטים במידה ${waist} 😔\n\n` +
+          `לא מצאתי כרגע פריטים במידה ${what} 😔\n\n` +
             `דרופ חדש נכנס כל שבוע — שווה לעקוב.\n${SHOP}`,
         ),
       );
@@ -170,7 +196,7 @@ export default async (request) => {
 
     return Response.json(
       reply(
-        `מצאתי ${matches.length} פריטים שמתאימים למידה ${waist} 🤙\n\n` +
+        `מצאתי ${matches.length} פריטים שמתאימים למידה ${what} 🤙\n\n` +
           lines.join('\n\n') +
           more,
       ),
