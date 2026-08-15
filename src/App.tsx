@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product } from './types';
 import { loadProducts, CATEGORIES } from './data';
 import TopWanted from './components/TopWanted';
+import SizeLanding from './components/SizeLanding';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -15,6 +16,7 @@ import catWomenImg from '@/assets/photos/Women (1).jpeg';
 import catAllImg from '@/assets/photos/all products.jpg';
 import { Info, Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
+import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
 // The size finder is built and tested but held back while it is refined —
 // src/components/MySizePanel.tsx and SizeFinder.tsx, plus items.waist_cm /
 // length_cm, are all still in place. Re-render them to switch it back on.
@@ -43,11 +45,28 @@ export default function App() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
   const [saleFilter, setSaleFilter] = useState<'' | 'sale'>('');
+  // Set when a shopper arrives from the Instagram bot with their size. Replaces
+  // the homepage with everything that fits them; null means browse as usual.
+  const [sizeLanding, setSizeLanding] = useState<{
+    gender: 'men' | 'women';
+    query: { kind: 'waist'; waist: number } | { kind: 'letter'; letter: string };
+  } | null>(null);
+
+  // Sizes the size-landing page wants applied to the catalogue it is handing
+  // over to. Switching category clears the filters, which would otherwise wipe
+  // them the moment they were set.
+  const carriedSizes = useRef<string[] | null>(null);
 
   // Filters reset when switching category
   useEffect(() => {
-    setSelectedSizes([]);
-    setAvailabilityFilter('');
+    if (carriedSizes.current) {
+      setSelectedSizes(carriedSizes.current);
+      setAvailabilityFilter('available');
+      carriedSizes.current = null;
+    } else {
+      setSelectedSizes([]);
+      setAvailabilityFilter('');
+    }
     if (selectedCategory !== 'none') {
       track('category_view', { category: selectedCategory });
     }
@@ -153,20 +172,35 @@ export default function App() {
     setSelectedProductForDetails(product);
   };
 
-  // ?item=boardies-126 opens straight onto that garment. The Instagram bot
-  // hands out these links, so a shopper lands on the piece rather than on the
-  // homepage with a number to hunt for.
+  // Links the Instagram bot hands out:
+  //   ?item=boardies-126        opens straight onto that garment
+  //   ?size=32&gender=men       lands on everything that fits them
+  //   ?size=L                   the same, for shirts
+  // Either way the shopper arrives at what they asked about instead of at the
+  // homepage holding a number.
   useEffect(() => {
     if (products.length === 0) return;
-    const wanted = new URLSearchParams(window.location.search).get('item');
-    if (!wanted) return;
-    const match = products.find((p) => p.id === wanted);
-    if (match) {
-      setSelectedCategory(match.category);
-      openProduct(match);
-      track('deep_link_open', { product_id: match.id });
+    const params = new URLSearchParams(window.location.search);
+    const wantedItem = params.get('item');
+    const wantedSize = params.get('size');
+
+    if (wantedItem) {
+      const match = products.find((p) => p.id === wantedItem);
+      if (match) {
+        setSelectedCategory(match.category);
+        openProduct(match);
+        track('deep_link_open', { product_id: match.id });
+      }
+    } else if (wantedSize) {
+      const query = parseSizeQuery(wantedSize);
+      if (query) {
+        const gender = parseGender(params.get('gender'));
+        setSizeLanding({ gender, query });
+        track('size_landing_open', { size: wantedSize, gender });
+      }
     }
-    // Clear the parameter so a reload does not reopen it after the visitor closed it.
+
+    // Clear the parameters so a reload does not reopen what the visitor closed.
     const clean = window.location.pathname + window.location.hash;
     window.history.replaceState({}, '', clean);
   }, [products]);
@@ -301,7 +335,7 @@ export default function App() {
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
       
       {/* Standard White Sticky Header: only shown when NOT on the homepage landing view */}
-      {(selectedCategory !== 'none' || searchTerm !== '') && (
+      {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding) && (
         <Header
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -315,7 +349,7 @@ export default function App() {
       )}
 
       {/* Homepage Landing View Hero & Navigation (Seamlessly integrated with NO gaps) */}
-      {selectedCategory === 'none' && searchTerm === '' && (
+      {selectedCategory === 'none' && searchTerm === '' && !sizeLanding && (
         <div className="w-full flex flex-col" id="landing-page-hero-wrapper">
           {/* Announcement Strip at the absolute top of the viewport */}
           <div className="bg-white py-2 text-center border-b border-stone-100 flex items-center justify-center select-none" id="global-announcement-strip">
@@ -420,8 +454,28 @@ export default function App() {
       {/* Main Container */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
         
-        {/* Homepage Category Navigation OR Filtered Product Catalog */}
-        {selectedCategory === 'none' && searchTerm === '' ? (
+        {/* Arrived from the bot with a size / Homepage Category Navigation / Filtered Catalog */}
+        {sizeLanding ? (
+          <SizeLanding
+            products={products}
+            gender={sizeLanding.gender}
+            query={sizeLanding.query}
+            onViewDetails={openProduct}
+            onShowAll={(sizes, category) => {
+              carriedSizes.current = Array.from(new Set(sizes.map(normalizeSize)));
+              setSizeLanding(null);
+              setSelectedCategory(category);
+            }}
+            onBrowseAll={() => {
+              setSizeLanding(null);
+              setSelectedCategory('none');
+            }}
+            onPickSize={(size) => {
+              const next = parseSizeQuery(size);
+              if (next) setSizeLanding({ ...sizeLanding, query: next });
+            }}
+          />
+        ) : selectedCategory === 'none' && searchTerm === '' ? (
           <section className="space-y-6 sm:space-y-8 animate-fade-in" id="homepage-categories">
             <TopWanted products={products} onViewDetails={openProduct} />
 

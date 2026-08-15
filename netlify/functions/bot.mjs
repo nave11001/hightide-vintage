@@ -11,57 +11,27 @@
 // get the message laid out the way the customer will see it — the raw JSON is
 // unreadable in Hebrew, and the owner tests these by hand.
 
+import {
+  parseSizeQuery,
+  splitByWaist,
+  shirtsByLetter,
+  nearestWaists,
+  availableShirtLetters,
+  categoryForGender,
+  parseGender,
+  byViews,
+} from '../../shared/sizing.mjs';
+
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SHOP = 'https://hightide-vintage.netlify.app';
-const MAX_RESULTS = 6;
-
-// Boardshort sizes are the waist in inches. Letters cover a range; these are
-// the middle of each.
-const LETTER_INCHES = {
-  small: 30, s: 30, m: 32, medium: 32, l: 34, large: 34, xl: 36, xxl: 38,
-};
-
-/** '32' -> 32, '38-40' -> 38 (the narrow end has to close), 'L' -> 34 */
-function sizeToInches(size) {
-  const s = String(size || '').trim().toLowerCase();
-  if (!s || s === 'one size') return null;
-  const range = s.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (range) return parseInt(range[1], 10);
-  const plain = s.match(/^(\d+)$/);
-  if (plain) {
-    const n = parseInt(plain[1], 10);
-    return n >= 24 && n <= 48 ? n : null;
-  }
-  return LETTER_INCHES[s] ?? null;
-}
-
-// A waist measurement only means something on the bottom half. A shirt marked
-// M is not a 32in waist, and treating it as one filled the answer with
-// garments that have nothing to do with what was asked.
-const BOTTOMS = new Set(['boardies', 'women']);
-
-/** Drawstrings forgive slack, not tightness. Kept tight so a reply is a
- *  recommendation and not a catalogue dump. */
-function fitLabel(sizeInches, waistInches) {
-  const slack = sizeInches - waistInches;
-  if (slack < -1) return null;              // will not close, do not offer it
-  if (slack < 1) return 'מתאים';
-  if (slack <= 2) return 'רפוי מעט';
-  return null;                              // too big to bother suggesting
-}
-
-/** 'M' -> 'm', 'Small' -> 's', '32' -> null */
-function letterOf(size) {
-  const s = String(size || '').trim().toLowerCase();
-  const map = { small: 's', s: 's', medium: 'm', m: 'm', large: 'l', l: 'l', xl: 'xl', xxl: 'xxl' };
-  return map[s] ?? null;
-}
+const MAX_RESULTS = 5;
 
 async function catalogue() {
   const url =
     `${SUPABASE_URL}/rest/v1/items` +
-    `?select=num,category,name,size,price,original_price,sold` +
+    // views drives the ranking — without it every sort is a no-op.
+    `?select=num,category,name,size,price,original_price,sold,views` +
     `&sold=eq.false&order=num.asc`;
   const res = await fetch(url, {
     headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
@@ -179,64 +149,79 @@ export default async (request) => {
     );
   }
 
-  // ── everything that fits a waist ───────────────────────────────────────
+  // ── everything in a size ───────────────────────────────────────────────
   if (wantedSize) {
-    const asked = String(wantedSize).trim();
-    const askedLetter = letterOf(asked);
-    const waist = sizeToInches(asked);
-
-    if (!waist) {
+    const query = parseSizeQuery(wantedSize);
+    if (!query) {
       return send(
         request,
         'לא זיהיתי את המידה 🤔\n\n' +
-          'אפשר לשלוח מספר באינצ׳ים (למשל 32)\n' +
-          'או מידה באותיות (S / M / L / XL)',
+          'למכנסיים — מספר באינצ׳ים (למשל 32)\n' +
+          'לחולצה — אות (S / M / L / XL)',
       );
     }
 
-    const matches = [];
-    for (const item of items) {
-      const isBottom = BOTTOMS.has(item.category);
-      // A number is a waist, so it only speaks to bottoms. A letter matches
-      // tops letter-for-letter, and bottoms through the waist it stands for.
-      if (!isBottom && !askedLetter) continue;
-      if (!isBottom) {
-        if (letterOf(item.size) === askedLetter) {
-          matches.push({ item, label: 'מתאים', gap: 0 });
-        }
-        continue;
-      }
-      const inches = sizeToInches(item.size);
-      if (inches === null) continue;
-      const label = fitLabel(inches, waist);
-      if (label) matches.push({ item, label, gap: Math.abs(inches - waist) });
-    }
-    matches.sort((a, b) => a.gap - b.gap);
+    const isWaist = query.kind === 'waist';
+    const gender = parseGender(params.get('gender'));
+    const category = isWaist ? categoryForGender(gender) : 'shirts';
+    const label = isWaist ? String(query.waist) : query.letter;
+    const noun = isWaist ? (gender === 'women' ? 'מכנסי נשים' : 'מכנסיים') : 'חולצות';
+    const landing = `${SHOP}/?size=${encodeURIComponent(label)}` + (isWaist ? `&gender=${gender}` : '');
 
-    const what = askedLetter ? asked.toUpperCase() : `${waist}`;
-    if (matches.length === 0) {
+    const { exact, maybe } = isWaist
+      ? splitByWaist(items, query.waist, { category })
+      : { exact: shirtsByLetter(items, query.letter), maybe: [] };
+
+    // Nothing at all — point at the sizes that do have stock instead of
+    // closing the conversation.
+    if (exact.length === 0 && maybe.length === 0) {
+      const near = isWaist
+        ? nearestWaists(items, query.waist, { category })
+        : availableShirtLetters(items).filter((s) => s.letter !== query.letter);
+      const options = near
+        .map((s) => `מידה ${s.size ?? s.letter} — ${s.count === 1 ? 'פריט אחד' : `${s.count} פריטים`}`)
+        .join('\n');
       return send(
         request,
-        `לא מצאתי כרגע פריטים במידה ${what} 😔\n\n` +
-          `דרופ חדש נכנס כל שבוע — שווה לעקוב.\n${SHOP}`,
+        `אין לנו כרגע ${noun} במידה ${label} 😔\n\n` +
+          (options ? `אבל יש במידות האלה:\n${options}\n\n` : 'דרופ חדש נכנס כל שבוע.\n\n') +
+          SHOP,
       );
     }
 
-    const lines = matches.slice(0, MAX_RESULTS).map(
-      ({ item, label }) =>
-        `#${item.num} · ${item.name} · מידה ${item.size} · ${priceText(item)} — ${label}\n` +
-        `${SHOP}/?item=${item.category}-${item.num}`,
-    );
+    const line = (item) =>
+      `#${item.num} · ${item.name} · מידה ${item.size} · ${priceText(item)}\n` +
+      `${SHOP}/?item=${item.category}-${item.num}`;
+
+    const top = [...exact].sort(byViews).slice(0, MAX_RESULTS).map(line);
     const more =
-      matches.length > MAX_RESULTS
-        ? `\n\nויש עוד ${matches.length - MAX_RESULTS} במידה שלך באתר 👇\n${SHOP}`
+      exact.length > MAX_RESULTS
+        ? `\n\nויש עוד ${exact.length - MAX_RESULTS} במידה שלך 👇\n${landing}`
         : '';
+
+    // Letter-labelled pieces are a weaker claim than a numeric label, so they
+    // are named as such rather than mixed into the count.
+    const alsoFits = [...maybe].sort(byViews).slice(0, 3);
+    const alsoText = alsoFits.length
+      ? `\n\nוגם אלה עשויים להתאים:\n` +
+        alsoFits.map((i) => `#${i.num} · ${i.name} · מידה ${i.size} · ${priceText(i)}`).join('\n')
+      : '';
+
+    if (exact.length === 0) {
+      return send(
+        request,
+        `אין ${noun} מסומנים במידה ${label}, אבל אלה עשויים להתאים 🤙\n\n` +
+          [...maybe].sort(byViews).slice(0, MAX_RESULTS).map(line).join('\n\n') +
+          `\n\n${landing}`,
+      );
+    }
 
     return send(
       request,
-      `מצאתי ${matches.length} פריטים שמתאימים למידה ${what} 🤙\n\n` +
-        lines.join('\n\n') +
-        more,
+      `מצאתי ${exact.length} ${noun} במידה ${label} 🤙\n\n` +
+        top.join('\n\n') +
+        more +
+        alsoText,
     );
   }
 
