@@ -7,7 +7,9 @@
 //   /.netlify/functions/bot?size=32     which pieces fit a 32in waist
 //   /.netlify/functions/bot?item=126    is #126 still available
 //
-// Response is ManyChat Dynamic Block v2.
+// ManyChat gets Dynamic Block v2 JSON. Open the same URL in a browser and you
+// get the message laid out the way the customer will see it — the raw JSON is
+// unreadable in Hebrew, and the owner tests these by hand.
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
@@ -81,7 +83,7 @@ function priceText(item) {
     : `${item.price}₪`;
 }
 
-function reply(text, quickReplies = []) {
+function manyChatBody(text, quickReplies) {
   return {
     version: 'v2',
     content: {
@@ -96,46 +98,84 @@ function reply(text, quickReplies = []) {
   };
 }
 
+const esc = (s) =>
+  String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+/** The same answer, laid out for a person instead of for ManyChat. */
+function previewPage(text) {
+  const body = esc(text).replace(
+    /(https?:\/\/[^\s]+)/g,
+    '<a href="$1" dir="ltr">$1</a>',
+  );
+  return `<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>תצוגה מקדימה — בוט HighTide</title>
+<meta name="robots" content="noindex">
+<style>
+  body{margin:0;padding:24px;background:#0f172a;color:#e2e8f0;
+       font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:520px;margin:0 auto}
+  .note{font-size:13px;color:#94a3b8;margin:0 0 16px}
+  .bubble{background:#1e293b;border-radius:18px 18px 18px 4px;padding:16px 18px;
+          white-space:pre-wrap;overflow-wrap:anywhere}
+  a{color:#7dd3fc}
+</style></head>
+<body><div class="wrap">
+<p class="note">כך ההודעה תיראה ללקוח באינסטגרם. ManyChat מקבל את אותו תוכן בפורמט JSON.</p>
+<div class="bubble">${body}</div>
+</div></body></html>`;
+}
+
+/** Browsers ask for HTML; ManyChat does not. Answer each in its own language. */
+function send(request, text, quickReplies = []) {
+  const accept = request.headers.get('accept') || '';
+  if (accept.includes('text/html')) {
+    return new Response(previewPage(text), {
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+  }
+  return Response.json(manyChatBody(text, quickReplies));
+}
+
 export default async (request) => {
   const params = new URL(request.url).searchParams;
   const wantedSize = params.get('size');
   const wantedItem = params.get('item');
 
   if (!SUPABASE_URL || !ANON_KEY) {
-    return Response.json(reply('אופס, יש תקלה זמנית. נחזור אליך תוך כמה דקות 🙏'));
+    return send(request, 'אופס, יש תקלה זמנית. נחזור אליך תוך כמה דקות 🙏');
   }
 
   let items;
   try {
     items = await catalogue();
   } catch {
-    return Response.json(reply('אופס, יש תקלה זמנית. נחזור אליך תוך כמה דקות 🙏'));
+    return send(request, 'אופס, יש תקלה זמנית. נחזור אליך תוך כמה דקות 🙏');
   }
 
   // ── a specific piece ───────────────────────────────────────────────────
   if (wantedItem) {
     const num = parseInt(String(wantedItem).replace(/[^\d]/g, ''), 10);
     if (!num) {
-      return Response.json(reply('לא זיהיתי את המספר. אפשר לשלוח רק את הספרות? למשל 126'));
+      return send(request, 'לא זיהיתי את המספר. אפשר לשלוח רק את הספרות? למשל 126');
     }
     const found = items.find((i) => i.num === num);
     if (!found) {
-      return Response.json(
-        reply(
-          `פריט #${num} כבר לא במלאי 😔\n\n` +
-            `כל פריט אצלנו יחיד, אז ברגע שנמכר הוא נעלם.\n` +
-            `מה שיש עכשיו: ${SHOP}`,
-        ),
+      return send(
+        request,
+        `פריט #${num} כבר לא במלאי 😔\n\n` +
+          `כל פריט אצלנו יחיד, אז ברגע שנמכר הוא נעלם.\n` +
+          `מה שיש עכשיו: ${SHOP}`,
       );
     }
-    return Response.json(
-      reply(
-        `פריט #${found.num} — זמין ✅\n\n` +
-          `${found.name}\n` +
-          `${CATEGORY_LABEL[found.category] || ''} · מידה ${found.size}\n` +
-          `${priceText(found)}\n\n` +
-          `${SHOP}/?item=${found.category}-${found.num}`,
-      ),
+    return send(
+      request,
+      `פריט #${found.num} — זמין ✅\n\n` +
+        `${found.name}\n` +
+        `${CATEGORY_LABEL[found.category] || ''} · מידה ${found.size}\n` +
+        `${priceText(found)}\n\n` +
+        `${SHOP}/?item=${found.category}-${found.num}`,
     );
   }
 
@@ -146,12 +186,11 @@ export default async (request) => {
     const waist = sizeToInches(asked);
 
     if (!waist) {
-      return Response.json(
-        reply(
-          'לא זיהיתי את המידה 🤔\n\n' +
-            'אפשר לשלוח מספר באינצ׳ים (למשל 32)\n' +
-            'או מידה באותיות (S / M / L / XL)',
-        ),
+      return send(
+        request,
+        'לא זיהיתי את המידה 🤔\n\n' +
+          'אפשר לשלוח מספר באינצ׳ים (למשל 32)\n' +
+          'או מידה באותיות (S / M / L / XL)',
       );
     }
 
@@ -176,11 +215,10 @@ export default async (request) => {
 
     const what = askedLetter ? asked.toUpperCase() : `${waist}`;
     if (matches.length === 0) {
-      return Response.json(
-        reply(
-          `לא מצאתי כרגע פריטים במידה ${what} 😔\n\n` +
-            `דרופ חדש נכנס כל שבוע — שווה לעקוב.\n${SHOP}`,
-        ),
+      return send(
+        request,
+        `לא מצאתי כרגע פריטים במידה ${what} 😔\n\n` +
+          `דרופ חדש נכנס כל שבוע — שווה לעקוב.\n${SHOP}`,
       );
     }
 
@@ -194,16 +232,16 @@ export default async (request) => {
         ? `\n\nויש עוד ${matches.length - MAX_RESULTS} במידה שלך באתר 👇\n${SHOP}`
         : '';
 
-    return Response.json(
-      reply(
-        `מצאתי ${matches.length} פריטים שמתאימים למידה ${what} 🤙\n\n` +
-          lines.join('\n\n') +
-          more,
-      ),
+    return send(
+      request,
+      `מצאתי ${matches.length} פריטים שמתאימים למידה ${what} 🤙\n\n` +
+        lines.join('\n\n') +
+        more,
     );
   }
 
-  return Response.json(
-    reply('שלחו מידה (למשל 32) או מספר פריט (למשל 126) ואבדוק במלאי.'),
+  return send(
+    request,
+    'שלחו מידה (למשל 32) או מספר פריט (למשל 126) ואבדוק במלאי.',
   );
 };
