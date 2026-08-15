@@ -4,7 +4,12 @@
   # Requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the Netlify env vars.
   command = "npm run build:static"
 
-# SPA: every route serves the app
+# The Instagram bot asks these what is in stock — see netlify/functions/bot.mjs
+[functions]
+  directory = "netlify/functions"
+
+# SPA: every route serves the app. Listed after the functions block so the
+# catch-all cannot swallow /.netlify/functions/*.
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -153,6 +153,24 @@ export default function App() {
     setSelectedProductForDetails(product);
   };
 
+  // ?item=boardies-126 opens straight onto that garment. The Instagram bot
+  // hands out these links, so a shopper lands on the piece rather than on the
+  // homepage with a number to hunt for.
+  useEffect(() => {
+    if (products.length === 0) return;
+    const wanted = new URLSearchParams(window.location.search).get('item');
+    if (!wanted) return;
+    const match = products.find((p) => p.id === wanted);
+    if (match) {
+      setSelectedCategory(match.category);
+      openProduct(match);
+      track('deep_link_open', { product_id: match.id });
+    }
+    // Clear the parameter so a reload does not reopen it after the visitor closed it.
+    const clean = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', clean);
+  }, [products]);
+
   const handleToggleFavorite = (product: Product) => {
     const isFav = favoriteItems.some((item) => item.id === product.id);
     let updated: Product[];
