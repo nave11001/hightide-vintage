@@ -2,9 +2,14 @@
 //
 // The read-only bot endpoint is next door in bot.mjs. This one writes, so it is
 // deliberately narrow: one table, insert only, and a shared secret ManyChat
-// carries in the URL so the address alone is not an open door.
+// carries so the address alone is not an open door.
 //
-//   /.netlify/functions/reserve?key=…&description=…&phone=…&user=…
+//   x-bot-key: …
+//   /.netlify/functions/reserve?description=…&phone=…&user=…
+//
+// The secret belongs in the header. A query string travels in the clear through
+// every access log it touches; a header usually does not. ?key= is still read so
+// an already-configured automation keeps working while it is being moved over.
 //
 // The rows hold customers' phone numbers. They are never read back through this
 // function and never written to the logs — see supabase/reservations.sql, where
@@ -71,7 +76,8 @@ export default async (request) => {
   }
 
   // Without this the address is a public write endpoint for anyone who finds it.
-  if (params.get('key') !== SECRET) {
+  const presented = request.headers.get('x-bot-key') ?? params.get('key');
+  if (presented !== SECRET) {
     return new Response('Not found', { status: 404 });
   }
 
