@@ -25,6 +25,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   const items: GalleryItem[] = top.map((p, i) => ({
     id: p.id,
     image: p.image,
+    hoverImage: p.images?.[1],
     title: p.name,
     price: p.price,
     originalPrice: p.originalPrice,

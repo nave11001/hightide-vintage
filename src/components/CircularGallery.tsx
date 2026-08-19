@@ -17,6 +17,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export interface GalleryItem {
   id: string;
   image: string;
+  /** A second angle, faded in while the pointer rests on the card. */
+  hoverImage?: string;
   title: string;
   price: number;
   originalPrice?: number;
@@ -49,6 +51,16 @@ interface CircularGalleryProps {
 // room. The gap has to cover that overhang or neighbours climb onto each other,
 // so it scales with the card rather than sitting at a fixed pixel count.
 const GAP_RATIO = 0.26;
+
+/** Capture is a nicety; a throw here would strand the rail mid-drag. */
+function capture(el: any, id: number, on: boolean) {
+  try {
+    if (on) el.setPointerCapture?.(id);
+    else el.releasePointerCapture?.(id);
+  } catch {
+    /* pointer already gone */
+  }
+}
 const DEG = 180 / Math.PI;
 /** Past this much pointer travel it was a drag, not a click on a card. */
 const DRAG_SLOP = 6;
@@ -196,11 +208,22 @@ export default function CircularGallery({
   };
 
   // Pointer drag. The distance travelled decides whether the release opens an item.
-  const start = useRef({ x: 0, from: 0, moved: 0 });
+  //
+  // Capturing the pointer is what makes dragging past the rail's edge work, but it
+  // also retargets the following `click` to the capturing element — so a listener
+  // on the card itself never hears it. The tap is therefore resolved here, from
+  // the card the press landed on, and the card handles only the keyboard.
+  const start = useRef({ x: 0, from: 0, moved: 0, card: -1 });
   const onPointerDown = (e: any) => {
     dragging.current = true;
-    start.current = { x: e.clientX, from: target.current, moved: 0 };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+    const hit = e.target?.closest?.('[data-card]');
+    start.current = {
+      x: e.clientX,
+      from: target.current,
+      moved: 0,
+      card: hit ? Number(hit.dataset.card) : -1,
+    };
+    capture(e.currentTarget, e.pointerId, true);
   };
   const onPointerMove = (e: any) => {
     if (!dragging.current) return;
@@ -209,8 +232,16 @@ export default function CircularGallery({
     target.current = start.current.from + dx * scrollSpeed * 0.5;
   };
   const onPointerUp = (e: any) => {
+    capture(e.currentTarget, e.pointerId, false);
+    const { moved, card } = start.current;
     dragging.current = false;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    start.current.card = -1;
+    if (moved <= DRAG_SLOP && card >= 0 && loop[card]) onSelect(loop[card]);
+  };
+  const onPointerCancel = (e: any) => {
+    capture(e.currentTarget, e.pointerId, false);
+    dragging.current = false;
+    start.current.card = -1;
   };
 
   // Horizontal intent only. Claiming the vertical wheel would trap the page.
@@ -245,7 +276,7 @@ export default function CircularGallery({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        onPointerCancel={onPointerCancel}
         onPointerEnter={() => (paused.current = true)}
         onPointerLeave={() => {
           paused.current = false;
@@ -260,6 +291,7 @@ export default function CircularGallery({
             ref={(el: HTMLDivElement) => {
               cards.current[i] = el;
             }}
+            data-card={i}
             className="absolute left-0 top-1/2 will-change-transform"
             style={{ width: itemW || undefined, visibility: 'hidden' }}
           >
@@ -271,8 +303,10 @@ export default function CircularGallery({
                 centerOn(i);
               }}
               onBlur={() => (paused.current = false)}
-              onClick={() => {
-                if (start.current.moved > DRAG_SLOP) return;
+              // Pointer taps are settled on the rail; this is the keyboard path.
+              onKeyDown={(e: any) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
                 onSelect(item);
               }}
               className="w-full text-right group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2"
@@ -289,6 +323,17 @@ export default function CircularGallery({
                   draggable={false}
                   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103"
                 />
+                {/* Second angle revealed on hover, same as ProductCard. */}
+                {item.hoverImage && (
+                  <img
+                    src={item.hoverImage}
+                    alt={`${item.title} - זווית נוספת`}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    draggable={false}
+                    className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                )}
                 {item.badge && (
                   <span className="absolute top-2 right-2 bg-stone-900 text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center select-none">
                     {item.badge}
