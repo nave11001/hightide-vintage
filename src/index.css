@@ -49,6 +49,15 @@
   }
 }
 
+@keyframes coinSpin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -74,6 +83,19 @@
 
 .animate-fade-in {
   animation: fadeIn 0.15s ease-out forwards;
+}
+
+/* Both faces of the coin live in the same 3D space, so the disc reads as solid. */
+.animate-coin {
+  animation: coinSpin 6s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* A logo spinning forever is exactly what reduced-motion is asking us to stop. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-coin {
+    animation: none;
+  }
 }
 
 /* Custom scrollbar to match retro look */
