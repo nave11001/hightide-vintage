@@ -4,6 +4,7 @@ import { loadProducts, CATEGORIES } from './data';
 import TopWanted from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
 import SpinningLogo from './components/SpinningLogo';
+import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -26,6 +27,13 @@ export default function App() {
   // Store Core State
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  // The loading veil. It reports real milestones rather than a timer, and it
+  // only ever appears when the shop is genuinely slow to come up — see the
+  // effect below for why it is not simply tied to isLoadingProducts.
+  const [veil, setVeil] = useState<{ progress: number; failed: boolean } | null>(null);
+  const veilProgress = useRef(0);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminSession, setIsAdminSession] = useState(() => {
     return !!sessionStorage.getItem('hightide_admin_token');
@@ -129,26 +137,91 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
+    // Milestones, not a clock. React is up the moment this runs; the catalogue
+    // is the long pole; the first row of photos is what makes the page usable.
+    const step = (to: number) => {
+      if (cancelled) return;
+      veilProgress.current = Math.max(veilProgress.current, to);
+      setVeil((v) => (v ? { ...v, progress: veilProgress.current } : v));
+    };
+    step(0.15);
+
+    // A fast visit must never see this. Only a shop that is still not ready
+    // after this long is worth covering.
+    const SHOW_AFTER_MS = 400;
+    const gate = window.setTimeout(() => {
+      if (!cancelled) setVeil({ progress: veilProgress.current, failed: false });
+    }, SHOW_AFTER_MS);
+
+    // Between milestones the level creeps, so a slow network never looks stuck.
+    const creep = window.setInterval(() => {
+      const ceiling = veilProgress.current < 0.7 ? 0.62 : 0.94;
+      if (veilProgress.current < ceiling) step(Math.min(ceiling, veilProgress.current + 0.006));
+    }, 120);
+
+    const done = () => {
+      window.clearTimeout(gate);
+      window.clearInterval(creep);
+      step(1);
+      if (!cancelled) setIsLoadingProducts(false);
+      // Long enough for the sphere to fill and the fade to run.
+      window.setTimeout(() => {
+        if (!cancelled) setVeil(null);
+      }, 900);
+    };
+
+    /** Give the first few photos a moment to decode, so the shop lands whole. */
+    const warmImages = (list: Product[]) =>
+      Promise.race([
+        Promise.all(
+          list.slice(0, 4).map(
+            (p) =>
+              new Promise<void>((resolve) => {
+                if (!p.image) return resolve();
+                const img = new Image();
+                img.onload = img.onerror = () => resolve();
+                img.src = p.image;
+              }),
+          ),
+        ),
+        new Promise((resolve) => window.setTimeout(resolve, 2500)),
+      ]);
+
     (async () => {
       try {
         const live = await loadProducts();
         if (cancelled) return;
         setProducts(live);
+        step(0.7);
         // Kept only so the shop still renders if Supabase is unreachable later
         localStorage.setItem('higetide_products_v2', JSON.stringify(live));
+        await warmImages(live);
+        done();
       } catch (e) {
         console.error('Failed to load inventory from Supabase:', e);
         if (cancelled) return;
         const cached = localStorage.getItem('higetide_products_v2');
+        let recovered: Product[] | null = null;
         if (cached) {
           try {
-            setProducts(JSON.parse(cached));
+            recovered = JSON.parse(cached);
           } catch {
-            /* corrupt cache — show the empty state */
+            /* corrupt cache — fall through to the retry panel */
           }
         }
-      } finally {
-        if (!cancelled) setIsLoadingProducts(false);
+        if (recovered && recovered.length > 0) {
+          // Last visit's catalogue beats an empty shop. It may be a drop behind.
+          setProducts(recovered);
+          step(0.7);
+          done();
+          return;
+        }
+        // Nothing live and nothing cached: say so instead of showing an empty
+        // grid the customer cannot tell apart from a sold-out shop.
+        window.clearTimeout(gate);
+        window.clearInterval(creep);
+        setIsLoadingProducts(false);
+        setVeil({ progress: veilProgress.current, failed: true });
       }
     })();
 
@@ -163,8 +236,18 @@ export default function App() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(gate);
+      window.clearInterval(creep);
     };
-  }, []);
+  }, [loadAttempt]);
+
+  /** "נסו שוב" on the veil: start the whole load over from an empty level. */
+  const retryLoad = () => {
+    veilProgress.current = 0;
+    setVeil({ progress: 0, failed: false });
+    setIsLoadingProducts(true);
+    setLoadAttempt((n) => n + 1);
+  };
 
   // The product_view event is the only thing recorded here. items.views is
   // filled from PostHog by scripts/sync_top_wanted.py, counting distinct
@@ -355,7 +438,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
-      
+
+      {/* Only mounted when the shop was still not ready after 400ms. */}
+      {veil && (
+        <LiquidVeil progress={veil.progress} failed={veil.failed} onRetry={retryLoad} />
+      )}
+
       {/* Standard White Sticky Header: only shown when NOT on the homepage landing view */}
       {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding) && (
         <Header
