@@ -183,7 +183,7 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
       ) : (
         <p
           dir="ltr"
-          className="text-2xl sm:text-3xl font-groovy font-normal text-stone-900 tracking-wide select-none"
+          className="text-lg sm:text-xl font-groovy font-normal text-stone-900 tracking-wide select-none"
         >
           JUST CHILL
         </p>
