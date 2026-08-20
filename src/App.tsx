@@ -3,6 +3,7 @@ import { Product } from './types';
 import { loadProducts, CATEGORIES } from './data';
 import TopWanted from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
+import SpinningLogo from './components/SpinningLogo';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -14,7 +15,7 @@ import catShirtsImg from '@/assets/photos/T-shirts.jpg';
 import catAccessoriesImg from '@/assets/photos/accessories.jpeg';
 import catWomenImg from '@/assets/photos/Women (1).jpeg';
 import catAllImg from '@/assets/photos/all products.jpg';
-import { Info, Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
+import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
 // The size finder is built and tested but held back while it is refined —
@@ -720,9 +721,7 @@ export default function App() {
 
         {/* Vintage Care Tip section */}
         <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-col md:flex-row-reverse gap-4 items-start text-right" id="care-tips">
-          <div className="p-2.5 bg-stone-100 border border-stone-300 text-stone-800 flex-shrink-0">
-            <Info className="w-6 h-6" />
-          </div>
+          <SpinningLogo className="w-16 h-16 sm:w-20 sm:h-20" />
           <div dir="rtl">
             <h4 className="font-extrabold text-stone-900" style={{ fontFamily: 'Rubik, sans-serif', fontSize: '26px' }} dir="rtl">אהבתם מה שראיתם?</h4>
             <p className="text-xs text-stone-700 mt-1 leading-relaxed" dir="rtl">

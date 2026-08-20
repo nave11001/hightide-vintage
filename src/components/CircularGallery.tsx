@@ -50,7 +50,13 @@ interface CircularGalleryProps {
 // A tilted card is wider than it is: rotating W by θ needs W·cosθ + H·sinθ of
 // room. The gap has to cover that overhang or neighbours climb onto each other,
 // so it scales with the card rather than sitting at a fixed pixel count.
-const GAP_RATIO = 0.26;
+//
+// A phone needs more of it. The rail is the same arc across half the width, so
+// every card sits at a steeper tilt and overhangs further.
+const gapRatioFor = (width: number) => (width < 640 ? 0.42 : 0.26);
+
+/** Below this the rail only moves when a finger moves it. */
+const DRIFT_MIN_WIDTH = 640;
 
 /** Capture is a nicety; a throw here would strand the rail mid-drag. */
 function capture(el: any, id: number, on: boolean) {
@@ -112,7 +118,7 @@ export default function CircularGallery({
   }, []);
 
   const itemW = stepFor(width);
-  const step = itemW * (1 + GAP_RATIO);
+  const step = itemW * (1 + gapRatioFor(width));
 
   // Repeat the list until it is long enough that wrapping never exposes a gap:
   // the visible window is one container wide, so two containers' worth of track
@@ -128,6 +134,9 @@ export default function CircularGallery({
     if (width === 0 || loop.length === 0) return;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // On a phone the rail sits under the thumb. Anything that moves on its own
+    // there reads as the page running away, so it waits to be dragged.
+    const idle = width >= DRIFT_MIN_WIDTH ? drift : 0;
     const half = width / 2;
     // Sagitta: how far the rail dips by the time it reaches the edge. Feeding it
     // through the circle formula gives the radius the cards actually sit on.
@@ -182,8 +191,8 @@ export default function CircularGallery({
 
     let frame = 0;
     const tick = () => {
-      if (!reduced && drift !== 0 && !paused.current && !dragging.current) {
-        target.current += drift;
+      if (!reduced && idle !== 0 && !paused.current && !dragging.current) {
+        target.current += idle;
       }
       current.current += (target.current - current.current) * scrollEase;
       layout();
