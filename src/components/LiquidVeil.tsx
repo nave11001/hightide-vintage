@@ -163,6 +163,9 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
         </div>
       </div>
 
+      {/* JUST CHILL is written uppercase rather than transformed: the Latin face
+          behind font-groovy is Flowers Kingdom, and a text-transform would ask
+          it for glyphs the string does not actually carry. */}
       {failed ? (
         <div className="text-center max-w-sm">
           <p className="text-base font-medium text-stone-900">לא הצלחנו לטעון את המלאי</p>
@@ -178,7 +181,12 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
           </button>
         </div>
       ) : (
-        <p className="text-xs text-stone-400 tracking-widest uppercase font-mono">טוען מלאי…</p>
+        <p
+          dir="ltr"
+          className="text-2xl sm:text-3xl font-groovy font-normal text-stone-900 tracking-wide select-none"
+        >
+          JUST CHILL
+        </p>
       )}
     </div>
   );
