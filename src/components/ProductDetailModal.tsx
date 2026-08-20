@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
-import saleStampUrl from '@/assets/photos/sale_stamp.png';
+import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 
 interface ProductDetailModalProps {
   product: Product | null;

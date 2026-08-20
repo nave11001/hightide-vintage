@@ -1,5 +1,5 @@
 import React from 'react';
-import fontUrl from '@/assets/font_homepage.png';
+import fontUrl from '@/assets/font_homepage.webp';
 
 interface HightideLogoProps {
   className?: string;

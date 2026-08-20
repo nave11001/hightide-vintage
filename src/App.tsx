@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Product } from './types';
 import { loadProducts, CATEGORIES } from './data';
-import TopWanted from './components/TopWanted';
+import { dismissSplash } from './splash';
+import TopWanted, { pickTopWanted } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
 import SpinningLogo from './components/SpinningLogo';
 import LiquidVeil from './components/LiquidVeil';
@@ -10,12 +11,12 @@ import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
 import AdminPanelModal from './components/AdminPanelModal';
 import HightideLogo from './components/HightideLogo';
-import heroImageUrl from '@/assets/homepage_photo.png';
-import catBoardiesImg from '@/assets/photos/boardshorts.jpg';
-import catShirtsImg from '@/assets/photos/T-shirts.jpg';
-import catAccessoriesImg from '@/assets/photos/accessories.jpeg';
-import catWomenImg from '@/assets/photos/Women (1).jpeg';
-import catAllImg from '@/assets/photos/all products.jpg';
+import heroImageUrl from '@/assets/homepage_photo.webp';
+import catBoardiesImg from '@/assets/photos/boardshorts.webp';
+import catShirtsImg from '@/assets/photos/T-shirts.webp';
+import catAccessoriesImg from '@/assets/photos/accessories.webp';
+import catWomenImg from '@/assets/photos/Women (1).webp';
+import catAllImg from '@/assets/photos/all products.webp';
 import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
@@ -164,28 +165,46 @@ export default function App() {
       window.clearInterval(creep);
       step(1);
       if (!cancelled) setIsLoadingProducts(false);
+      // On a fast visit the veil never mounted, so nothing else will take the
+      // splash down. On a slow one the veil already did, and this is a no-op.
+      dismissSplash();
       // Long enough for the sphere to fill and the fade to run.
       window.setTimeout(() => {
         if (!cancelled) setVeil(null);
       }, 900);
     };
 
-    /** Give the first few photos a moment to decode, so the shop lands whole. */
-    const warmImages = (list: Product[]) =>
-      Promise.race([
-        Promise.all(
-          list.slice(0, 4).map(
-            (p) =>
-              new Promise<void>((resolve) => {
-                if (!p.image) return resolve();
-                const img = new Image();
-                img.onload = img.onerror = () => resolve();
-                img.src = p.image;
-              }),
-          ),
-        ),
-        new Promise((resolve) => window.setTimeout(resolve, 2500)),
+    /**
+     * Hold the veil until the top of the homepage can actually be painted.
+     *
+     * What that means is specific: the hero photograph, and the first cards of
+     * the Most Wanted rail — which is not the head of the catalogue but the
+     * most-viewed items, so it asks TopWanted itself rather than guessing.
+     * Warming the wrong list is the same as warming nothing.
+     *
+     * decode() rather than onload, because onload only means the bytes arrived;
+     * a photo that has not been decoded still paints as an empty frame.
+     */
+    const warmImages = (list: Product[]) => {
+      const urls = [heroImageUrl, ...pickTopWanted(list).slice(0, 5).map((p) => p.image)];
+
+      const ready = urls.filter(Boolean).map(
+        (src) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onerror = () => resolve(); // a broken photo must not hold the shop
+            img.onload = () => (img.decode ? img.decode().then(resolve, () => resolve()) : resolve());
+            img.src = src;
+          }),
+      );
+
+      // A ceiling, not a target. On a bad connection the shop opens anyway —
+      // a veil that never lifts is worse than a photo that arrives late.
+      return Promise.race([
+        Promise.all(ready),
+        new Promise((resolve) => window.setTimeout(resolve, 6000)),
       ]);
+    };
 
     (async () => {
       try {

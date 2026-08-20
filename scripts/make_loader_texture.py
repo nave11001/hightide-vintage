@@ -16,6 +16,11 @@ viewport, so it arrives stretched. Padding to square keeps the logo round.
 
 The 512px result is also 32x lighter than the source, which matters when the
 image's whole job is to appear before the site does.
+
+It lives in public/ rather than assets/ so that it keeps a fixed URL. The splash
+screen in index.html is plain HTML that has to render before any JavaScript
+runs, and it cannot know the hash Vite would stamp on a bundled asset. The
+shader then loads the same URL, so the two share one download.
 """
 
 import os
@@ -23,7 +28,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'logo.png')
-DST = os.path.join(ROOT, 'assets', 'logo-loader.webp')
+DST = os.path.join(ROOT, 'public', 'logo-loader.webp')
 SIZE = 512
 
 def main() -> None:

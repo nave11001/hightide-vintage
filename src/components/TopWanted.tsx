@@ -12,12 +12,21 @@ interface TopWantedProps {
 
 const HOW_MANY = 10;
 
-export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
+/**
+ * The rail's contents. Exported because the loading veil has to wait for these
+ * exact photos — this rail is the first thing on the homepage, and warming any
+ * other selection lifts the veil onto a row of empty frames.
+ */
+export function pickTopWanted(products: Product[]): Product[] {
   // Sold items keep their views but stop being something to want.
-  const top = [...products]
+  return [...products]
     .filter((p) => !p.isSold && (p.views ?? 0) > 0)
     .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
     .slice(0, HOW_MANY);
+}
+
+export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
+  const top = pickTopWanted(products);
 
   // Nothing viewed yet — say nothing rather than show an empty rail.
   if (top.length < 3) return null;

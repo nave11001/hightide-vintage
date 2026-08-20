@@ -20,6 +20,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- The loading screen, in plain HTML so it is on screen in the first frame.
+         The bundle is ~750KB; until it arrives React has not run, and without
+         this the browser shows the crawler fallback text at the bottom of this
+         file as unstyled black on white. This marks the document instead, so the
+         splash only exists where there is JavaScript to replace it — with
+         scripting off the fallback text is the right thing to show. -->
+    <script>
+      document.documentElement.className = 'js splash-open';
+    </script>
+    <link rel="preload" as="image" href="/logo-loader.webp" />
+    <style>
+      /* Deliberately mirrors LiquidVeil's column — same square, same 24px gaps,
+         same 2px rule, same 28px reserved for the caption — so the logo does not
+         jump when the animated version takes over. */
+      /* Held from the first frame until the splash is gone. React renders the
+         whole shop behind the splash, and the scrollbar that appears when it
+         does would otherwise narrow the viewport and shift the logo sideways by
+         half a scrollbar — a visible twitch on the handover. */
+      .splash-open,
+      .splash-open body { overflow: hidden; }
+      #splash { display: none; }
+      .js #splash {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        opacity: 1;
+        transition: opacity 0.25s linear;
+      }
+      #splash > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+      }
+      /* The shader maps this same image across its whole square canvas, so
+         matching the box matches the artwork pixel for pixel. */
+      #splash img {
+        display: block;
+        width: min(64vmin, 420px);
+        height: min(64vmin, 420px);
+      }
+      /* justify-content is flex-end because the page is RTL and the veil's bar
+         grows from the right. */
+      #splash .splash-bar {
+        display: flex;
+        justify-content: flex-end;
+        width: min(64vmin, 420px);
+        max-width: 100%;
+        height: 2px;
+        background: #e7e5e4;
+      }
+      #splash .splash-bar > div { width: 2%; background: #1c1917; }
+      /* Holds the space JUST CHILL will occupy. Left empty on purpose: the brand
+         face is in the stylesheet, and drawing the words in a fallback font
+         first would only make them jump. */
+      #splash .splash-caption { height: 28px; }
+    </style>
+
     <!-- Search results. The title is what Google prints as the blue link and
          the description is the grey line under it; without them Google has to
          invent both from whatever it can scrape. -->
@@ -81,6 +143,16 @@
         ביחידה אחת בלבד.
       </p>
     </div>
+
+    <!-- Covers everything above until src/splash.ts is told to let go. -->
+    <div id="splash" aria-hidden="true">
+      <div>
+        <img src="/logo-loader.webp" alt="" width="512" height="512" />
+        <div class="splash-bar"><div></div></div>
+        <div class="splash-caption"></div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

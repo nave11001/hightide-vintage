@@ -1,4 +1,4 @@
-import logoUrl from '@/assets/logo.png';
+import logoUrl from '@/assets/logo.webp';
 
 // The brand mark turning on its vertical axis, like a coin flipped on a table.
 //

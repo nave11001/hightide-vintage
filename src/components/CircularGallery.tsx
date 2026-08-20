@@ -222,34 +222,74 @@ export default function CircularGallery({
   // also retargets the following `click` to the capturing element — so a listener
   // on the card itself never hears it. The tap is therefore resolved here, from
   // the card the press landed on, and the card handles only the keyboard.
-  const start = useRef({ x: 0, from: 0, moved: 0, card: -1 });
+  // A press does not start a drag, and nothing is captured until the finger has
+  // travelled far enough to say which way it is going.
+  //
+  // This is what stands between the rail and the page on a phone. touch-action
+  // asks the browser to keep vertical panning for itself, but capturing a touch
+  // pointer overrules that and hands the whole gesture here — so a rail that
+  // captures on pointerdown swallows every attempt to scroll past it, and the
+  // page only moves if the finger happens to land beside a card. Waiting for a
+  // direction leaves the vertical swipe with the browser, where it belongs.
+  const start = useRef({ x: 0, y: 0, from: 0, moved: 0, card: -1, live: false, held: false });
   const onPointerDown = (e: any) => {
-    dragging.current = true;
     const hit = e.target?.closest?.('[data-card]');
     start.current = {
       x: e.clientX,
+      y: e.clientY,
       from: target.current,
       moved: 0,
       card: hit ? Number(hit.dataset.card) : -1,
+      live: true,
+      held: false,
     };
-    capture(e.currentTarget, e.pointerId, true);
   };
   const onPointerMove = (e: any) => {
-    if (!dragging.current) return;
-    const dx = e.clientX - start.current.x;
-    start.current.moved = Math.max(start.current.moved, Math.abs(dx));
-    target.current = start.current.from + dx * scrollSpeed * 0.5;
+    const s = start.current;
+    if (!s.live) return;
+
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+
+    if (!s.held) {
+      // Still a tap until proven otherwise.
+      if (Math.abs(dx) < DRAG_SLOP && Math.abs(dy) < DRAG_SLOP) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // Vertical: this gesture belongs to the page. Let go of it entirely,
+        // and forget the card so the release cannot open an item.
+        s.live = false;
+        s.card = -1;
+        return;
+      }
+      // Horizontal. Take the gesture, and re-origin so the rail does not jump
+      // by the slop that was spent deciding.
+      s.held = true;
+      s.live = true;
+      s.x = e.clientX;
+      s.from = target.current;
+      s.moved = DRAG_SLOP + 1;
+      dragging.current = true;
+      capture(e.currentTarget, e.pointerId, true);
+      return;
+    }
+
+    s.moved = Math.max(s.moved, Math.abs(dx));
+    target.current = s.from + dx * scrollSpeed * 0.5;
+  };
+  const release = (e: any) => {
+    if (start.current.held) capture(e.currentTarget, e.pointerId, false);
+    dragging.current = false;
+    start.current.live = false;
+    start.current.held = false;
   };
   const onPointerUp = (e: any) => {
-    capture(e.currentTarget, e.pointerId, false);
-    const { moved, card } = start.current;
-    dragging.current = false;
+    const { moved, card, live } = start.current;
+    release(e);
     start.current.card = -1;
-    if (moved <= DRAG_SLOP && card >= 0 && loop[card]) onSelect(loop[card]);
+    if (live && moved <= DRAG_SLOP && card >= 0 && loop[card]) onSelect(loop[card]);
   };
   const onPointerCancel = (e: any) => {
-    capture(e.currentTarget, e.pointerId, false);
-    dragging.current = false;
+    release(e);
     start.current.card = -1;
   };
 
@@ -328,7 +368,10 @@ export default function CircularGallery({
                   src={item.image}
                   alt={item.title}
                   referrerPolicy="no-referrer"
-                  loading="lazy"
+                  // Not lazy: this rail is the top of the homepage, and every
+                  // card starts with visibility:hidden until the layout pass —
+                  // which is exactly the state a lazy loader waits out.
+                  loading="eager"
                   draggable={false}
                   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103"
                 />

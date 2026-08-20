@@ -1,9 +1,9 @@
 import React from 'react';
 import { Product } from '../types';
 import { Heart } from 'lucide-react';
-import soldStampUrl from '@/assets/photos/sold_stamp.png';
+import soldStampUrl from '@/assets/photos/sold_stamp.webp';
 // Downscaled from Sale.png — the original is 1536px wide for a 40px badge.
-import saleStampUrl from '@/assets/photos/sale_stamp.png';
+import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
 
 interface ProductCardProps {

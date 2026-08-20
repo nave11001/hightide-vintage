@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
-import logoUrl from '@/assets/logo-loader.webp';
 import { FRAGMENT_SHADER, VERTEX_SHADER } from './liquidShader';
+import { dismissSplash } from '../splash';
+
+// The same URL index.html preloads for its splash, so the texture is already in
+// cache by the time this mounts. It sits in public/ for that reason: a bundled
+// asset would carry a hash the static HTML cannot know.
+const logoUrl = '/logo-loader.webp';
 
 // The screen shown while the shop is still coming up: the brand mark as a glass
 // sphere filling with liquid, where the level is the real load progress.
@@ -33,8 +38,13 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
     const el = canvas.current;
     if (!el) return;
 
+    // Every path that gives up below hands the screen back, or the static splash
+    // would sit on top of the shop forever.
     const gl = el.getContext('webgl', { antialias: true, alpha: false, premultipliedAlpha: false });
-    if (!gl) return; // the bar underneath is already showing
+    if (!gl) {
+      dismissSplash(); // the bar underneath is already showing
+      return;
+    }
 
     const compile = (type: number, source: string) => {
       const shader = gl.createShader(type)!;
@@ -49,7 +59,10 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
 
     const vs = compile(gl.VERTEX_SHADER, VERTEX_SHADER);
     const fs = compile(gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
-    if (!vs || !fs) return;
+    if (!vs || !fs) {
+      dismissSplash();
+      return;
+    }
 
     const program = gl.createProgram()!;
     gl.attachShader(program, vs);
@@ -57,6 +70,7 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error('liquid veil link', gl.getProgramInfoLog(program));
+      dismissSplash();
       return;
     }
     gl.useProgram(program);
@@ -115,10 +129,19 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
         gl.uniform1f(uFill, shown);
         gl.uniform2f(uPointer, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        // Not a frame earlier: the splash is holding the same logo still, and
+        // uncovering an unpainted canvas is the blink it exists to prevent.
+        dismissSplash();
         frame = requestAnimationFrame(draw);
       };
-      frame = requestAnimationFrame(draw);
+
+      // The first frame is drawn synchronously rather than waited for. A tab
+      // opened in the background suspends requestAnimationFrame, and the splash
+      // only lifts once something has been painted — so waiting for a frame that
+      // may never come would leave the shop under a white screen.
+      draw(performance.now());
     };
+    image.onerror = dismissSplash; // no texture, nothing will ever be drawn
     image.src = logoUrl;
 
     return () => cancelAnimationFrame(frame);
@@ -147,10 +170,12 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
       aria-live="polite"
       id="liquid-veil"
     >
+      {/* No fade in: the splash covers this until the first frame is drawn, and
+          a fade would only dim the sphere while the splash uncovers it. */}
       <canvas
         ref={canvas}
         aria-hidden="true"
-        className="block w-[min(64vmin,420px)] h-[min(64vmin,420px)] opacity-0 transition-opacity duration-500"
+        className="block w-[min(64vmin,420px)] h-[min(64vmin,420px)] opacity-0"
       />
 
       <div className="w-[min(64vmin,420px)] max-w-full">

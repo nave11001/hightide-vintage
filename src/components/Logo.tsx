@@ -1,5 +1,5 @@
 import React from 'react';
-import logoUrl from '@/assets/logo.png';
+import logoUrl from '@/assets/logo.webp';
 
 interface LogoProps {
   className?: string;
