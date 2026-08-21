@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { Product } from './types';
-import { usePath, navigate, productSlugFromPath } from './router';
+import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath } from './router';
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, CATEGORIES } from './data';
@@ -12,7 +12,15 @@ import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
-import AdminPanelModal from './components/AdminPanelModal';
+// Loaded only when the panel is actually opened. It is 11KB gzipped that no
+// shopper will ever reach, and on the live site it cannot even authenticate —
+// its /api/admin/* endpoints only exist under server.ts, which Netlify does not
+// run. Kept rather than deleted because it does work locally under `npm run dev`.
+//
+// This is not a security measure. The control that matters is Supabase's row
+// level security: anon is refused INSERT and matches no rows on UPDATE or
+// DELETE. See supabase/schema.sql.
+const AdminPanelModal = lazy(() => import('./components/AdminPanelModal'));
 import HightideLogo from './components/HightideLogo';
 import heroImageUrl from '@/assets/homepage_photo.webp';
 import catBoardiesImg from '@/assets/photos/boardshorts.webp';
@@ -74,7 +82,22 @@ export default function App() {
   
   // Filtering & Search
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('none');
+  // Which category is showing is read from the address bar, the same way the
+  // open garment is. Every call site below still calls setSelectedCategory and
+  // does not know the difference — it navigates instead of setting state.
+  //
+  // While a garment is open the path names the garment, not a category, so the
+  // last one is remembered: without it, opening an item from the boardies grid
+  // would silently swap the shop behind the modal back to the homepage.
+  const lastCategory = useRef('none');
+  const pathCategory = categoryFromPath(path);
+  if (pathCategory) lastCategory.current = pathCategory;
+  else if (!routeSlug) lastCategory.current = 'none';
+  const selectedCategory = routeSlug ? lastCategory.current : (pathCategory ?? 'none');
+
+  const setSelectedCategory = (id: string) => {
+    navigate(id === 'none' ? '/' : categoryPath(id));
+  };
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
   const [saleFilter, setSaleFilter] = useState<'' | 'sale'>('');
@@ -354,7 +377,6 @@ export default function App() {
       const wantedNum = numFromSlug(wantedItem);
       const match = products.find((p) => p.num === wantedNum);
       if (match) {
-        setSelectedCategory(match.category);
         track('deep_link_open', { product_id: match.id });
         // Straight onto the canonical address, replacing rather than pushing:
         // this is not somewhere the visitor navigated, so back should take them
@@ -993,19 +1015,25 @@ export default function App() {
         } : undefined}
       />
 
-      {/* Admin Panel Inventory Control Overlay */}
-      <AdminPanelModal
-        isOpen={isAdminOpen}
-        onClose={() => {
-          setIsAdminOpen(false);
-          setPreselectedEditProduct(null);
-          setIsAdminSession(!!sessionStorage.getItem('hightide_admin_token'));
-        }}
-        products={products}
-        onSaveProducts={handleSaveProducts}
-        onResetToDefault={handleResetToDefaultProducts}
-        initialProductToEdit={preselectedEditProduct}
-      />
+      {/* Admin Panel Inventory Control Overlay. Mounted only once opened —
+          rendering it closed would download the chunk for every shopper, which
+          is the whole thing lazy() is here to avoid. */}
+      {isAdminOpen && (
+        <Suspense fallback={null}>
+          <AdminPanelModal
+            isOpen={isAdminOpen}
+            onClose={() => {
+              setIsAdminOpen(false);
+              setPreselectedEditProduct(null);
+              setIsAdminSession(!!sessionStorage.getItem('hightide_admin_token'));
+            }}
+            products={products}
+            onSaveProducts={handleSaveProducts}
+            onResetToDefault={handleResetToDefaultProducts}
+            initialProductToEdit={preselectedEditProduct}
+          />
+        </Suspense>
+      )}
 
       {/* Interactive floating accessibility and WhatsApp controls on bottom-left corner */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-center">

@@ -1,5 +1,5 @@
 import { Product } from './types';
-import { supabase, storageUrl } from './supabase';
+import { selectRows, storageUrl } from './supabase';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
 // Nothing here is baked in at build time, so marking an item sold in the
@@ -71,22 +71,11 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
 }
 
 export async function loadProducts(): Promise<Product[]> {
-  if (!supabase) {
-    throw new Error(
-      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
-    );
-  }
-
-  const { data, error } = await supabase
-    .from('items')
-    .select(
-      'num, category, name, size, price, original_price, drop_date, sold, waist_cm, length_cm, views, item_photos(path, position)',
-    )
-    .order('num', { ascending: true });
-
-  if (error) throw error;
-
-  const rows = (data ?? []) as unknown as ItemRow[];
+  const rows = await selectRows<ItemRow>('items', {
+    select:
+      'num,category,name,size,price,original_price,drop_date,sold,waist_cm,length_cm,views,item_photos(path,position)',
+    order: 'num.asc',
+  });
 
   // The latest drop = the most recent arrival date in the whole catalogue.
   const latestDropDate =
@@ -101,10 +90,7 @@ export async function loadProducts(): Promise<Product[]> {
     .filter((p): p is Product => p !== null);
 }
 
-export const CATEGORIES = [
-  { id: 'all', name: 'כל הפריטים' },
-  { id: 'boardies', name: 'בורדיז' },
-  { id: 'shirts', name: 'חולצות' },
-  { id: 'accessories', name: 'אקססוריז' },
-  { id: 'women', name: 'נשים' }
-];
+// Re-exported rather than defined here: the same list has to reach the Netlify
+// function that writes each category's search and share tags, and that cannot
+// import TypeScript. See shared/categories.mjs.
+export { CATEGORIES } from '@/shared/categories.mjs';

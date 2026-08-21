@@ -16,13 +16,14 @@
 // unfurls of the same link cheap.
 
 import { numFromSlug, productSlug } from '../../shared/slug.mjs';
+import { categoryById } from '../../shared/categories.mjs';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SHOP = 'https://hightide-vintage.netlify.app';
 const BUCKET = 'inventory';
 
-export const config = { path: '/product/*' };
+export const config = { path: ['/product/*', '/category/*'] };
 
 const CATEGORY_WORD = {
   boardies: 'מכנסי גלישה וינטג׳',
@@ -128,15 +129,59 @@ function rewrite(html, head) {
     .replace('</head>', `${head}\n  </head>`);
 }
 
+/**
+ * A category's head tags. No lookup needed — the wording is fixed per category
+ * and lives in shared/categories.mjs, alongside the list the shop renders from.
+ *
+ * The shop's own cover picture is kept: a category is a room, not an object,
+ * and picking one garment to stand for it would be arbitrary and would go stale
+ * the moment it sold.
+ */
+function buildCategoryHead(category, url) {
+  const title = `${category.title} | HIGHTIDE VINTAGE`;
+  return `<title>${attr(title)}</title>
+    <meta name="description" content="${attr(category.description)}" />
+    <link rel="canonical" href="${attr(url)}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HIGHTIDE VINTAGE" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:url" content="${attr(url)}" />
+    <meta property="og:title" content="${attr(category.title)}" />
+    <meta property="og:description" content="${attr(category.description)}" />
+    <meta property="og:image" content="${SHOP}/og-cover.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${SHOP}/og-cover.jpg" />`;
+}
+
 export default async (request) => {
   const url = new URL(request.url);
-  const slug = decodeURIComponent(url.pathname.replace(/^\/product\//, '').replace(/\/$/, ''));
 
-  // The shell is served either way, so the app still boots and can show its own
-  // not-found page. Only the status code and the head tags differ.
+  // The shell is served whatever happens, so the app still boots and can show
+  // its own not-found page. Only the status and the head tags differ.
   const shell = await fetch(new URL('/index.html', url.origin));
   const html = await shell.text();
 
+  const ok = (head) =>
+    new Response(rewrite(html, head), {
+      status: 200,
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' },
+    });
+
+  if (url.pathname.startsWith('/category/')) {
+    const id = decodeURIComponent(url.pathname.replace(/^\/category\//, '').replace(/\/$/, ''));
+    const category = categoryById(id);
+    if (!category) {
+      return new Response(html, {
+        status: 404,
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=60' },
+      });
+    }
+    return ok(buildCategoryHead(category, `${SHOP}/category/${category.id}`));
+  }
+
+  const slug = decodeURIComponent(url.pathname.replace(/^\/product\//, '').replace(/\/$/, ''));
   const num = numFromSlug(slug);
   const item = num === null ? null : await fetchItem(num);
 
@@ -148,13 +193,5 @@ export default async (request) => {
   }
 
   // Always advertise the canonical spelling, whatever spelling was followed.
-  const canonical = `${SHOP}/product/${productSlug(item.name, item.num)}`;
-
-  return new Response(rewrite(html, buildHead(item, canonical)), {
-    status: 200,
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'public, max-age=300',
-    },
-  });
+  return ok(buildHead(item, `${SHOP}/product/${productSlug(item.name, item.num)}`));
 };

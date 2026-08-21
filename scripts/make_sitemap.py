@@ -73,6 +73,18 @@ def main() -> None:
         "  </url>",
     ]
 
+    # Categories rank for what people actually type — "מכנסי גלישה וינטג׳" —
+    # which no single garment's page competes for. Kept in step with
+    # shared/categories.mjs by hand; there are five of them.
+    for category in ("all", "boardies", "shirts", "accessories", "women", "latest"):
+        lines += [
+            "  <url>",
+            f"    <loc>{SHOP}/category/{category}</loc>",
+            "    <changefreq>weekly</changefreq>",
+            "    <priority>0.9</priority>",
+            "  </url>",
+        ]
+
     for item in items:
         name = slugify(item.get("name") or "")
         num = item["num"]

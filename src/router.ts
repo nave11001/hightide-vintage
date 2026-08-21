@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { categoryById } from '@/shared/categories.mjs';
 
 // The shop has two addresses: the shop itself, and one garment.
 //
@@ -55,4 +56,21 @@ export function navigate(path: string, options: { replace?: boolean } = {}) {
 export function productSlugFromPath(path: string): string | null {
   const match = /^\/product\/([^/]+)\/?$/.exec(path);
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * The category id in /category/<id>, or null.
+ *
+ * Unknown ids come back null rather than as themselves, so an invented address
+ * shows the shop instead of an empty grid captioned with someone's typo.
+ */
+export function categoryFromPath(path: string): string | null {
+  const match = /^\/category\/([^/]+)\/?$/.exec(path);
+  if (!match) return null;
+  const id = decodeURIComponent(match[1]);
+  return categoryById(id) ? id : null;
+}
+
+export function categoryPath(id: string): string {
+  return `/category/${id}`;
 }
