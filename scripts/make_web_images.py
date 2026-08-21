@@ -38,6 +38,27 @@ JOBS = [
 ]
 
 
+def make_og_cover() -> None:
+    """The picture WhatsApp and Instagram show when the shop itself is shared.
+
+    Separate from everything above, and deliberately a JPEG: the unfurlers that
+    build link previews are much older than the pages they read, and several
+    still will not decode WebP — a card with no picture is the failure this
+    exists to prevent. 1200x630 is the size they all crop to.
+    """
+    src = os.path.join(ROOT, 'assets', 'homepage_photo.png')
+    dst = os.path.join(ROOT, 'public', 'og-cover.jpg')
+    width, height = 1200, 630
+
+    im = Image.open(src).convert('RGB')
+    scale = max(width / im.width, height / im.height)
+    im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    left, top = (im.width - width) // 2, (im.height - height) // 2
+    im.crop((left, top, left + width, top + height)).save(dst, 'JPEG', quality=86, optimize=True)
+
+    print(f'{width}x{height} jpeg {os.path.getsize(dst) // 1024}KB  public/og-cover.jpg')
+
+
 def main() -> None:
     total_before = total_after = 0
 
@@ -62,6 +83,8 @@ def main() -> None:
 
     print(f'\n{total_before // 1024:,}KB -> {total_after // 1024:,}KB'
           f'  ({100 - total_after * 100 // total_before}% lighter)')
+
+    make_og_cover()
 
 
 if __name__ == '__main__':

@@ -111,7 +111,18 @@
       property="og:description"
       content="מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים. דרופ חדש כל שבוע, כל פריט יחיד במלאי."
     />
+    <!-- Without a picture the shop unfurls as a bare line of text, which for a
+         business whose links travel through Instagram DMs is most of the first
+         impression. JPEG on purpose — several unfurlers still do not read WebP,
+         and a card with no image is exactly the failure being avoided.
+         Built by scripts/make_web_images.py. Product pages replace all of this
+         with the garment's own photo — see netlify/functions/product-meta.mjs. -->
+    <meta property="og:image" content="https://hightide-vintage.netlify.app/og-cover.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="מכנסי גלישה וחולצות וינטג׳ מקוריים — HIGHTIDE VINTAGE" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hightide-vintage.netlify.app/og-cover.jpg" />
 
     <!-- Tells Google this is a shop rather than a personal page. -->
     <script type="application/ld+json">
