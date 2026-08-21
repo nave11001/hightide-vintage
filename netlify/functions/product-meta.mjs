@@ -1,0 +1,160 @@
+// Serves /product/<slug> with that garment's own title, description and photo
+// written into the HTML.
+//
+// This is the whole reason product URLs are worth having. The shop is a React
+// app: the garment is drawn by JavaScript, and the crawlers that build link
+// previews for WhatsApp, Instagram and Facebook do not run any. Without this
+// every one of the shop's links would unfurl with the same generic card and no
+// photograph — a shop whose sales channel is Instagram DMs cannot afford that.
+//
+// Googlebot does execute JavaScript, so search would eventually manage without
+// this. Sharing never would.
+//
+// The page is fetched fresh rather than baked at build time, because the thing
+// most worth being current — whether the item is still available — changes in
+// the dashboard, which does not trigger a deploy. A short cache keeps repeat
+// unfurls of the same link cheap.
+
+import { numFromSlug, productSlug } from '../../shared/slug.mjs';
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const SHOP = 'https://hightide-vintage.netlify.app';
+const BUCKET = 'inventory';
+
+export const config = { path: '/product/*' };
+
+const CATEGORY_WORD = {
+  boardies: 'מכנסי גלישה וינטג׳',
+  shirts: 'חולצת וינטג׳',
+  accessories: 'אקססורי וינטג׳',
+  women: 'פריט נשים וינטג׳',
+};
+
+/** For text inside a double-quoted HTML attribute. */
+const attr = (value) =>
+  String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/** For a string inside a <script type="application/ld+json"> block. */
+const json = (value) => JSON.stringify(value).replace(/</g, '\\u003c');
+
+async function fetchItem(num) {
+  if (!SUPABASE_URL || !ANON_KEY) return null;
+
+  const query = new URLSearchParams({
+    select: 'num,category,name,size,price,original_price,sold,item_photos(path,position)',
+    num: `eq.${num}`,
+    limit: '1',
+  });
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/items?${query}`, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
+  });
+  if (!response.ok) return null;
+
+  const rows = await response.json();
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+function buildHead(item, url) {
+  const photos = [...(item.item_photos ?? [])].sort(
+    (a, b) => a.position - b.position || a.path.localeCompare(b.path),
+  );
+  const image = photos.length
+    ? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${photos[0].path}`
+    : `${SHOP}/logo-loader.webp`;
+
+  const kind = CATEGORY_WORD[item.category] || 'פריט וינטג׳';
+  const title = `${item.name} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
+  const status = item.sold ? 'נמכר' : `₪${item.price}`;
+  const description = item.sold
+    ? `${kind} של ${item.name}, מידה ${item.size}. הפריט נמכר — כל פריט אצלנו הוא יחיד.`
+    : `${kind} של ${item.name}, מידה ${item.size}, ₪${item.price}. פריט יחיד במלאי, מקורי ומאומת.`;
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${item.name} #${item.num}`,
+    description,
+    image,
+    sku: String(item.num),
+    brand: { '@type': 'Brand', name: item.name },
+    offers: {
+      '@type': 'Offer',
+      url,
+      price: item.price,
+      priceCurrency: 'ILS',
+      itemCondition: 'https://schema.org/UsedCondition',
+      availability: item.sold
+        ? 'https://schema.org/SoldOut'
+        : 'https://schema.org/InStock',
+    },
+  };
+
+  return `<title>${attr(title)}</title>
+    <meta name="description" content="${attr(description)}" />
+    <link rel="canonical" href="${attr(url)}" />
+    <meta property="og:type" content="product" />
+    <meta property="og:site_name" content="HIGHTIDE VINTAGE" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:url" content="${attr(url)}" />
+    <meta property="og:title" content="${attr(`${item.name} #${item.num}`)} — ${attr(status)}" />
+    <meta property="og:description" content="${attr(description)}" />
+    <meta property="og:image" content="${attr(image)}" />
+    <meta property="product:price:amount" content="${attr(item.price)}" />
+    <meta property="product:price:currency" content="ILS" />
+    <meta property="product:availability" content="${item.sold ? 'oldout' : 'instock'}" />
+    <!-- "oldout" is not a typo: it is the spelling the Open Graph product
+         namespace defines. The word a person reads is in og:title above. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${attr(image)}" />
+    <script type="application/ld+json">${json(schema)}</script>`;
+}
+
+/**
+ * Swap the shop's own head tags for this garment's.
+ *
+ * The originals are removed rather than added to: a crawler handed two og:title
+ * tags takes whichever it meets first, which would be the shop's.
+ */
+function rewrite(html, head) {
+  return html
+    .replace(/<title>[\s\S]*?<\/title>/i, '')
+    .replace(/<meta\s+name="description"[^>]*>/i, '')
+    .replace(/<meta\s+property="og:[^"]*"[^>]*>/gi, '')
+    .replace(/<meta\s+name="twitter:[^"]*"[^>]*>/gi, '')
+    .replace(/<link\s+rel="canonical"[^>]*>/i, '')
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/i, '')
+    .replace('</head>', `${head}\n  </head>`);
+}
+
+export default async (request) => {
+  const url = new URL(request.url);
+  const slug = decodeURIComponent(url.pathname.replace(/^\/product\//, '').replace(/\/$/, ''));
+
+  // The shell is served either way, so the app still boots and can show its own
+  // not-found page. Only the status code and the head tags differ.
+  const shell = await fetch(new URL('/index.html', url.origin));
+  const html = await shell.text();
+
+  const num = numFromSlug(slug);
+  const item = num === null ? null : await fetchItem(num);
+
+  if (!item) {
+    return new Response(html, {
+      status: 404,
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=60' },
+    });
+  }
+
+  // Always advertise the canonical spelling, whatever spelling was followed.
+  const canonical = `${SHOP}/product/${productSlug(item.name, item.num)}`;
+
+  return new Response(rewrite(html, buildHead(item, canonical)), {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'public, max-age=300',
+    },
+  });
+};

@@ -45,6 +45,7 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
   const labels = CATEGORY_LABELS[category];
   return {
     id: `${category}-${row.num}`,
+    num: row.num,
     name: `${row.name} #${row.num}`,
     brand: row.name,
     price: row.price,

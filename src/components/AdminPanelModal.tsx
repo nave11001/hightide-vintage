@@ -230,8 +230,13 @@ export default function AdminPanelModal({
     }
 
     if (isAddingNew) {
+      // An item added by hand has no catalogue number, but it still needs one:
+      // the number is what a product URL resolves by. The timestamp keeps it
+      // unique against both the catalogue and other hand-added items.
+      const stamp = Date.now();
       const newProd: Product = {
-        id: 'user_prod_' + Date.now(),
+        id: 'user_prod_' + stamp,
+        num: stamp,
         name,
         brand,
         price,

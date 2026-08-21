@@ -1,5 +1,8 @@
 export interface Product {
   id: string;
+  /** Catalogue number. Unique across every category, and the identity inside
+   *  a product URL — see shared/slug.mjs. */
+  num: number;
   name: string;
   brand: string;
   price: number;

@@ -8,36 +8,52 @@ interface ProductDetailModalProps {
   product: Product | null;
   onClose: () => void;
   onEditProduct?: (product: Product) => void;
+  /**
+   * 'modal' lays the garment over the shop, for a click inside it.
+   * 'page' is the same card standing on its own, for someone who arrived on
+   * the garment's own address — there is no shop behind them to cover.
+   */
+  variant?: 'modal' | 'page';
 }
 
-export default function ProductDetailModal({ product, onClose, onEditProduct }: ProductDetailModalProps) {
+export default function ProductDetailModal({
+  product,
+  onClose,
+  onEditProduct,
+  variant = 'modal',
+}: ProductDetailModalProps) {
   if (!product) return null;
 
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] || 'One Size');
-  const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'details' | 'sizing' | 'shipping'>('details');
   const gallery = product.images && product.images.length > 0 ? product.images : [product.image];
   const [activeImage, setActiveImage] = useState(0);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" id="detail-modal">
-      {/* Overlay background */}
-      <div 
-        className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity" 
-        onClick={onClose}
-      ></div>
+  const isPage = variant === 'page';
 
-      {/* Main product card container */}
-      <div className="bg-[#fdfcf9] border border-stone-200/60 w-full max-w-3xl relative z-10 shadow-2xl max-h-[90vh] overflow-y-auto rounded-none flex flex-col md:flex-row animate-scale-up">
-        
-        {/* Left close button */}
+  // The card itself is identical in both. What changes is the frame: a modal
+  // scrolls inside its own box against a darkened shop, a page scrolls with
+  // the document like any other page.
+  const card = (
+      <div
+        className={
+          isPage
+            ? 'bg-[#fdfcf9] border border-stone-200/60 w-full max-w-3xl mx-auto relative rounded-none flex flex-col md:flex-row'
+            : 'bg-[#fdfcf9] border border-stone-200/60 w-full max-w-3xl relative z-10 shadow-2xl max-h-[90vh] overflow-y-auto rounded-none flex flex-col md:flex-row animate-scale-up'
+        }
+      >
+
+        {/* Left close button — on a page it is the way back to the shop, which
+            is a different promise from dismissing a layer, so it says so. */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 left-4 z-20 p-2 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors"
+          className="absolute top-4 left-4 z-20 p-2 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center gap-1.5"
           id="close-detail-modal-btn"
+          aria-label={isPage ? 'חזרה לחנות' : 'סגירה'}
         >
           <X className="w-4 h-4" />
+          {isPage && <span className="text-xs font-medium pl-1">לחנות</span>}
         </button>
 
         {/* Product Visual Container */}
@@ -231,7 +247,9 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
             )}
           </div>
 
-          {/* Action buttons — a sold item cannot be ordered */}
+          {/* Action buttons — a sold item cannot be ordered.
+              There is no quantity picker: every garment here is a single
+              vintage piece, so the only number it could ever hold is 1. */}
           {product.isSold ? (
             <div className="mt-6" id="detail-sold-notice">
               <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
@@ -243,32 +261,13 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
             </div>
           ) : (
           <div className="mt-6 flex flex-row-reverse gap-3 items-center">
-            {/* Quantity select */}
-            <div className="flex items-center border border-stone-200 w-24 h-10 bg-white flex-shrink-0 select-none">
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => (q > 1 ? q - 1 : 1))}
-                className="w-8 h-full flex items-center justify-center hover:bg-stone-50 active:bg-stone-100 font-normal"
-              >
-                -
-              </button>
-              <span className="flex-grow text-center font-normal font-mono text-xs text-stone-800">{quantity}</span>
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="w-8 h-full flex items-center justify-center hover:bg-stone-50 active:bg-stone-100 font-normal"
-              >
-                +
-              </button>
-            </div>
-
             {/* WhatsApp Purchase button */}
             <a
-              href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} ובכמות ${quantity} במחיר כולל של ₪${product.price * quantity}. האם הוא זמין במלאי?`)}`}
+              href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`)}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
-                trackProduct('whatsapp_purchase_click', product, { source: 'detail', quantity });
+                trackProduct('whatsapp_purchase_click', product, { source: 'detail' });
                 onClose();
               }}
               className="flex-grow h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
@@ -295,6 +294,18 @@ export default function ProductDetailModal({ product, onClose, onEditProduct }: 
           </div>
         </div>
       </div>
+  );
+
+  if (isPage) return card;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" id="detail-modal">
+      {/* Overlay background */}
+      <div
+        className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      ></div>
+      {card}
     </div>
   );
 }

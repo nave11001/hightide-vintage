@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Product } from './types';
+import { usePath, navigate, productSlugFromPath } from './router';
+import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
+import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, CATEGORIES } from './data';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted } from './components/TopWanted';
@@ -40,7 +43,27 @@ export default function App() {
     return !!sessionStorage.getItem('hightide_admin_token');
   });
   const [preselectedEditProduct, setPreselectedEditProduct] = useState<Product | null>(null);
-  const [selectedProductForDetails, setSelectedProductForDetails] = useState<Product | null>(null);
+
+  // Which garment is open is read from the address bar rather than kept in
+  // state, so a shared link, a refresh, the back button and a click inside the
+  // shop all land on exactly the same thing. See src/router.ts.
+  const path = usePath();
+  const routeSlug = productSlugFromPath(path);
+  const selectedProductForDetails = useMemo(() => {
+    if (!routeSlug) return null;
+    const num = numFromSlug(routeSlug);
+    if (num === null) return null;
+    return products.find((p) => p.num === num) ?? null;
+  }, [routeSlug, products]);
+
+  // Only once the catalogue is in can a slug be called wrong — before that it
+  // is just a garment we have not loaded yet.
+  const productNotFound = Boolean(routeSlug) && !selectedProductForDetails && products.length > 0;
+
+  // Set when the shop itself opened the garment, which is what decides whether
+  // it lays over the grid or replaces it.
+  const cameFromShop = useRef(false);
+  const productAsPage = Boolean(selectedProductForDetails) && !cameFromShop.current;
   
   // Secret Brand Clicks state
   const [brandClickCount, setBrandClickCount] = useState(0);
@@ -272,9 +295,43 @@ export default function App() {
   // filled from PostHog by scripts/sync_top_wanted.py, counting distinct
   // people — a second counter running in the browser would fight it.
   const openProduct = (product: Product) => {
-    trackProduct('product_view', product);
-    setSelectedProductForDetails(product);
+    cameFromShop.current = true;
+    navigate(productPath(product.brand, product.num));
   };
+
+  const closeProduct = () => {
+    // Step back when the entry is one we pushed, so the shop returns exactly as
+    // it was, scroll and all. Someone who arrived on the link itself has no
+    // entry behind them and would be sent off the site instead.
+    if ((window.history.state as { hightide?: boolean } | null)?.hightide) window.history.back();
+    else navigate('/', { replace: true });
+  };
+
+  // product_view fires from the route, so a shared link opening a garment
+  // counts the same as a click inside the shop — which is the point of giving
+  // it an address. Reset on close, so reopening the same item counts again.
+  const lastViewed = useRef<string | null>(null);
+  useEffect(() => {
+    const product = selectedProductForDetails;
+    if (!product) {
+      lastViewed.current = null;
+      return;
+    }
+    if (lastViewed.current === product.id) return;
+    lastViewed.current = product.id;
+    trackProduct('product_view', product);
+  }, [selectedProductForDetails]);
+
+  // A link written before a brand was renamed still finds the item, by its
+  // number. Put the current spelling in the address bar so that what gets
+  // shared onward, and what Google indexes, is one address rather than several.
+  useEffect(() => {
+    const product = selectedProductForDetails;
+    if (!product || !routeSlug) return;
+    if (routeSlug !== productSlug(product.brand, product.num)) {
+      navigate(productPath(product.brand, product.num), { replace: true });
+    }
+  }, [selectedProductForDetails, routeSlug]);
 
   // Links the Instagram bot hands out:
   //   ?item=boardies-126               opens straight onto that garment
@@ -292,11 +349,18 @@ export default function App() {
     const wantedSize = params.get('size');
 
     if (wantedItem) {
-      const match = products.find((p) => p.id === wantedItem);
+      // The bot hands out `boardies-126`; numFromSlug reads the number straight
+      // out of that, so every link already sitting in a DM keeps working.
+      const wantedNum = numFromSlug(wantedItem);
+      const match = products.find((p) => p.num === wantedNum);
       if (match) {
         setSelectedCategory(match.category);
-        openProduct(match);
         track('deep_link_open', { product_id: match.id });
+        // Straight onto the canonical address, replacing rather than pushing:
+        // this is not somewhere the visitor navigated, so back should take them
+        // out of the shop, not to the same garment under its old link.
+        navigate(productPath(match.brand, match.num), { replace: true });
+        return;
       }
     } else {
       const asWaist = (raw: string | null) => {
@@ -582,7 +646,22 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
-        
+
+        {/* A garment reached by its own address is the page. Opened from inside
+            the shop it stays a layer over the grid, so the scroll position and
+            the filters survive underneath. Same URL and same component either
+            way — only the frame around it differs. */}
+        {productAsPage && selectedProductForDetails ? (
+          <ProductDetailModal
+            product={selectedProductForDetails}
+            variant="page"
+            onClose={closeProduct}
+          />
+        ) : productNotFound ? (
+          <ProductNotFound onBack={() => navigate('/', { replace: true })} />
+        ) : (
+          <>
+
         {/* Arrived from the bot with a size / Homepage Category Navigation / Filtered Catalog */}
         {sizeLanding ? (
           <SizeLanding
@@ -836,6 +915,8 @@ export default function App() {
             </p>
           </div>
         </div>
+          </>
+        )}
       </main>
 
       {/* Footer component */}
@@ -900,13 +981,14 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Product detailed popup view */}
+      {/* Product detailed popup view. Suppressed when the garment is already
+          the page above, or it would render twice. */}
       <ProductDetailModal
-        product={selectedProductForDetails}
-        onClose={() => setSelectedProductForDetails(null)}
+        product={productAsPage ? null : selectedProductForDetails}
+        onClose={closeProduct}
         onEditProduct={isAdminSession ? (prod) => {
           setPreselectedEditProduct(prod);
-          setSelectedProductForDetails(null);
+          closeProduct();
           setIsAdminOpen(true);
         } : undefined}
       />
