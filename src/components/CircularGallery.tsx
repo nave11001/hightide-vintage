@@ -1,6 +1,16 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { onPhotoError } from '../photos';
+import { onPhotoError, srcSetFor } from '../photos';
+
+/**
+ * How wide a rail card is: about half the container on a phone, a third of it
+ * once there is room for neighbours.
+ *
+ * Exported because the loading veil preloads these same photographs, and a
+ * preloader that guesses a different width fetches a different file — which
+ * means downloading each of them twice.
+ */
+export const RAIL_SIZES = '(min-width: 1024px) 30vw, (min-width: 640px) 40vw, 55vw';
 
 // A rail whose cards ride an arc instead of a straight line: the further a card
 // sits from the middle, the lower it drops and the more it tilts, following the
@@ -380,6 +390,8 @@ export default function CircularGallery({
               >
                 <img
                   src={item.image}
+                  srcSet={srcSetFor(item.image)}
+                  sizes={RAIL_SIZES}
                   alt={item.title}
                   referrerPolicy="no-referrer"
                   // Not lazy: this rail is the top of the homepage, and every
@@ -397,6 +409,8 @@ export default function CircularGallery({
                 {item.hoverImage && wantsAngle[i] && (
                   <img
                     src={item.hoverImage}
+                    srcSet={srcSetFor(item.hoverImage)}
+                    sizes={RAIL_SIZES}
                     alt={`${item.title} - זווית נוספת`}
                     referrerPolicy="no-referrer"
                     draggable={false}

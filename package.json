@@ -20,7 +20,9 @@
     "make-snapshot": "python scripts/make_catalog_snapshot.py",
     "sync-inventory": "python scripts/sync_inventory.py",
     "reset-inventory": "python scripts/reset_inventory.py",
-    "check-duplicates": "python scripts/find_duplicates.py"
+    "check-duplicates": "python scripts/find_duplicates.py",
+    "make-logo": "python scripts/make_logo.py",
+    "make-font": "python scripts/make_font_subset.py"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

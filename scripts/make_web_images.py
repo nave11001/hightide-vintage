@@ -21,11 +21,18 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# (path relative to assets/, max width in px, quality)
+# The masters. Kept out of git — they are 16MB of PNG and JPEG that no visitor
+# ever sees, and only this script and make_logo.py read them. They live on disk
+# (and in OneDrive) rather than in the repo.
+ORIGINALS = os.path.join(ROOT, 'assets', '_originals')
+
+# (path relative to assets/_originals/, max width in px, quality)
 # Photographs take 82; flat artwork with hard edges takes 90, where ringing
 # around the letterforms would show.
+#
+# The logo is not here: scripts/make_logo.py builds it and the icons together,
+# because it has to cut the background away first.
 JOBS = [
-    ('logo.png', 700, 90),
     ('font_homepage.png', 1200, 90),
     ('homepage_photo.png', 1600, 82),
     ('photos/boardshorts.jpg', 1170, 82),
@@ -46,7 +53,7 @@ def make_og_cover() -> None:
     still will not decode WebP — a card with no picture is the failure this
     exists to prevent. 1200x630 is the size they all crop to.
     """
-    src = os.path.join(ROOT, 'assets', 'homepage_photo.png')
+    src = os.path.join(ORIGINALS, 'homepage_photo.png')
     dst = os.path.join(ROOT, 'public', 'og-cover.jpg')
     width, height = 1200, 630
 
@@ -63,8 +70,9 @@ def main() -> None:
     total_before = total_after = 0
 
     for name, max_w, quality in JOBS:
-        src = os.path.join(ROOT, 'assets', name)
-        dst = os.path.splitext(src)[0] + '.webp'
+        src = os.path.join(ORIGINALS, name)
+        # Read from the masters, write into assets/ where the site imports from.
+        dst = os.path.splitext(os.path.join(ROOT, 'assets', name))[0] + '.webp'
 
         im = Image.open(src)
         # Alpha is kept where it exists: these sit on the page as cut-outs, and

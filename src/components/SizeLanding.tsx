@@ -1,7 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Product } from '../types';
 import { track } from '../analytics';
-import { onPhotoError } from '../photos';
+import { onPhotoError, srcSetFor } from '../photos';
 import Logo from './Logo';
 import {
   splitByWaist,
@@ -43,6 +43,8 @@ function Card({ product, badge, onViewDetails }: CardProps) {
       <div className="relative aspect-[4/5] bg-stone-50 border border-gray-100 overflow-hidden">
         <img
           src={product.image}
+          srcSet={srcSetFor(product.image)}
+          sizes="(min-width: 1024px) 19vw, (min-width: 640px) 31vw, 46vw"
           alt={product.name}
           referrerPolicy="no-referrer"
           loading="lazy"

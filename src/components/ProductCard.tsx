@@ -5,7 +5,7 @@ import soldStampUrl from '@/assets/photos/sold_stamp.webp';
 // Downscaled from Sale.png — the original is 1536px wide for a 40px badge.
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
-import { onPhotoError } from '../photos';
+import { onPhotoError, srcSetFor } from '../photos';
 
 interface ProductCardProps {
   product: Product;
@@ -53,6 +53,10 @@ export default function ProductCard({
             two megabytes. */}
         <img
           src={product.image}
+          srcSet={srcSetFor(product.image)}
+          // Two per row on a phone, three on a tablet, four on a desktop — the
+          // same breakpoints as the grid this card sits in.
+          sizes="(min-width: 1024px) 23vw, (min-width: 768px) 31vw, 47vw"
           alt={product.name}
           referrerPolicy="no-referrer"
           decoding="async"
@@ -64,6 +68,8 @@ export default function ProductCard({
         {hasAngle && angleWanted && (
           <img
             src={product.images![1]}
+            srcSet={srcSetFor(product.images![1])}
+            sizes="(min-width: 1024px) 23vw, (min-width: 768px) 31vw, 47vw"
             alt={`${product.name} - זווית נוספת`}
             referrerPolicy="no-referrer"
             decoding="async"

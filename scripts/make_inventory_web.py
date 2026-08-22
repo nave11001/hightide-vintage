@@ -51,9 +51,24 @@ FOLDER_TO_CATEGORY = {
 }
 
 IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")
-# The widest the photo is ever shown, doubled for sharp screens.
-MAX_WIDTH = 1200
 QUALITY = 82
+
+# Three widths, because one width cannot serve both a thumbnail and the page a
+# customer decides on. Measured on an iPhone: a card in the grid is 164 CSS
+# pixels wide, which on that screen means 328 real ones — and it was being sent
+# 1170, about twelve times the pixels it could show. A category page cost 3.45MB
+# of photographs for that reason alone.
+#
+#   480  a card on a phone, and on a plain desktop screen
+#   800  a card on a sharp desktop screen, and the homepage rail
+#  1200  the item's own page, where the buyer is actually looking
+#
+# The browser picks: srcset offers all three and it takes the smallest that
+# still covers its screen. Nobody downloads more than one.
+WIDTHS = (480, 800, 1200)
+# 1200 keeps the plain name, so every path already stored in the database and
+# the snapshot still resolves without being rewritten.
+FULL_WIDTH = 1200
 
 
 def item_number(stem):
@@ -63,8 +78,19 @@ def item_number(stem):
 
 
 def main() -> None:
-    before = after = count = 0
+    before = after = full = count = 0
     skipped = []
+
+    # Cleared, not merged. Every file below is rewritten from the masters on
+    # each run, and a leftover is worse than missing: a variant this run decided
+    # not to write — because the master was already smaller — would survive as a
+    # stale copy, and the site's srcset would go on offering it as a size it is
+    # not. Nothing here is a source; assets/inventory/ is.
+    if os.path.isdir(DST):
+        for folder, _, names in os.walk(DST):
+            for name in names:
+                if name.lower().endswith(".webp"):
+                    os.remove(os.path.join(folder, name))
 
     for folder in sorted(os.listdir(SRC)):
         source_dir = os.path.join(SRC, folder)
@@ -90,22 +116,42 @@ def main() -> None:
                 continue
 
             source = os.path.join(source_dir, filename)
-            target = os.path.join(out_dir, f"{num}{suffix}.webp")
 
-            with Image.open(source) as im:
-                im = im.convert("RGB")
-                if im.width > MAX_WIDTH:
-                    height = round(im.height * MAX_WIDTH / im.width)
-                    im = im.resize((MAX_WIDTH, height), Image.LANCZOS)
-                im.save(target, "WEBP", quality=QUALITY, method=6)
+            with Image.open(source) as original:
+                original = original.convert("RGB")
+                for width in WIDTHS:
+                    # Nothing to shrink: some masters are already narrower than
+                    # a variant, and writing one anyway produces a byte-for-byte
+                    # copy under a name that claims a width it does not have.
+                    # The site reads what exists, so skipping is also what stops
+                    # srcset advertising three sizes of the same file.
+                    if width != FULL_WIDTH and original.width <= width:
+                        continue
+
+                    stem_out = f"{num}{suffix}" + ("" if width == FULL_WIDTH else f"-{width}")
+                    target = os.path.join(out_dir, f"{stem_out}.webp")
+
+                    im = original
+                    if original.width > width:
+                        height = round(original.height * width / original.width)
+                        im = original.resize((width, height), Image.LANCZOS)
+                    im.save(target, "WEBP", quality=QUALITY, method=6)
+
+                    after += os.path.getsize(target)
+                    if width == FULL_WIDTH:
+                        full += os.path.getsize(target)
 
             before += os.path.getsize(source)
-            after += os.path.getsize(target)
             count += 1
 
-    print(f"{count} photos")
-    print(f"  {before / 1024 / 1024:6.1f} MB  ->  {after / 1024 / 1024:.1f} MB"
+    print(f"{count} photos, {len(WIDTHS)} widths each")
+    print(f"  {before / 1024 / 1024:6.1f} MB  ->  {after / 1024 / 1024:.1f} MB on disk"
           f"   ({100 - after * 100 // before}% lighter)")
+    # What a visitor downloads is one width, not the set — and on a phone it is
+    # the smallest. Disk is the wrong number to judge this by.
+    print(f"  a phone loads the {WIDTHS[0]}px copy: "
+          f"{sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk(DST) for f in fs if f.endswith(f'-{WIDTHS[0]}.webp')) / count / 1024:.0f} KB "
+          f"per photo, against {full / count / 1024:.0f} KB at {FULL_WIDTH}px")
     print(f"  written to assets/inventory-web/")
 
     for note in skipped:

@@ -3,7 +3,7 @@ import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
-import { onPhotoError } from '../photos';
+import { onPhotoError, srcSetFor } from '../photos';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -74,6 +74,10 @@ export default function ProductDetailModal({
                 usually the waistband. Contain fits whatever shape came in. */}
             <img
               src={gallery[activeImage] || product.image}
+              srcSet={srcSetFor(gallery[activeImage] || product.image)}
+              // The page a buyer decides on. Half the window with room to spare,
+              // full width on a phone — so a sharp phone still reaches 1200px.
+              sizes="(min-width: 768px) 50vw, 100vw"
               alt={product.name}
               referrerPolicy="no-referrer"
               onError={onPhotoError}

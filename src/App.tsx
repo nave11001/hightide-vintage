@@ -4,7 +4,8 @@ import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath 
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, snapshotProducts, cacheProducts, readCachedProducts, CATEGORIES } from './data';
-import { markBucketUnreachable, repairPhotos } from './photos';
+import { markBucketUnreachable, repairPhotos, srcSetFor } from './photos';
+import { RAIL_SIZES } from './components/CircularGallery';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
@@ -32,9 +33,9 @@ import catAllImg from '@/assets/photos/all products.webp';
 import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
-// The size finder is built and tested but held back while it is refined —
-// src/components/MySizePanel.tsx and SizeFinder.tsx, plus items.waist_cm /
-// length_cm, are all still in place. Re-render them to switch it back on.
+// The size finder — MySizePanel and SizeFinder — was built, never switched on,
+// and is now removed. shared/sizing.mjs stays: SizeLanding and the Instagram bot
+// both read it to answer "what have you got in 32?".
 
 export default function App() {
   // Store Core State
@@ -242,9 +243,15 @@ export default function App() {
      *
      * decode() rather than onload, because onload only means the bytes arrived;
      * a photo that has not been decoded still paints as an empty frame.
+     *
+     * The srcset and sizes are the rail's own, so this warms the file the rail
+     * will actually ask for. Without them the preloader fetched the full-width
+     * copy of every one — six photographs downloaded twice, at the worst moment
+     * there is, because the second request was the small one that got painted.
      */
     const warmImages = (list: Product[]) => {
-      const urls = [heroImageUrl, ...pickTopWanted(list).slice(0, 5).map((p) => p.image)];
+      const rail = pickTopWanted(list).slice(0, 5).map((p) => p.image);
+      const urls = [heroImageUrl, ...rail];
 
       const ready = urls.filter(Boolean).map(
         (src) =>
@@ -252,6 +259,11 @@ export default function App() {
             const img = new Image();
             img.onerror = () => resolve(); // a broken photo must not hold the shop
             img.onload = () => (img.decode ? img.decode().then(resolve, () => resolve()) : resolve());
+            const set = srcSetFor(src);
+            if (set) {
+              img.sizes = RAIL_SIZES;
+              img.srcset = set;
+            }
             img.src = src;
           }),
       );

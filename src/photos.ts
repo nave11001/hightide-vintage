@@ -43,6 +43,41 @@ export function localPhotoUrl(path: string): string | undefined {
   return LOCAL_PHOTOS[localKey(path)];
 }
 
+// Each photograph ships at three widths — see scripts/make_inventory_web.py.
+// This maps the full-width URL to the srcset offering all three, so a component
+// holding nothing but a resolved URL can still hand the browser the choice.
+//
+// Worth the map: a card on a phone is 164 CSS pixels wide, 328 real ones, and
+// was being sent 1170. The 480px copy is 19KB against 58KB, and a category page
+// of photographs falls from 3.45MB to roughly 1MB with nothing to see for it.
+const SRCSET_BY_URL: Record<string, string> = {};
+{
+  const widths = [480, 800];
+  for (const [key, href] of Object.entries(LOCAL_PHOTOS)) {
+    if (/-\d+\.webp$/.test(key)) continue; // a variant, not a full-width original
+    const base = key.slice(0, -'.webp'.length);
+    const parts: string[] = [];
+    for (const w of widths) {
+      const variant = LOCAL_PHOTOS[`${base}-${w}.webp`];
+      if (variant) parts.push(`${variant} ${w}w`);
+    }
+    // No variants means the master was already smaller than the smallest of
+    // them. Leaving it without a srcset is the honest answer — a lone candidate
+    // labelled 1200w would be claiming a width the file does not have.
+    if (parts.length) SRCSET_BY_URL[href] = [...parts, `${href} 1200w`].join(', ');
+  }
+}
+
+/**
+ * The widths available for an already-resolved URL, or undefined.
+ *
+ * Undefined for a bucket URL: Supabase holds one size, so there is nothing to
+ * choose between, and an <img> with no srcset simply uses its src.
+ */
+export function srcSetFor(url: string): string | undefined {
+  return SRCSET_BY_URL[url];
+}
+
 // Shown only when a garment has no photograph anywhere. Drawn rather than
 // fetched: a placeholder that can itself fail to load is not a placeholder.
 export const PHOTO_PLACEHOLDER =
@@ -80,15 +115,24 @@ export function isBucketReachable(): boolean {
 /**
  * Where to load the photo stored at e.g. "boardies/47.jpeg".
  *
- * The bucket wins while it is answering: a garment photographed this morning is
- * in Supabase and not in this build. Once it has refused, the local copy wins
- * and the bucket is only used for paths this build never shipped — where a
- * doomed request is still better than no picture at all.
+ * A photograph this build shipped is served from here; anything else comes from
+ * the bucket. So a garment photographed this morning still appears without a
+ * deploy — Supabase is what makes new pictures reachable — while the ones
+ * already on this site cost nobody's bandwidth.
+ *
+ * The bucket holds one size, and it is the full-resolution upload. Serving a
+ * card from it means sending 564KB to fill 164 CSS pixels; the local copy at
+ * the same place is 19KB with srcset choosing it. That difference is what put
+ * 56GB through a 5GB allowance in August.
+ *
+ * To put the bucket first again — every photo from Supabase while it answers —
+ * make this `if (bucketReachable) return REMOTE_PREFIX + path;` above the
+ * lookup. One line, and it reverses.
  */
 export function storageUrl(path: string): string {
-  if (!REMOTE_PREFIX) return localPhotoUrl(path) ?? '';
-  if (bucketReachable) return REMOTE_PREFIX + path;
-  return localPhotoUrl(path) ?? REMOTE_PREFIX + path;
+  const local = localPhotoUrl(path);
+  if (local) return local;
+  return REMOTE_PREFIX ? REMOTE_PREFIX + path : '';
 }
 
 /** The stored path behind a bucket URL, or null if it is not one. */
@@ -148,5 +192,8 @@ export function onPhotoError(event: { currentTarget: HTMLImageElement }): void {
 
   const twin = localTwin(img.src);
   img.dataset.photoFallback = twin ? 'local' : 'placeholder';
+  // Before src, and unconditionally: a srcset outranks src, so leaving one in
+  // place would send the browser straight back to the URL that just failed.
+  img.srcset = twin ? (srcSetFor(twin) ?? '') : '';
   img.src = twin ?? PHOTO_PLACEHOLDER;
 }

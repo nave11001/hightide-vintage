@@ -22,3 +22,15 @@ sold_archive/
 
 # Photos of items removed as duplicates (kept locally, out of the site)
 removed_archive/
+
+# Photo masters. 16MB of PNG and JPEG that no visitor ever sees — only
+# scripts/make_web_images.py and scripts/make_logo.py read them, and the
+# compressed results they produce ARE tracked. Kept on disk (and OneDrive).
+assets/_originals/
+
+# The garment photographs at full resolution: 81MB, the source that
+# scripts/make_inventory_web.py compresses into assets/inventory-web/. Nothing
+# ships from here and no visitor ever downloaded a byte of it. Kept on disk.
+# The Excel sheets underneath it stay in git — see the un-ignore below.
+assets/inventory/*
+!assets/inventory/excel/

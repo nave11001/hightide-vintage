@@ -91,7 +91,24 @@
       "Bash(python build.py)",
       "PowerShell(cd \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; $l = Get-Content .env; foreach \\($k in 'VITE_POSTHOG_KEY','VITE_POSTHOG_HOST'\\) { $line = $l | Where-Object { $_ -match \"^$k=\" }; if \\($line\\) { $v = \\($line -replace \"^$k=\",''\\); \"$k : set, length $\\($v.Length\\)\" } else { \"$k : NOT SET\" } })",
       "PowerShell(cd \"C:\\\\Users\\\\נווה\\\\OneDrive - ראואל בעמ\\\\מסמכים\\\\פיתוח\\\\hightide\"; $env:NODE_ENV=\"production\"; node dist/server.cjs)",
-      "Bash(awk '{s+=$1; n++} END {printf \"total %.1f MB, avg %.0f KB\\\\n\", s/1048576, s/n/1024}')"
+      "Bash(awk '{s+=$1; n++} END {printf \"total %.1f MB, avg %.0f KB\\\\n\", s/1048576, s/n/1024}')",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(xargs -0 ls -la)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -0 md5sum)",
+      "Bash(awk '{h=$1; $1=\"\"; f=substr\\($0,2\\); if \\(h==p\\) {if \\(!\\(pf in seen\\)\\) {print \"DUP GROUP:\"; print \"  \" pf; seen[pf]=1} print \"  \" f} p=h; pf=f}')",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && pwd && grep -n \"posthog\" src/posthog.ts | head -5 && echo \"--- font ---\" && grep -rn \"font-groovy\" src/ --include=*.tsx --include=*.css | head -6)",
+      "Bash(node -p \"require\\('./node_modules/posthog-js/package.json'\\).version\")",
+      "Bash(cd \"/c/Users/נווה/OneDrive *)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && echo \"=== VintageFrame.tsx \\($\\(wc -l < src/components/VintageFrame.tsx\\) lines\\) ===\"; head -45 src/components/VintageFrame.tsx)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && echo \"=== size calculator files ===\"; wc -l src/components/MySizePanel.tsx src/components/SizeFinder.tsx shared/sizing.mjs; echo; echo \"=== who uses sizing.mjs ===\"; grep -rn \"sizing.mjs\" src/ netlify/ shared/ scripts/ 2>/dev/null; echo; echo \"=== who uses waistCm/lengthCm ===\"; grep -rn \"waistCm\\\\|lengthCm\\\\|waist_cm\\\\|length_cm\" src/ netlify/ --include=*.tsx --include=*.ts --include=*.mjs | head)",
+      "Bash(pip install *)",
+      "Bash(python scripts/make_inventory_web.py)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && grep -rn \"FlowersKingdom\\\\|font-groovy\\\\|@font-face\" src/index.css | head -20)",
+      "Bash(python scripts/make_font_subset.py)"
     ]
   }
 }

@@ -1,9 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@300;400;500;700;800;900&family=Rubik+Bubbles&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Pacifico&family=Yellowtail&family=Kaushan+Script&family=Satisfy&family=Dancing+Script&family=Allura&display=swap');
+/* Pacifico, Yellowtail, Kaushan Script, Satisfy, Dancing Script and Allura were
+   requested here and set on nothing — six script faces the shop never used. */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@300;400;500;700;800;900&family=Rubik+Bubbles&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
+/* Subset to printable ASCII and converted to WOFF2 by
+   scripts/make_font_subset.py: 141KB of TrueType down to 28KB. The face has no
+   Hebrew glyphs, so nothing Hebrew ever rendered in it — those headings fall to
+   Rubik Bubbles below, exactly as they did before. The full TTF stays in
+   assets/fonts/ as the master. */
 @font-face {
   font-family: 'Flowers Kingdom';
-  src: url('@/assets/fonts/FlowersKingdom.ttf') format('truetype');
+  src: url('@/assets/fonts/FlowersKingdom.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
