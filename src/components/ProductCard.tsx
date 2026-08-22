@@ -20,28 +20,46 @@ export default function ProductCard({
   onToggleFavorite,
   onViewDetails,
 }: ProductCardProps) {
+  // The second angle is not fetched until a pointer actually asks for it.
+  //
+  // It used to download with the card. On a category page of 45 items that was
+  // 45 extra photographs nobody had asked to see — and on a phone, where there
+  // is no hover at all, not one of them could ever be shown. Half the shop's
+  // image traffic was spent on pictures no customer saw.
+  //
+  // Once loaded it stays mounted, so a second hover is instant.
+  const [angleWanted, setAngleWanted] = React.useState(false);
+  const hasAngle = Boolean(product.images && product.images[1]);
+
   return (
     <div
       className="flex flex-col group h-full bg-[#fdfcf9] border border-gray-100 rounded-none overflow-hidden transition-all duration-300 hover:shadow-sm"
       id={`product-card-${product.id}`}
     >
       {/* Product Image - Completely clean container with NO vintage frame, just like the jewelry screenshot */}
-      <div 
-        className="relative cursor-pointer overflow-hidden aspect-[4/5] bg-gray-50" 
+      <div
+        className="relative cursor-pointer overflow-hidden aspect-[4/5] bg-gray-50"
         onClick={() => onViewDetails(product)}
+        onMouseEnter={hasAngle ? () => setAngleWanted(true) : undefined}
       >
+        {/* Lazy: a category page holds 45 of these and shows about six. The rest
+            were downloaded in full before anyone scrolled to them. */}
         <img
           src={product.image}
           alt={product.name}
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
           id={`product-img-${product.id}`}
         />
         {/* Second angle revealed on hover */}
-        {product.images && product.images[1] && (
+        {hasAngle && angleWanted && (
           <img
-            src={product.images[1]}
+            src={product.images![1]}
             alt={`${product.name} - זווית נוספת`}
+            referrerPolicy="no-referrer"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
         )}

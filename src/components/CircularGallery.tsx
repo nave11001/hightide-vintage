@@ -93,6 +93,8 @@ export default function CircularGallery({
   const wrap = useRef<HTMLDivElement>(null);
   const cards = useRef<HTMLDivElement[]>([]);
   const [width, setWidth] = useState(0);
+  /** Cards whose second angle has been asked for. Sparse on purpose. */
+  const [wantsAngle, setWantsAngle] = useState<Record<number, boolean>>({});
 
   // Where the rail is, and where it is heading. Frame state, never React state.
   const current = useRef(0);
@@ -341,6 +343,11 @@ export default function CircularGallery({
               cards.current[i] = el;
             }}
             data-card={i}
+            onMouseEnter={
+              item.hoverImage && !wantsAngle[i]
+                ? () => setWantsAngle((seen) => ({ ...seen, [i]: true }))
+                : undefined
+            }
             className="absolute left-0 top-1/2 will-change-transform"
             style={{ width: itemW || undefined, visibility: 'hidden' }}
           >
@@ -375,13 +382,15 @@ export default function CircularGallery({
                   draggable={false}
                   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103"
                 />
-                {/* Second angle revealed on hover, same as ProductCard. */}
-                {item.hoverImage && (
+                {/* Second angle, fetched only once a pointer asks for it — same
+                    reasoning as ProductCard. Ten cards each quietly pulling a
+                    second photograph doubled the weight of the homepage for an
+                    effect no phone can even show. */}
+                {item.hoverImage && wantsAngle[i] && (
                   <img
                     src={item.hoverImage}
                     alt={`${item.title} - זווית נוספת`}
                     referrerPolicy="no-referrer"
-                    loading="lazy"
                     draggable={false}
                     className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />

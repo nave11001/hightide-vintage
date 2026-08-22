@@ -27,17 +27,49 @@ Usage:
   python scripts/migrate_to_supabase.py
   python scripts/migrate_to_supabase.py --update-prices   # re-read prices only
 """
+import io
 import json
-import mimetypes
 import os
 import re
 import sys
+
+from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INV = os.path.join(ROOT, "assets", "inventory")
 DB_JSON = os.path.join(ROOT, "src", "inventory_db.json")
 BUCKET = "inventory"
 IMAGE_EXT = (".jpeg", ".jpg", ".png", ".webp")
+
+# Photos are compressed on the way up, never uploaded as they came off the
+# camera.
+#
+# This is not housekeeping. Uploading originals — 517KB on average, some near
+# 2MB — cost the shop its Supabase bandwidth allowance: 60MB of stored photos
+# went out as 56GB in one month, eleven times the quota, and the project was
+# restricted until it was paid for. A garment shown in a card 600px wide has no
+# use for 3000px of detail.
+#
+# MAX_WIDTH is the widest the photo is ever displayed, doubled for retina
+# screens, and it never upscales a smaller original.
+MAX_WIDTH = 1200
+QUALITY = 82
+# A year. The photo for item #10 never changes, so a browser that has it should
+# keep it. Supabase defaults to one hour, which means every returning customer
+# downloads the whole shop again.
+CACHE_CONTROL = "31536000"
+
+
+def compress(path):
+    """(bytes, mime, extension) ready to upload."""
+    with Image.open(path) as im:
+        im = im.convert("RGB")
+        if im.width > MAX_WIDTH:
+            height = round(im.height * MAX_WIDTH / im.width)
+            im = im.resize((MAX_WIDTH, height), Image.LANCZOS)
+        buffer = io.BytesIO()
+        im.save(buffer, "WEBP", quality=QUALITY, method=6)
+    return buffer.getvalue(), "image/webp", ".webp"
 
 # Repo folder -> site category. None means "not sorted yet".
 FOLDER_TO_CATEGORY = {
@@ -97,8 +129,9 @@ def collect_photos():
             if num is None:
                 print(f"  ! skipping unrecognised filename '{folder}/{fn}'")
                 continue
-            ext = os.path.splitext(fn)[1].lower()
-            storage_path = f"{category or 'unsorted'}/{num}{suffix}{ext}"
+            # Always .webp: compress() re-encodes whatever came out of the
+            # camera, and the bucket path has to name what actually lands there.
+            storage_path = f"{category or 'unsorted'}/{num}{suffix}.webp"
             groups.setdefault((category, num), []).append(
                 (suffix, os.path.join(d, fn), storage_path)
             )
@@ -204,12 +237,14 @@ def main():
         created += 1
 
         for position, (_suffix, local_path, storage_path) in enumerate(photos):
-            with open(local_path, "rb") as fh:
-                content = fh.read()
-            mime = mimetypes.guess_type(storage_path)[0] or "image/jpeg"
+            content, mime, _ext = compress(local_path)
             db.storage.from_(BUCKET).upload(
                 storage_path, content,
-                {"content-type": mime, "upsert": "true"},
+                {
+                    "content-type": mime,
+                    "upsert": "true",
+                    "cache-control": CACHE_CONTROL,
+                },
             )
             db.table("item_photos").insert(
                 {"item_id": item_id, "path": storage_path, "position": position}
