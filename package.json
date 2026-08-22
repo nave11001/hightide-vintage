@@ -14,7 +14,7 @@
     "prebuild:static": "node scripts/check-photos.mjs",
     "build:static": "vite build",
     "publish": "vite build && netlify deploy --prod --dir=dist",
-    "upload-drop": "python scripts/sync_inventory.py && python scripts/migrate_to_supabase.py && python scripts/make_inventory_web.py && python scripts/make_catalog_snapshot.py && python scripts/make_sitemap.py",
+    "upload-drop": "python scripts/sync_inventory.py && python scripts/migrate_to_supabase.py && python scripts/make_inventory_web.py && python scripts/make_catalog_snapshot.py && python scripts/make_og_images.py && python scripts/make_sitemap.py",
     "make-sitemap": "python scripts/make_sitemap.py",
     "make-images": "python scripts/make_inventory_web.py",
     "make-snapshot": "python scripts/make_catalog_snapshot.py",
@@ -22,7 +22,8 @@
     "reset-inventory": "python scripts/reset_inventory.py",
     "check-duplicates": "python scripts/find_duplicates.py",
     "make-logo": "python scripts/make_logo.py",
-    "make-font": "python scripts/make_font_subset.py"
+    "make-font": "python scripts/make_font_subset.py",
+    "make-og": "python scripts/make_og_images.py"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

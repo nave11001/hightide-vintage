@@ -22,7 +22,10 @@ import snapshot from '../../src/catalog-snapshot.json' with { type: 'json' };
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SHOP = 'https://hightide-vintage.netlify.app';
-const BUCKET = 'inventory';
+
+// Which item numbers have a share card in public/og/. A garment added since the
+// last deploy has none, and falls back to the shop's cover.
+const OG_ITEMS = new Set((snapshot.items ?? []).map((row) => row.n));
 
 export const config = { path: ['/product/*', '/category/*'] };
 
@@ -87,14 +90,20 @@ function buildHead(item, url) {
   const photos = [...(item.item_photos ?? [])].sort(
     (a, b) => a.position - b.position || a.path.localeCompare(b.path),
   );
-  // The shop's own cover when the garment came from the snapshot: Supabase is
-  // evidently not answering, so pointing a link preview at its bucket would
-  // produce a card with a hole where the photograph should be.
-  const image = item.fromSnapshot
-    ? `${SHOP}/og-cover.jpg`
-    : photos.length
-      ? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${photos[0].path}`
-      : `${SHOP}/logo-loader.webp`;
+  // This garment's own share card, served from here.
+  //
+  // It used to point at the bucket, which was wrong twice over: an unfurler
+  // pulled the full-resolution upload — half a megabyte to draw a thumbnail,
+  // from the metered store — and it broke completely the moment Supabase
+  // stopped answering, which is when every link fell back to the shop's
+  // generic cover. For a business whose links live in Instagram DMs, that
+  // meant every shared garment looked like every other one.
+  //
+  // scripts/make_og_images.py writes one per catalogue item under a stable,
+  // unhashed name, so this can be built without knowing the build.
+  const image = OG_ITEMS.has(item.num)
+    ? `${SHOP}/og/${item.num}.jpg`
+    : `${SHOP}/og-cover.jpg`;
 
   const kind = CATEGORY_WORD[item.category] || 'פריט וינטג׳';
   const title = `${item.name} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
@@ -102,6 +111,20 @@ function buildHead(item, url) {
   const description = item.sold
     ? `${kind} של ${item.name}, מידה ${item.size}. הפריט נמכר — כל פריט אצלנו הוא יחיד.`
     : `${kind} של ${item.name}, מידה ${item.size}, ₪${item.price}. פריט יחיד במלאי, מקורי ומאומת.`;
+
+  // Two graphs: what the thing is, and where it sits. Google draws the second
+  // as a path under the result — "hightide-vintage.netlify.app › בורדיז ›
+  // billabong #66" — in place of a bare URL.
+  const category = categoryById(item.category);
+  const breadcrumb = category && {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'HIGHTIDE VINTAGE', item: SHOP },
+      { '@type': 'ListItem', position: 2, name: category.name, item: `${SHOP}/category/${category.id}` },
+      { '@type': 'ListItem', position: 3, name: `${item.name} #${item.num}` },
+    ],
+  };
 
   const schema = {
     '@context': 'https://schema.org',
@@ -133,6 +156,8 @@ function buildHead(item, url) {
     <meta property="og:title" content="${attr(`${item.name} #${item.num}`)} — ${attr(status)}" />
     <meta property="og:description" content="${attr(description)}" />
     <meta property="og:image" content="${attr(image)}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="product:price:amount" content="${attr(item.price)}" />
     <meta property="product:price:currency" content="ILS" />
     <meta property="product:availability" content="${item.sold ? 'oldout' : 'instock'}" />
@@ -140,7 +165,9 @@ function buildHead(item, url) {
          namespace defines. The word a person reads is in og:title above. -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${attr(image)}" />
-    <script type="application/ld+json">${json(schema)}</script>`;
+    <script type="application/ld+json">${json(schema)}</script>${
+      breadcrumb ? `\n    <script type="application/ld+json">${json(breadcrumb)}</script>` : ''
+    }`;
 }
 
 /**

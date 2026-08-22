@@ -4,6 +4,8 @@ import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
+import { categoryPath, navigate } from '../router';
+import { categoryById } from '@/shared/categories.mjs';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -31,6 +33,15 @@ export default function ProductDetailModal({
   const [activeImage, setActiveImage] = useState(0);
 
   const isPage = variant === 'page';
+  const categoryName = categoryById(product.category)?.name;
+
+  // Real hrefs, so a crawler and a long-press both see a destination, but
+  // handled in the router rather than reloading the whole shop.
+  const crumb = (to: string) => (event: React.MouseEvent) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    navigate(to);
+  };
 
   // The card itself is identical in both. What changes is the frame: a modal
   // scrolls inside its own box against a darkened shop, a page scrolls with
@@ -131,9 +142,43 @@ export default function ProductDetailModal({
               </button>
             )}
           </div>
-          <h2 className="text-lg sm:text-xl font-normal text-stone-900 leading-tight mt-1">
-            {product.name}
-          </h2>
+          {/* Where this garment sits. Only on a page: inside a layer over the
+              shop the customer already knows, and can see, where they came
+              from — following a link from a DM they do not.
+              Google reads the same path out of the JSON-LD the Netlify
+              function writes, and shows it in place of the bare URL. */}
+          {isPage && categoryName && (
+            <nav aria-label="נתיב ניווט" className="text-[11px] text-stone-400 mb-1" dir="rtl">
+              <ol className="flex items-center gap-1.5 flex-wrap">
+                <li>
+                  <a href="/" onClick={crumb('/')} className="hover:text-stone-700 transition-colors">
+                    HIGHTIDE
+                  </a>
+                </li>
+                <li aria-hidden="true">›</li>
+                <li>
+                  <a
+                    href={categoryPath(product.category)}
+                    onClick={crumb(categoryPath(product.category))}
+                    className="hover:text-stone-700 transition-colors"
+                  >
+                    {categoryName}
+                  </a>
+                </li>
+                <li aria-hidden="true">›</li>
+                <li aria-current="page" className="text-stone-600">{product.name}</li>
+              </ol>
+            </nav>
+          )}
+
+          {/* An h1 when the garment *is* the page, an h2 when it is a layer
+              over the shop — there the category heading is already the h1, and
+              a second one would leave the page claiming two subjects. */}
+          {React.createElement(
+            isPage ? 'h1' : 'h2',
+            { className: 'text-lg sm:text-xl font-normal text-stone-900 leading-tight mt-1' },
+            product.name,
+          )}
 
           {/* Price on one side, the size on the other — the two facts a shopper
               checks together, so they sit on the same line instead of being
@@ -291,7 +336,9 @@ export default function ProductDetailModal({
           <div className="mt-5 grid grid-cols-2 gap-2 text-[10px] text-stone-400 pt-4 border-t border-stone-100 font-normal text-center">
             <div className="flex items-center gap-1 justify-center">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>100% מקורי ומאומת</span>
+              {/* dir="auto" and not the stylesheet rule: this is a bare span in
+                  a flex row, and the rule deliberately stops at block text. */}
+              <span dir="auto">100% מקורי ומאומת</span>
             </div>
             <div className="flex items-center gap-1 justify-center">
               <RefreshCw className="w-3.5 h-3.5 text-stone-600" />

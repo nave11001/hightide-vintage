@@ -21,6 +21,29 @@
   font-family: 'Flowers Kingdom', 'Rubik Bubbles', cursive;
 }
 
+/* Let each run of text find its own direction.
+ *
+ * The document is left-to-right and the shop is Hebrew. That mostly works,
+ * because a line starting with a Hebrew letter lays itself out right-to-left
+ * regardless — but a line starting with anything else does not. "100% מקורי
+ * ומאומת" rendered left-to-right on the item page, with the 100% on the wrong
+ * side, because a digit is not a strong character and the paragraph direction
+ * decided it.
+ *
+ * `plaintext` takes the direction from the first strong character in the text
+ * instead of from the box. It is exactly `dir="auto"`, applied everywhere, and
+ * it changes no geometry: the box, its flex order and its alignment are all
+ * untouched, only the order glyphs are placed inside it.
+ *
+ * The alternative is dir="rtl" on <html>, which would be the tidier answer to
+ * a shop written in Hebrew — but the layout is built on 35 flex-row-reverse
+ * rows that exist precisely because the document is LTR, and every one of them
+ * would turn around. That is a rewrite, not an attribute.
+ */
+p, h1, h2, h3, h4, h5, h6, li, dt, dd, figcaption, blockquote, label, th, td {
+  unicode-bidi: plaintext;
+}
+
 @theme {
   --font-sans: "Rubik", "Heebo", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;

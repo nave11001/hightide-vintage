@@ -628,6 +628,19 @@ export default function App() {
       {/* Homepage Landing View Hero & Navigation (Seamlessly integrated with NO gaps) */}
       {selectedCategory === 'none' && searchTerm === '' && !sizeLanding && (
         <div className="w-full flex flex-col" id="landing-page-hero-wrapper">
+          {/* The homepage's h1. Nothing here is a text heading — the shop's
+              name is artwork inside a photograph — so a search engine and a
+              screen reader both had nothing to read the page by. Off-screen
+              rather than hidden: display:none would be read by neither.
+              The wording is the meta description's, so the two agree.
+              Not on a garment's own page: this hero renders above that too,
+              and the garment's name is the heading there. */}
+          {!routeSlug && (
+            <h1 className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 [clip:rect(0,0,0,0)]">
+              HIGHTIDE VINTAGE — מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים
+            </h1>
+          )}
+
           {/* Announcement Strip at the absolute top of the viewport */}
           <div className="bg-white py-2 text-center border-b border-stone-100 flex items-center justify-center select-none" id="global-announcement-strip">
             <span className="text-[10px] sm:text-xs font-medium tracking-[0.25em] uppercase text-stone-900 font-display">
@@ -868,13 +881,17 @@ export default function App() {
           <section id="catalog-section" className="animate-fade-in">
             {/* Active filter display */}
             <div className="flex items-center justify-between mb-5 flex-row-reverse border-b border-stone-100 pb-3">
-              <h2 className="text-sm sm:text-base font-normal tracking-widest text-stone-900 flex items-center gap-2 flex-row-reverse uppercase">
+              {/* The page's one h1. It was an h2 and nothing above it was an
+                  h1, which leaves a search engine to work out what the page is
+                  about from the body text. Same size, same weight, same place —
+                  only the tag differs. */}
+              <h1 className="text-sm sm:text-base font-normal tracking-widest text-stone-900 flex items-center gap-2 flex-row-reverse uppercase">
                 <span>{selectedCategory === 'latest' ? 'הדרופ האחרון' : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'תוצאות חיפוש'}</span>
                 <span className="text-xs text-stone-400 font-mono font-normal bg-stone-100 px-2 py-0.5 border border-stone-200/60">
                   ({filteredProducts.length} פריטים)
                 </span>
-              </h2>
-              
+              </h1>
+
               {/* Back to categories link */}
               <button
                 type="button"
