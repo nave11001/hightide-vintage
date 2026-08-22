@@ -108,7 +108,8 @@
       "Bash(pip install *)",
       "Bash(python scripts/make_inventory_web.py)",
       "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && grep -rn \"FlowersKingdom\\\\|font-groovy\\\\|@font-face\" src/index.css | head -20)",
-      "Bash(python scripts/make_font_subset.py)"
+      "Bash(python scripts/make_font_subset.py)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && grep -n \"logo-loader\\\\|splash\" index.html | head -20)"
     ]
   }
 }

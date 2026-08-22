@@ -1,50 +1,73 @@
-"""Builds assets/logo-loader.webp, the texture the loading veil samples.
-
-Run after changing assets/logo.png:
+"""Builds public/logo-loader.webp, the still logo the loading screen shows.
 
     python scripts/make_loader_texture.py
 
-Two things make the source file unusable as a shader texture.
+Two things read this one file, which is the point:
 
-Its transparent region stores a grey checkerboard in the colour channels — the
-pattern a design tool paints to *show* transparency, baked in. A shader reading
-.rgb renders the checkerboard. Flattening onto white deletes the channel the
-bug lives in, rather than teaching every reader to respect alpha.
+  * the splash in index.html, plain HTML that renders before any JavaScript,
+    which is the first thing a visitor sees;
+  * the liquid veil's shader, which samples it as a texture and refracts it.
 
-And the artwork is 866x906 while the shader maps it onto a circle in a square
-viewport, so it arrives stretched. Padding to square keeps the logo round.
+They share the URL so they share the download, and — more importantly — so the
+handover between them is invisible. Two different images here would flip in
+front of the customer at the exact moment the water starts.
 
-The 512px result is also 32x lighter than the source, which matters when the
-image's whole job is to appear before the site does.
+The source is flattened onto white because the shader reads .rgb: an alpha
+channel it ignores would leave the transparent region as whatever colour was
+stored underneath. It is padded to a square because the shader maps it onto a
+circle in a square viewport, and anything else arrives stretched.
 
-It lives in public/ rather than assets/ so that it keeps a fixed URL. The splash
-screen in index.html is plain HTML that has to render before any JavaScript
-runs, and it cannot know the hash Vite would stamp on a bundled asset. The
-shader then loads the same URL, so the two share one download.
+The artwork is scaled to the same 94% of the frame the previous texture used, so
+the veil's geometry — and the splash CSS that mirrors it — is unchanged.
 """
 
 import os
-from PIL import Image
+
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'assets', 'logo.png')
+SRC = os.path.join(ROOT, 'assets', '_originals', 'final logo.png')
 DST = os.path.join(ROOT, 'public', 'logo-loader.webp')
 SIZE = 512
+# How much of the frame the sphere covers. Measured off the texture this
+# replaces, so nothing downstream has to move.
+FILL = 0.941
+
+
+def cut_background(im):
+    """Transparent where the white outside the sphere reaches. See make_logo.py."""
+    w, h = im.size
+    work = im.convert('RGB')
+    key = (255, 0, 255)
+    for corner in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+        ImageDraw.floodfill(work, corner, key, thresh=22)
+    px = work.load()
+    mask = Image.new('L', (w, h), 0)
+    mp = mask.load()
+    for y in range(h):
+        for x in range(w):
+            mp[x, y] = 0 if px[x, y] == key else 255
+    mask = mask.filter(ImageFilter.GaussianBlur(0.8))
+    out = im.convert('RGBA')
+    out.putalpha(mask)
+    return out.crop(out.getbbox())
+
 
 def main() -> None:
-    im = Image.open(SRC).convert('RGBA')
-    w, h = im.size
+    art = cut_background(Image.open(SRC).convert('RGBA'))
 
-    side = max(w, h)
-    square = Image.new('RGBA', (side, side), (255, 255, 255, 0))
-    square.paste(im, ((side - w) // 2, (side - h) // 2))
+    target = round(SIZE * FILL)
+    art.thumbnail((target, target), Image.LANCZOS)
 
-    flat = Image.new('RGB', (side, side), (255, 255, 255))
-    flat.paste(square, mask=square.getchannel('A'))
-    flat.resize((SIZE, SIZE), Image.LANCZOS).save(DST, 'WEBP', quality=88, method=6)
+    flat = Image.new('RGB', (SIZE, SIZE), (255, 255, 255))
+    flat.paste(art, ((SIZE - art.width) // 2, (SIZE - art.height) // 2),
+               mask=art.getchannel('A'))
+    flat.save(DST, 'WEBP', quality=88, method=6)
 
-    print(f'{w}x{h} rgba {os.path.getsize(SRC):,}B'
-          f' -> {SIZE}x{SIZE} rgb {os.path.getsize(DST):,}B')
+    print(f'{os.path.basename(SRC)} -> {SIZE}x{SIZE} rgb'
+          f'  artwork {art.width}x{art.height}'
+          f'  {os.path.getsize(DST):,}B  public/logo-loader.webp')
+
 
 if __name__ == '__main__':
     main()
