@@ -1,5 +1,6 @@
 import { Product } from './types';
 import { selectRows, storageUrl } from './supabase';
+import snapshot from './catalog-snapshot.json';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
 // Nothing here is baked in at build time, so marking an item sold in the
@@ -88,6 +89,60 @@ export async function loadProducts(): Promise<Product[]> {
   return rows
     .map((row) => toProduct(row, latestDropDate))
     .filter((p): p is Product => p !== null);
+}
+
+// ── the catalogue that ships with the site ──────────────────────────────
+//
+// A copy of the shop taken at build time, read only when Supabase cannot be
+// reached. On the night Supabase restricted the project for exceeding its
+// bandwidth allowance the shop had nothing to show at all — not the garments,
+// not the photographs. With this it stays open, one deploy behind.
+//
+// Deliberately never the first choice: prices and sold marks change in the
+// dashboard without a deploy, so the live catalogue wins whenever it answers.
+//
+// Rebuild it with `python scripts/make_catalog_snapshot.py`.
+
+interface SnapshotRow {
+  n: number; // catalogue number
+  c: string; // category
+  b: string; // brand
+  s: string; // size
+  p: number; // price
+  o?: number; // original price, when on sale
+  ph: string[]; // photo paths, in order
+  v?: number; // views
+  sold?: number;
+  new?: number; // part of the latest drop
+  w?: number; // waist cm
+  l?: number; // length cm
+}
+
+export function snapshotProducts(): Product[] {
+  const rows = (snapshot.items ?? []) as SnapshotRow[];
+  return rows
+    .filter((row) => CATEGORY_LABELS[row.c] && row.ph.length > 0)
+    .map((row) => ({
+      id: `${row.c}-${row.n}`,
+      num: row.n,
+      name: `${row.b} #${row.n}`,
+      brand: row.b,
+      price: row.p,
+      originalPrice: row.o,
+      image: storageUrl(row.ph[0]),
+      images: row.ph.map(storageUrl),
+      borderType: 'retro-wave' as const,
+      sizes: [row.s],
+      condition: 'וינטג׳ במצב מעולה',
+      category: row.c as Product['category'],
+      description: `${CATEGORY_LABELS[row.c].description} — פריט מס׳ ${row.n}`,
+      colors: [],
+      isSold: row.sold === 1,
+      isLatestDrop: row.new === 1,
+      waistCm: row.w,
+      lengthCm: row.l,
+      views: row.v ?? 0,
+    }));
 }
 
 // Re-exported rather than defined here: the same list has to reach the Netlify

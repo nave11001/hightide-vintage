@@ -3,7 +3,7 @@ import { Product } from './types';
 import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath } from './router';
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
-import { loadProducts, CATEGORIES } from './data';
+import { loadProducts, snapshotProducts, CATEGORIES } from './data';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
@@ -278,6 +278,18 @@ export default function App() {
           // Last visit's catalogue beats an empty shop. It may be a drop behind.
           setProducts(recovered);
           step(0.7);
+          done();
+          return;
+        }
+
+        // Nothing cached — a first-time visitor, arriving while Supabase is
+        // unreachable. The copy that shipped with the site is a deploy behind,
+        // but a deploy-old shop is a shop; an error screen is not.
+        const shipped = snapshotProducts();
+        if (shipped.length > 0) {
+          setProducts(shipped);
+          step(0.7);
+          await warmImages(shipped);
           done();
           return;
         }

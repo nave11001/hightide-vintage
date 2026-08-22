@@ -11,8 +11,10 @@
     "lint": "tsc --noEmit",
     "build:static": "vite build",
     "publish": "vite build && netlify deploy --prod --dir=dist",
-    "upload-drop": "python scripts/sync_inventory.py && python scripts/migrate_to_supabase.py && python scripts/make_sitemap.py",
+    "upload-drop": "python scripts/sync_inventory.py && python scripts/migrate_to_supabase.py && python scripts/make_inventory_web.py && python scripts/make_catalog_snapshot.py && python scripts/make_sitemap.py",
     "make-sitemap": "python scripts/make_sitemap.py",
+    "make-images": "python scripts/make_inventory_web.py",
+    "make-snapshot": "python scripts/make_catalog_snapshot.py",
     "sync-inventory": "python scripts/sync_inventory.py",
     "reset-inventory": "python scripts/reset_inventory.py",
     "check-duplicates": "python scripts/find_duplicates.py"

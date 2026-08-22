@@ -19,9 +19,37 @@ export const isSupabaseConfigured = Boolean(url && anonKey);
 
 const BUCKET = 'inventory';
 
-/** Public URL of a photo stored at e.g. "boardies/47.jpeg". */
+// Product photos are served from this site, not from Supabase Storage.
+//
+// They used to come from the bucket, one download per shopper per hour. In
+// August 2026 that pushed 56GB through a 5GB allowance and Supabase restricted
+// the whole project — catalogue and pictures both — until it was paid for.
+// Shipping the photos with the site removes that meter entirely, and Netlify
+// serves them under a name that only changes when the picture does, so a
+// returning customer downloads nothing.
+//
+// Built by scripts/make_inventory_web.py, which names each file after the item
+// number the database knows it by. Verified: all 116 paths in the database
+// resolve here.
+const LOCAL_PHOTOS = import.meta.glob('@/assets/inventory-web/**/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+/** "boardies/104.jpg" -> the key make_inventory_web.py wrote. */
+function localKey(path: string): string {
+  return `/assets/inventory-web/${path.replace(/\.[^./]+$/, '')}.webp`;
+}
+
+/**
+ * Where to load the photo stored at e.g. "boardies/47.jpeg".
+ *
+ * Falls back to the bucket for anything not in the build — a garment added to
+ * the dashboard since the last deploy shows its picture rather than a hole.
+ */
 export function storageUrl(path: string): string {
-  return `${url}/storage/v1/object/public/${BUCKET}/${path}`;
+  return LOCAL_PHOTOS[localKey(path)] ?? `${url}/storage/v1/object/public/${BUCKET}/${path}`;
 }
 
 /**
