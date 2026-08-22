@@ -11,6 +11,8 @@ interface ProductCardProps {
   isFavorite: boolean;
   onToggleFavorite: (product: Product) => void;
   onViewDetails: (product: Product) => void;
+  /** Load this photo immediately — it is on screen when the page opens. */
+  priority?: boolean;
   key?: string;
 }
 
@@ -19,6 +21,7 @@ export default function ProductCard({
   isFavorite,
   onToggleFavorite,
   onViewDetails,
+  priority = false,
 }: ProductCardProps) {
   // The second angle is not fetched until a pointer actually asks for it.
   //
@@ -42,13 +45,18 @@ export default function ProductCard({
         onClick={() => onViewDetails(product)}
         onMouseEnter={hasAngle ? () => setAngleWanted(true) : undefined}
       >
-        {/* Lazy: a category page holds 45 of these and shows about six. The rest
-            were downloaded in full before anyone scrolled to them. */}
+        {/* Lazy below the fold: a category page holds 45 of these and shows
+            about six, and the rest used to download in full before anyone had
+            scrolled to them.
+            The first rows are exempt. Lazy loading only starts a download once
+            the browser decides the image is near the viewport, and on the top
+            row that decision is the one thing standing between a customer and
+            a photograph — not worth the few hundred KB it would save. */}
         <img
           src={product.image}
           alt={product.name}
           referrerPolicy="no-referrer"
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
           id={`product-img-${product.id}`}
