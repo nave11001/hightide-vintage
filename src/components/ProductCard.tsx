@@ -6,6 +6,7 @@ import soldStampUrl from '@/assets/photos/sold_stamp.webp';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
+import { productPath } from '@/shared/slug.mjs';
 
 interface ProductCardProps {
   product: Product;
@@ -32,15 +33,34 @@ export default function ProductCard({
   const [angleWanted, setAngleWanted] = React.useState(false);
   const hasAngle = Boolean(product.images && product.images[1]);
 
+  // The garment's own address, on the picture and on the name.
+  //
+  // They were divs with an onClick, which works for exactly one gesture: a
+  // plain tap. Tabbing through a category went heart, buy, heart, buy — never
+  // reaching a single garment — and a long press offered no "open in new tab"
+  // and no link to copy, because there was no link. A real href fixes all of
+  // it at once and the browser handles the modifier keys itself.
+  //
+  // Still routed rather than reloaded: the plain click is taken over, and
+  // anything the customer means as "open this somewhere else" is left alone.
+  const href = productPath(product.brand, product.num);
+  const open = (event: React.MouseEvent) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.button !== 0) return;
+    event.preventDefault();
+    onViewDetails(product);
+  };
+
   return (
     <div
       className="flex flex-col group h-full bg-[#fdfcf9] border border-gray-100 rounded-none overflow-hidden transition-all duration-300 hover:shadow-sm"
       id={`product-card-${product.id}`}
     >
       {/* Product Image - Completely clean container with NO vintage frame, just like the jewelry screenshot */}
-      <div
-        className="relative cursor-pointer overflow-hidden aspect-[4/5] bg-gray-50"
-        onClick={() => onViewDetails(product)}
+      <a
+        href={href}
+        onClick={open}
+        className="relative block cursor-pointer overflow-hidden aspect-[4/5] bg-gray-50"
         onMouseEnter={hasAngle ? () => setAngleWanted(true) : undefined}
       >
         {/* Loaded outright, not on scroll.
@@ -77,7 +97,7 @@ export default function ProductCard({
             className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
         )}
-      </div>
+      </a>
 
       {/* Item info - Structured exactly like the jewelry screenshot */}
       <div className="p-3.5 flex flex-col flex-grow text-right">
@@ -102,11 +122,14 @@ export default function ProductCard({
           </button>
 
           {/* Name / Title */}
-          <h3
-            className="text-sm sm:text-base font-normal text-gray-800 leading-snug hover:text-stone-950 transition-colors cursor-pointer line-clamp-1 flex-grow"
-            onClick={() => onViewDetails(product)}
-          >
-            {product.name}
+          <h3 className="line-clamp-1 flex-grow">
+            <a
+              href={href}
+              onClick={open}
+              className="text-sm sm:text-base font-normal text-gray-800 leading-snug hover:text-stone-950 transition-colors cursor-pointer no-underline"
+            >
+              {product.name}
+            </a>
           </h3>
         </div>
 
@@ -155,7 +178,17 @@ export default function ProductCard({
           {product.description}
         </p>
 
-        {/* Row 4: Clean, elegant minimalist button "רכישה בווטסאפ" in white style */}
+        {/* Row 4: the only thing on this card that sells anything.
+            It was white with a pale border and teal text at 4.1:1 — under the
+            readable minimum, and quieter than the price above it and the heart
+            beside it, on a shop whose entire checkout is this message.
+            Filled, and filled in the same stone-900 the item page already uses
+            for the identical action, with WhatsApp's green kept on the mark.
+            Not a green fill: forty-five of those down a category page would be
+            louder than the clothes, and the clothes are the product.
+            py-3.5 rather than py-2 because it measured 38px tall and a thumb
+            wants 44 — the one control on the card nobody should have to aim
+            for twice. */}
         {product.isSold ? (
           <span className="mt-3.5 w-full bg-stone-100 text-stone-400 border border-stone-200 font-medium py-2 px-4 flex items-center justify-center text-xs text-center cursor-not-allowed select-none">
             נמכר
@@ -169,7 +202,7 @@ export default function ProductCard({
             e.stopPropagation();
             trackProduct('whatsapp_purchase_click', product, { source: 'card' });
           }}
-          className="mt-3.5 w-full bg-white hover:bg-stone-50 text-[#128C7E] border border-stone-200 hover:border-[#128C7E] font-medium py-2 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center"
+          className="mt-3.5 w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 hover:border-stone-800 font-medium py-3.5 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center no-underline"
           id={`quick-buy-btn-${product.id}`}
         >
           <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

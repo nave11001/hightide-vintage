@@ -113,7 +113,9 @@
       "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && sed -n '15,35p' src/components/SpinningLogo.tsx; echo \"=== where SpinningLogo used ===\"; grep -rn \"SpinningLogo\" src/App.tsx | head -3; echo; echo \"=== filteredProducts block ===\"; sed -n '575,600p' src/App.tsx)",
       "Bash(rm -rf dist)",
       "Bash(awk '{printf \"%7d  %s\\\\n\", $5, $9}')",
-      "Bash(python scripts/make_og_images.py)"
+      "Bash(python scripts/make_og_images.py)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && npm run lint 2>&1 | tail -10)",
+      "Bash(cd \"/c/Users/נווה/OneDrive - ראואל בעמ/מסמכים/פיתוח/hightide\" && npm run lint 2>&1 | tail -8 && npm run build:static 2>&1 | grep -E \"✓ built|error\")"
     ]
   }
 }
