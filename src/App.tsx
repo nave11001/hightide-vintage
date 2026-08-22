@@ -3,7 +3,7 @@ import { Product } from './types';
 import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath } from './router';
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
-import { loadProducts, snapshotProducts, CATEGORIES } from './data';
+import { loadProducts, snapshotProducts, cacheProducts, readCachedProducts, CATEGORIES } from './data';
 import { markBucketUnreachable, repairPhotos } from './photos';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted } from './components/TopWanted';
@@ -58,12 +58,23 @@ export default function App() {
   // shop all land on exactly the same thing. See src/router.ts.
   const path = usePath();
   const routeSlug = productSlugFromPath(path);
+  // False once Supabase has refused, which means `products` is either last
+  // visit's catalogue or the shipped snapshot — both of which can be a drop
+  // behind the link somebody is following.
+  const [catalogueIsLive, setCatalogueIsLive] = useState(true);
+
   const selectedProductForDetails = useMemo(() => {
     if (!routeSlug) return null;
     const num = numFromSlug(routeSlug);
     if (num === null) return null;
-    return products.find((p) => p.num === num) ?? null;
-  }, [routeSlug, products]);
+    const listed = products.find((p) => p.num === num);
+    if (listed) return listed;
+    // A garment the live catalogue does not list has genuinely gone. One the
+    // *fallback* catalogue does not list may simply be newer than it — and the
+    // shop's links live in Instagram DMs, where a dead one is a lost sale.
+    if (catalogueIsLive) return null;
+    return snapshotProducts().find((p) => p.num === num) ?? null;
+  }, [routeSlug, products, catalogueIsLive]);
 
   // Only once the catalogue is in can a slug be called wrong — before that it
   // is just a garment we have not loaded yet.
@@ -260,7 +271,7 @@ export default function App() {
         setProducts(live);
         step(0.7);
         // Kept only so the shop still renders if Supabase is unreachable later
-        localStorage.setItem('higetide_products_v2', JSON.stringify(live));
+        cacheProducts(live);
         await warmImages(live);
         done();
       } catch (e) {
@@ -272,32 +283,33 @@ export default function App() {
         // so this one refusal spares every photograph below the same trip, and
         // sends them straight to the copy that shipped with the site.
         markBucketUnreachable();
+        setCatalogueIsLive(false);
 
-        const cached = localStorage.getItem('higetide_products_v2');
-        let recovered: Product[] | null = null;
-        if (cached) {
-          try {
-            recovered = JSON.parse(cached);
-          } catch {
-            /* corrupt cache — fall through to the retry panel */
-          }
-        }
-        if (recovered && recovered.length > 0) {
+        // Anything this build cannot use is refused here rather than rendered
+        // half-working — see readCachedProducts in data.ts.
+        const recovered = readCachedProducts();
+        if (recovered) {
           // Last visit's catalogue beats an empty shop. It may be a drop behind.
           //
           // Its photo URLs were resolved on that visit and point at the bucket,
           // which is why a returning shopper saw prices with broken pictures
           // while a first-time visitor saw the shop whole. repairPhotos swaps
           // each one for the copy that shipped here.
-          setProducts(repairPhotos(recovered));
+          const mended = repairPhotos(recovered);
+          setProducts(mended);
           step(0.7);
+          // Warmed like every other path. This was missing, and it is the one
+          // path a returning customer takes: the veil ran its whole fill and
+          // then lifted onto a hero and a rail that had not started loading —
+          // the loading screen finishing before the shop was ready to be seen.
+          await warmImages(mended);
           done();
           return;
         }
 
-        // Nothing cached — a first-time visitor, arriving while Supabase is
-        // unreachable. The copy that shipped with the site is a deploy behind,
-        // but a deploy-old shop is a shop; an error screen is not.
+        // Nothing usable cached — a first-time visitor, or one whose cache this
+        // build cannot read. The copy that shipped with the site is a deploy
+        // behind, but a deploy-old shop is a shop; an error screen is not.
         const shipped = snapshotProducts();
         if (shipped.length > 0) {
           setProducts(shipped);
@@ -477,7 +489,7 @@ export default function App() {
   // Live Inventory Modifiers
   const handleSaveProducts = async (newProducts: Product[]) => {
     setProducts(newProducts);
-    localStorage.setItem('higetide_products_v2', JSON.stringify(newProducts));
+    cacheProducts(newProducts);
     
     // Save to server-side if logged in
     const token = sessionStorage.getItem('hightide_admin_token');
@@ -508,7 +520,7 @@ export default function App() {
     try {
       const live = await loadProducts();
       setProducts(live);
-      localStorage.setItem('higetide_products_v2', JSON.stringify(live));
+      cacheProducts(live);
       showToast(`המלאי רוענן מהדאטהבייס — ${live.length} פריטים`);
     } catch (e) {
       console.error('Failed to refresh inventory from Supabase:', e);

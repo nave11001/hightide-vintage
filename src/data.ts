@@ -146,6 +146,76 @@ export function snapshotProducts(): Product[] {
     }));
 }
 
+// ── last visit's catalogue, kept in the browser ─────────────────────────
+//
+// Read only when Supabase cannot be reached, and only ahead of the shipped
+// snapshot because it may carry a drop the last deploy did not.
+//
+// It is written by one version of the shop and read by another, which is the
+// whole difficulty. A Product gained a `num` field when garments got their own
+// URLs, and every catalogue cached before that lacked it — so on any phone
+// holding an older cache, `products.find(p => p.num === num)` matched nothing
+// and every single product link answered "הפריט הזה כבר לא כאן", while the shop
+// around it listed those same garments perfectly. It looked like broken links.
+// It was a catalogue from before the field existed.
+//
+// So: a shape number that must match, and a check on every row. Anything that
+// fails is dropped whole and the shipped snapshot is used instead — a catalogue
+// one deploy old is a small price against a shop whose every link is dead.
+// Raise CACHE_SHAPE whenever Product gains a field the shop relies on.
+
+const CACHE_KEY = 'hightide_catalogue';
+const CACHE_SHAPE = 3;
+
+/** The fields the shop cannot render a garment without. */
+function isUsable(row: unknown): row is Product {
+  const p = row as Partial<Product> | null;
+  return (
+    !!p &&
+    typeof p.num === 'number' &&
+    typeof p.id === 'string' &&
+    typeof p.name === 'string' &&
+    typeof p.price === 'number' &&
+    typeof p.image === 'string' &&
+    typeof p.category === 'string' &&
+    CATEGORY_LABELS[p.category] !== undefined
+  );
+}
+
+export function cacheProducts(products: Product[]): void {
+  try {
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ v: CACHE_SHAPE, savedAt: Date.now(), items: products }),
+    );
+  } catch {
+    // A full or disabled store is not worth an error screen — the shop has the
+    // snapshot behind it either way.
+  }
+}
+
+/** Last visit's catalogue, or null if there is nothing this build can trust. */
+export function readCachedProducts(): Product[] | null {
+  // Written by builds before this check existed, in a shape no longer read.
+  localStorage.removeItem('higetide_products_v2');
+
+  let parsed: unknown;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+
+  const box = parsed as { v?: number; items?: unknown[] } | null;
+  if (!box || box.v !== CACHE_SHAPE || !Array.isArray(box.items)) return null;
+  // All or nothing: a catalogue half of whose garments cannot open is worse to
+  // browse than one that is a deploy behind.
+  if (box.items.length === 0 || !box.items.every(isUsable)) return null;
+  return box.items as Product[];
+}
+
 // Re-exported rather than defined here: the same list has to reach the Netlify
 // function that writes each category's search and share tags, and that cannot
 // import TypeScript. See shared/categories.mjs.

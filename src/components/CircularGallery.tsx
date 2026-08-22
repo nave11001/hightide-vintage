@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { onPhotoError } from '../photos';
 
@@ -103,13 +103,17 @@ export default function CircularGallery({
   const paused = useRef(false);
   const dragging = useRef(false);
 
-  useEffect(() => {
+  // Before paint, not after. Every card starts hidden and is only revealed once
+  // a width is known, so measuring in a plain effect costs one painted frame in
+  // which the rail is a tall empty gap — on a phone, arriving exactly as the
+  // loading veil lifts, which is precisely when it reads as a shop that failed
+  // to come up.
+  useLayoutEffect(() => {
     const el = wrap.current;
     if (!el) return;
     const measure = () => setWidth(el.offsetWidth);
-    // Measure first and observe second. Every card starts hidden and only the
-    // layout pass reveals it, so a ResizeObserver that is slow, throttled or
-    // missing would leave a tall empty hole where the rail should be.
+    // Measure first and observe second: a ResizeObserver that is slow, throttled
+    // or missing must not be the only thing that can start the rail.
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -133,7 +137,9 @@ export default function CircularGallery({
   const loop = reps > 1 ? Array.from({ length: reps }, () => items).flat() : items;
   const total = loop.length * step;
 
-  useEffect(() => {
+  // Also before paint: this effect holds layout(), which is what makes a card
+  // visible at all. Run after paint and the first frame shows nothing.
+  useLayoutEffect(() => {
     if (width === 0 || loop.length === 0) return;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
