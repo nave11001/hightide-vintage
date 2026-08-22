@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
+import { onPhotoError } from '../photos';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -75,6 +76,7 @@ export default function ProductDetailModal({
               src={gallery[activeImage] || product.image}
               alt={product.name}
               referrerPolicy="no-referrer"
+              onError={onPhotoError}
               className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-103"
             />
             {onEditProduct && (

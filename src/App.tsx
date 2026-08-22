@@ -4,6 +4,7 @@ import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath 
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, snapshotProducts, CATEGORIES } from './data';
+import { markBucketUnreachable, repairPhotos } from './photos';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
@@ -265,6 +266,13 @@ export default function App() {
       } catch (e) {
         console.error('Failed to load inventory from Supabase:', e);
         if (cancelled) return;
+
+        // The catalogue request is also the photo probe. REST and Storage are
+        // restricted together — both answered 402 through the August outage —
+        // so this one refusal spares every photograph below the same trip, and
+        // sends them straight to the copy that shipped with the site.
+        markBucketUnreachable();
+
         const cached = localStorage.getItem('higetide_products_v2');
         let recovered: Product[] | null = null;
         if (cached) {
@@ -276,7 +284,12 @@ export default function App() {
         }
         if (recovered && recovered.length > 0) {
           // Last visit's catalogue beats an empty shop. It may be a drop behind.
-          setProducts(recovered);
+          //
+          // Its photo URLs were resolved on that visit and point at the bucket,
+          // which is why a returning shopper saw prices with broken pictures
+          // while a first-time visitor saw the shop whole. repairPhotos swaps
+          // each one for the copy that shipped here.
+          setProducts(repairPhotos(recovered));
           step(0.7);
           done();
           return;

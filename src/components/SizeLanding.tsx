@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Product } from '../types';
 import { track } from '../analytics';
+import { onPhotoError } from '../photos';
 import Logo from './Logo';
 import {
   splitByWaist,
@@ -45,6 +46,7 @@ function Card({ product, badge, onViewDetails }: CardProps) {
           alt={product.name}
           referrerPolicy="no-referrer"
           loading="lazy"
+          onError={onPhotoError}
           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103"
         />
         <span

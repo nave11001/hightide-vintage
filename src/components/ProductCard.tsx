@@ -5,6 +5,7 @@ import soldStampUrl from '@/assets/photos/sold_stamp.webp';
 // Downscaled from Sale.png — the original is 1536px wide for a 40px badge.
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
+import { onPhotoError } from '../photos';
 
 interface ProductCardProps {
   product: Product;
@@ -55,6 +56,7 @@ export default function ProductCard({
           alt={product.name}
           referrerPolicy="no-referrer"
           decoding="async"
+          onError={onPhotoError}
           className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
           id={`product-img-${product.id}`}
         />
@@ -65,6 +67,7 @@ export default function ProductCard({
             alt={`${product.name} - זווית נוספת`}
             referrerPolicy="no-referrer"
             decoding="async"
+            onError={onPhotoError}
             className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
         )}

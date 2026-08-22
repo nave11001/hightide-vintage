@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "prebuild": "node scripts/check-photos.mjs",
+    "check-photos": "node scripts/check-photos.mjs",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
+    "prebuild:static": "node scripts/check-photos.mjs",
     "build:static": "vite build",
     "publish": "vite build && netlify deploy --prod --dir=dist",
     "upload-drop": "python scripts/sync_inventory.py && python scripts/migrate_to_supabase.py && python scripts/make_inventory_web.py && python scripts/make_catalog_snapshot.py && python scripts/make_sitemap.py",

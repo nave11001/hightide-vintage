@@ -1,5 +1,6 @@
 import { Product } from './types';
-import { selectRows, storageUrl } from './supabase';
+import { selectRows } from './supabase';
+import { storageUrl } from './photos';
 import snapshot from './catalog-snapshot.json';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.

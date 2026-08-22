@@ -3,6 +3,7 @@ import { Search, Menu, X, Heart, Trash2 } from 'lucide-react';
 import { Product } from '../types';
 import Logo from './Logo';
 import HightideLogo from './HightideLogo';
+import { onPhotoError } from '../photos';
 
 interface HeaderProps {
   searchTerm: string;
@@ -326,8 +327,9 @@ export default function Header({
                     >
                       {/* Favorite Item Image */}
                       <img 
-                        src={item.image} 
-                        alt={item.name} 
+                        src={item.image}
+                        alt={item.name}
+                        onError={onPhotoError}
                         className="w-12 h-12 object-cover object-center flex-shrink-0 border border-stone-100"
                       />
 

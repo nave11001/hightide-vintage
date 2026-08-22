@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { onPhotoError } from '../photos';
 
 // A rail whose cards ride an arc instead of a straight line: the further a card
 // sits from the middle, the lower it drops and the more it tilts, following the
@@ -380,6 +381,7 @@ export default function CircularGallery({
                   // which is exactly the state a lazy loader waits out.
                   loading="eager"
                   draggable={false}
+                  onError={onPhotoError}
                   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103"
                 />
                 {/* Second angle, fetched only once a pointer asks for it — same
@@ -392,6 +394,7 @@ export default function CircularGallery({
                     alt={`${item.title} - זווית נוספת`}
                     referrerPolicy="no-referrer"
                     draggable={false}
+                    onError={onPhotoError}
                     className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />
                 )}
