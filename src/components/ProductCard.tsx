@@ -11,8 +11,6 @@ interface ProductCardProps {
   isFavorite: boolean;
   onToggleFavorite: (product: Product) => void;
   onViewDetails: (product: Product) => void;
-  /** Load this photo immediately — it is on screen when the page opens. */
-  priority?: boolean;
   key?: string;
 }
 
@@ -21,7 +19,6 @@ export default function ProductCard({
   isFavorite,
   onToggleFavorite,
   onViewDetails,
-  priority = false,
 }: ProductCardProps) {
   // The second angle is not fetched until a pointer actually asks for it.
   //
@@ -45,18 +42,18 @@ export default function ProductCard({
         onClick={() => onViewDetails(product)}
         onMouseEnter={hasAngle ? () => setAngleWanted(true) : undefined}
       >
-        {/* Lazy below the fold: a category page holds 45 of these and shows
-            about six, and the rest used to download in full before anyone had
-            scrolled to them.
-            The first rows are exempt. Lazy loading only starts a download once
-            the browser decides the image is near the viewport, and on the top
-            row that decision is the one thing standing between a customer and
-            a photograph — not worth the few hundred KB it would save. */}
+        {/* Loaded outright, not on scroll.
+            Lazy loading was worth its risk when each photograph was 564KB and
+            came from a metered bucket. It is not worth it now: they are 58KB
+            and served from this site, so the whole of a category page is a
+            couple of megabytes. Against that, lazy loading hands the decision
+            to the browser, and on iOS Safari it left cards blank in front of
+            customers. A shop that shows its garments beats a shop that saves
+            two megabytes. */}
         <img
           src={product.image}
           alt={product.name}
           referrerPolicy="no-referrer"
-          loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
           id={`product-img-${product.id}`}
@@ -104,8 +101,12 @@ export default function ProductCard({
           </h3>
         </div>
 
-        {/* Row 2: Price (Formatted clean) */}
-        <div className="mt-1 flex items-center gap-2 justify-start flex-row-reverse">
+        {/* Row 2: Price (Formatted clean)
+            Wraps rather than overflows: a garment that is both sold and
+            discounted puts a price, a struck price and two stamps on one line,
+            which on a phone ran past the edge of the card and left half a SOLD
+            stamp floating outside it. */}
+        <div className="mt-1 flex flex-wrap items-center gap-2 justify-start flex-row-reverse">
           {/* On sale, the live price turns red and the old one stays struck through beside it */}
           <span
             className={
@@ -124,7 +125,7 @@ export default function ProductCard({
               <img
                 src={saleStampUrl}
                 alt="מבצע"
-                className="h-7 w-auto select-none"
+                className="h-7 w-auto shrink-0 select-none"
                 draggable={false}
               />
             </>
@@ -134,7 +135,7 @@ export default function ProductCard({
             <img
               src={soldStampUrl}
               alt="נמכר"
-              className="h-9 w-auto mr-auto select-none"
+              className="h-9 w-auto shrink-0 mr-auto select-none"
               draggable={false}
             />
           )}

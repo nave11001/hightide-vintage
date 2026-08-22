@@ -71,8 +71,19 @@ export async function selectRows<T>(
     );
   }
 
+  // A deadline, because the shop has somewhere else to go.
+  //
+  // The catalogue is tried first and the copy that ships with the site is the
+  // fallback, so every second spent waiting here is a second of blank screen
+  // for a shopper whose answer was already on disk. Without this the wait is
+  // whatever the browser's own timeout happens to be — which during the August
+  // outage meant 2.3 seconds of nothing on every single visit, and would mean
+  // far longer if Supabase were slow rather than refusing outright.
+  const deadline = AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined;
+
   const response = await fetch(`${url}/rest/v1/${table}?${new URLSearchParams(params)}`, {
     headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+    signal: deadline,
   });
 
   if (!response.ok) {

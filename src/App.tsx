@@ -925,13 +925,10 @@ export default function App() {
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6"
                 id="products-grid"
               >
-                {filteredProducts.map((product, i) => (
+                {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
-                    // Two rows on the widest layout. Everything past them waits
-                    // to be scrolled to.
-                    priority={i < 8}
                     isFavorite={favoriteItems.some((item) => item.id === product.id)}
                     onToggleFavorite={handleToggleFavorite}
                     onViewDetails={openProduct}
