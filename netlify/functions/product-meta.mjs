@@ -17,6 +17,7 @@
 
 import { numFromSlug, productSlug } from '../../shared/slug.mjs';
 import { categoryById } from '../../shared/categories.mjs';
+import snapshot from '../../src/catalog-snapshot.json' with { type: 'json' };
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
@@ -57,13 +58,43 @@ async function fetchItem(num) {
   return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 }
 
+/**
+ * The same garment out of the copy that ships with the site.
+ *
+ * Used when Supabase does not answer. Without it every product link returns
+ * 404 during an outage — the page itself still draws, because the app has the
+ * same snapshot, but search engines are told the garment does not exist and a
+ * shared link unfurls as the shop rather than the item. For a business whose
+ * links live in Instagram DMs that is the outage doing its real damage.
+ */
+function fromSnapshot(num) {
+  const row = (snapshot.items ?? []).find((item) => item.n === num);
+  if (!row) return null;
+  return {
+    num: row.n,
+    category: row.c,
+    name: row.b,
+    size: row.s,
+    price: row.p,
+    original_price: row.o ?? null,
+    sold: row.sold === 1,
+    item_photos: (row.ph ?? []).map((path, position) => ({ path, position })),
+    fromSnapshot: true,
+  };
+}
+
 function buildHead(item, url) {
   const photos = [...(item.item_photos ?? [])].sort(
     (a, b) => a.position - b.position || a.path.localeCompare(b.path),
   );
-  const image = photos.length
-    ? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${photos[0].path}`
-    : `${SHOP}/logo-loader.webp`;
+  // The shop's own cover when the garment came from the snapshot: Supabase is
+  // evidently not answering, so pointing a link preview at its bucket would
+  // produce a card with a hole where the photograph should be.
+  const image = item.fromSnapshot
+    ? `${SHOP}/og-cover.jpg`
+    : photos.length
+      ? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${photos[0].path}`
+      : `${SHOP}/logo-loader.webp`;
 
   const kind = CATEGORY_WORD[item.category] || 'פריט וינטג׳';
   const title = `${item.name} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
@@ -183,7 +214,8 @@ export default async (request) => {
 
   const slug = decodeURIComponent(url.pathname.replace(/^\/product\//, '').replace(/\/$/, ''));
   const num = numFromSlug(slug);
-  const item = num === null ? null : await fetchItem(num);
+  // Live first, because a price or a sold mark can change without a deploy.
+  const item = num === null ? null : ((await fetchItem(num)) ?? fromSnapshot(num));
 
   if (!item) {
     return new Response(html, {
