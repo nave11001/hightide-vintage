@@ -26,22 +26,41 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # (and in OneDrive) rather than in the repo.
 ORIGINALS = os.path.join(ROOT, 'assets', '_originals')
 
-# (path relative to assets/_originals/, max width in px, quality)
+# (path relative to assets/_originals/, max width in px, quality, variants)
+#
 # Photographs take 82; flat artwork with hard edges takes 90, where ringing
 # around the letterforms would show.
 #
+# The widths are measured, not guessed — every one of these was checked against
+# what the browser actually draws, at 375px and at 1440px. Two kinds:
+#
+#   fixed size, no variants
+#     Drawn at one small size whatever the screen. The stamps are the extreme
+#     case: sold_stamp shipped at 620px to fill 54, which is 106KB spent on a
+#     badge, and it was the single heaviest file on a category page after the
+#     garments themselves.
+#
+#   variants, for srcset
+#     The hero and the category tiles really are full-width on a desktop — 1432
+#     and 1246 — and a phone draws them at 375 and 341. One size cannot serve
+#     both, so they ship at three and the browser picks, exactly as the garment
+#     photographs do.
+#
 # The logo is not here: scripts/make_logo.py builds it and the icons together,
 # because it has to cut the background away first.
+VARIANTS = (480, 800)
+
 JOBS = [
-    ('font_homepage.png', 1200, 90),
-    ('homepage_photo.png', 1600, 82),
-    ('photos/boardshorts.jpg', 1170, 82),
-    ('photos/T-shirts.jpg', 1170, 82),
-    ('photos/accessories.jpeg', 1170, 82),
-    ('photos/Women (1).jpeg', 1170, 82),
-    ('photos/all products.jpg', 1170, 82),
-    ('photos/sold_stamp.png', 620, 90),
-    ('photos/sale_stamp.png', 360, 90),
+    # name                        width  q   variants
+    ('font_homepage.png',          320,  90, False),  # drawn at 102px, always
+    ('photos/sold_stamp.png',      180,  90, False),  # drawn at 54px
+    ('photos/sale_stamp.png',      140,  90, False),  # drawn at 42px
+    ('homepage_photo.png',        1600,  82, True),   # 375 on a phone, 1432 wide
+    ('photos/boardshorts.jpg',    1170,  82, True),   # 341 on a phone, 610 wide
+    ('photos/T-shirts.jpg',       1170,  82, True),
+    ('photos/accessories.jpeg',   1170,  82, True),
+    ('photos/Women (1).jpeg',     1170,  82, True),
+    ('photos/all products.jpg',   1170,  82, True),   # 1246 on a desktop
 ]
 
 
@@ -69,25 +88,33 @@ def make_og_cover() -> None:
 def main() -> None:
     total_before = total_after = 0
 
-    for name, max_w, quality in JOBS:
+    for name, max_w, quality, wants_variants in JOBS:
         src = os.path.join(ORIGINALS, name)
         # Read from the masters, write into assets/ where the site imports from.
-        dst = os.path.splitext(os.path.join(ROOT, 'assets', name))[0] + '.webp'
+        stem = os.path.splitext(os.path.join(ROOT, 'assets', name))[0]
 
-        im = Image.open(src)
+        master = Image.open(src)
         # Alpha is kept where it exists: these sit on the page as cut-outs, and
         # flattening them onto white would put a box around them.
-        im = im.convert('RGBA' if im.mode in ('RGBA', 'LA', 'P') else 'RGB')
+        master = master.convert('RGBA' if master.mode in ('RGBA', 'LA', 'P') else 'RGB')
 
-        if im.width > max_w:
-            im = im.resize((max_w, round(im.height * max_w / im.width)), Image.LANCZOS)
+        widths = [max_w] + ([w for w in VARIANTS if w < max_w] if wants_variants else [])
+        after = 0
+        for width in widths:
+            im = master
+            if master.width > width:
+                im = master.resize((width, round(master.height * width / master.width)),
+                                   Image.LANCZOS)
+            suffix = '' if width == max_w else f'-{width}'
+            path = f'{stem}{suffix}.webp'
+            im.save(path, 'WEBP', quality=quality, method=6)
+            after += os.path.getsize(path)
 
-        im.save(dst, 'WEBP', quality=quality, method=6)
-
-        before, after = os.path.getsize(src), os.path.getsize(dst)
+        before = os.path.getsize(src)
         total_before += before
         total_after += after
-        print(f'{before // 1024:>6}KB -> {after // 1024:>5}KB  {im.width}x{im.height}  {name}')
+        note = f'  + {len(widths) - 1} smaller' if len(widths) > 1 else ''
+        print(f'{before // 1024:>6}KB -> {after // 1024:>5}KB  {min(master.width, max_w)}px  {name}{note}')
 
     print(f'\n{total_before // 1024:,}KB -> {total_after // 1024:,}KB'
           f'  ({100 - total_after * 100 // total_before}% lighter)')

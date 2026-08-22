@@ -251,7 +251,11 @@ export default function App() {
      */
     const warmImages = (list: Product[]) => {
       const rail = pickTopWanted(list).slice(0, 5).map((p) => p.image);
-      const urls = [heroImageUrl, ...rail];
+      // The hero only exists on the homepage. Warming it unconditionally meant
+      // 203KB fetched and discarded on every arrival straight into a category
+      // or a garment — which is how a link shared on Instagram is opened.
+      const onHomepage = window.location.pathname === '/';
+      const urls = onHomepage ? [heroImageUrl, ...rail] : rail;
 
       const ready = urls.filter(Boolean).map(
         (src) =>
@@ -261,7 +265,7 @@ export default function App() {
             img.onload = () => (img.decode ? img.decode().then(resolve, () => resolve()) : resolve());
             const set = srcSetFor(src);
             if (set) {
-              img.sizes = RAIL_SIZES;
+              img.sizes = src === heroImageUrl ? '100vw' : RAIL_SIZES;
               img.srcset = set;
             }
             img.src = src;
@@ -578,17 +582,26 @@ export default function App() {
     .map((fav) => products.find((p) => p.id === fav.id))
     .filter((p): p is Product => !!p);
 
-  const filteredProducts = categoryProducts.filter((p) => {
-    const matchesSize =
-      selectedSizes.length === 0 || p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)));
-    const matchesAvailability =
-      availabilityFilter === '' ||
-      (availabilityFilter === 'available' ? !p.isSold : p.isSold === true);
-    // An item counts as discounted exactly when it carries a pre-sale price,
-    // which is the same thing that draws the SALE stamp on the card.
-    const matchesSale = saleFilter === '' || Boolean(p.originalPrice);
-    return matchesSize && matchesAvailability && matchesSale;
-  });
+  const filteredProducts = categoryProducts
+    .filter((p) => {
+      const matchesSize =
+        selectedSizes.length === 0 || p.sizes.some((s) => selectedSizes.includes(normalizeSize(s)));
+      const matchesAvailability =
+        availabilityFilter === '' ||
+        (availabilityFilter === 'available' ? !p.isSold : p.isSold === true);
+      // An item counts as discounted exactly when it carries a pre-sale price,
+      // which is the same thing that draws the SALE stamp on the card.
+      const matchesSale = saleFilter === '' || Boolean(p.originalPrice);
+      return matchesSize && matchesAvailability && matchesSale;
+    })
+    // Sold garments sink to the end. They stay listed — every piece here is one
+    // of one, and a wall of נמכר is what tells a browsing customer the shop
+    // moves — but the first thing in a category should be something buyable.
+    // Boardies opened on a sold item: nine of its forty-five were gone, and one
+    // of them held the first square on the page.
+    //
+    // sort() is stable, so within each group the catalogue order is untouched.
+    .sort((a, b) => Number(a.isSold) - Number(b.isSold));
 
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
@@ -628,6 +641,9 @@ export default function App() {
             {/* Background Editorial Image - Warm-toned sun-soaked fashion group */}
             <img
               src={heroImageUrl}
+              srcSet={srcSetFor(heroImageUrl)}
+              // Edge to edge at every width, so the slot is the window.
+              sizes="100vw"
               alt="HighTide Vintage New Drop Editorial"
               className="absolute inset-0 w-full h-full object-cover object-[40%_75%]"
             />
@@ -824,6 +840,10 @@ export default function App() {
                   <div className="absolute inset-0 bg-stone-950 transition-colors duration-500 group-hover:bg-stone-900/40">
                     <img
                       src={category.image}
+                      srcSet={srcSetFor(category.image)}
+                      // Full width on a phone; two to a row, and one wide one,
+                      // once there is room.
+                      sizes="(min-width: 640px) 50vw, 100vw"
                       alt={category.name}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"

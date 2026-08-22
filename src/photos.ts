@@ -27,11 +27,17 @@ const REMOTE_PREFIX = url ? `${url}/storage/v1/object/public/${BUCKET}/` : '';
 // Every photograph the database knows about, compressed and renamed after the
 // item number it belongs to. Built by scripts/make_inventory_web.py; verified
 // to cover all 116 paths the database holds. 8.4MB for 147 files.
-const LOCAL_PHOTOS = import.meta.glob('@/assets/inventory-web/**/*.webp', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>;
+// Every picture the site ships, garments and furniture alike. Both need the
+// same treatment — the shop's own sold stamp was 620px wide to be drawn at 54,
+// which cost more than any single garment on the page — so both are read here
+// and both get a srcset below.
+//
+// _originals is excluded: those are the uncompressed masters, kept out of git
+// and never shipped.
+const LOCAL_PHOTOS = import.meta.glob(
+  ['@/assets/**/*.webp', '!@/assets/_originals/**'],
+  { eager: true, query: '?url', import: 'default' },
+) as Record<string, string>;
 
 /** "boardies/104.jpg" -> the key make_inventory_web.py wrote. */
 function localKey(path: string): string {
@@ -53,6 +59,16 @@ export function localPhotoUrl(path: string): string | undefined {
 const SRCSET_BY_URL: Record<string, string> = {};
 {
   const widths = [480, 800];
+  // The width claimed for the full-size candidate. The real ones differ a
+  // little — garments are 1200, the hero 1264, the category tiles 1170 — and
+  // nothing here can measure an image before it loads.
+  //
+  // So: the smallest of them, deliberately. Under-claiming makes the browser
+  // reach for the full file a touch sooner than it strictly must, which costs
+  // a few kilobytes on a wide screen. Over-claiming makes it settle for the
+  // 800px copy where the slot needed more, which is a blurry photograph. The
+  // 2.5% error only ever falls on the safe side.
+  const FULL = 1170;
   for (const [key, href] of Object.entries(LOCAL_PHOTOS)) {
     if (/-\d+\.webp$/.test(key)) continue; // a variant, not a full-width original
     const base = key.slice(0, -'.webp'.length);
@@ -63,8 +79,8 @@ const SRCSET_BY_URL: Record<string, string> = {};
     }
     // No variants means the master was already smaller than the smallest of
     // them. Leaving it without a srcset is the honest answer — a lone candidate
-    // labelled 1200w would be claiming a width the file does not have.
-    if (parts.length) SRCSET_BY_URL[href] = [...parts, `${href} 1200w`].join(', ');
+    // labelled with a width would be claiming one the file does not have.
+    if (parts.length) SRCSET_BY_URL[href] = [...parts, `${href} ${FULL}w`].join(', ');
   }
 }
 

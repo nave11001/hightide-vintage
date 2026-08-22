@@ -41,8 +41,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "assets", "_originals", "final logo.png")
 PUBLIC = os.path.join(ROOT, "public")
 
-# The header never draws it larger than this, and it is retina-doubled already.
-HEADER_WIDTH = 700
+# Measured, not guessed: the header draws it at 64 CSS pixels and the spinning
+# logo in the footer at 80. 240 covers the larger of those on a three-times
+# screen. It shipped at 700 and cost 101KB to fill 64 pixels.
+HEADER_WIDTH = 240
 HEADER_QUALITY = 88
 
 SIZES = [
