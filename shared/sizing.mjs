@@ -72,6 +72,21 @@ export function letterOf(size) {
   return LETTERS.includes(s) ? s : null;
 }
 
+/**
+ * The size as the shop should print it: one letter, or the number as typed.
+ *
+ * The sheet holds `M` and `m` and `Small` and `s`, and the category filter
+ * built its buttons straight from those strings — so a shopper who picked M
+ * was shown five garments and quietly not shown the two filed under `m`. The
+ * filter is right; the labels behind it were three spellings of one size.
+ */
+export function displaySize(size) {
+  const s = norm(size);
+  if (!s) return s;
+  if (isOneSize(s)) return 'ONE SIZE';
+  return letterOf(s) ?? s;
+}
+
 const covers = (span, n) => Boolean(span) && n >= span[0] && n <= span[1];
 
 // Customers answer in their own words, not in the shape a form would demand.

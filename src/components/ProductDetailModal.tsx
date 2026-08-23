@@ -6,6 +6,7 @@ import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
 import { categoryPath, navigate } from '../router';
 import { categoryById } from '@/shared/categories.mjs';
+import { productPath } from '@/shared/slug.mjs';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -17,6 +18,55 @@ interface ProductDetailModalProps {
    * the garment's own address — there is no shop behind them to cover.
    */
   variant?: 'modal' | 'page';
+  /** The rest of the shop, for the row of suggestions underneath. */
+  catalogue?: Product[];
+}
+
+/**
+ * Four garments to show under this one, best first.
+ *
+ * Every piece here is one of one, so the usual "more of this product" has
+ * nothing to point at — and that is exactly why the row matters. A shopper who
+ * likes this pair but cannot wear a 32 has, at this moment, no reason left to
+ * stay. Brand first because someone looking at Billabong is looking at
+ * Billabong; then size, because a size that fits is the scarcest thing in a
+ * vintage shop; then the same rail, then a near price.
+ */
+function similarTo(product: Product, catalogue: Product[]): Product[] {
+  const size = product.sizes[0];
+  const ranked = catalogue
+    .filter((p) => p.num !== product.num && !p.isSold)
+    .map((p) => {
+      let score = 0;
+      if (p.brand && p.brand === product.brand) score += 4;
+      if (size && p.sizes.includes(size)) score += 3;
+      if (p.category === product.category) score += 2;
+      if (Math.abs(p.price - product.price) <= product.price * 0.2) score += 1;
+      return { p, score };
+    })
+    .filter((row) => row.score > 0)
+    .sort((a, b) => b.score - a.score || (b.p.views ?? 0) - (a.p.views ?? 0));
+
+  // At most two from any one brand.
+  //
+  // Score alone filled the row with four Quiksilvers, three of them in sizes
+  // the shopper had just not chosen — the same garment four times, in the wrong
+  // size. Two of the brand and two that fit is a row worth looking at. The
+  // second pass fills from what is left if the cap runs the row short.
+  const perBrand: Record<string, number> = {};
+  const picked: Product[] = [];
+  for (const { p } of ranked) {
+    if (picked.length === 4) break;
+    const seen = perBrand[p.brand] ?? 0;
+    if (seen >= 2) continue;
+    perBrand[p.brand] = seen + 1;
+    picked.push(p);
+  }
+  for (const { p } of ranked) {
+    if (picked.length === 4) break;
+    if (!picked.includes(p)) picked.push(p);
+  }
+  return picked;
 }
 
 export default function ProductDetailModal({
@@ -24,6 +74,7 @@ export default function ProductDetailModal({
   onClose,
   onEditProduct,
   variant = 'modal',
+  catalogue = [],
 }: ProductDetailModalProps) {
   if (!product) return null;
 
@@ -47,20 +98,14 @@ export default function ProductDetailModal({
   // scrolls inside its own box against a darkened shop, a page scrolls with
   // the document like any other page.
   const card = (
-      <div
-        className={
-          isPage
-            ? 'bg-[#fdfcf9] border border-stone-200/60 w-full max-w-3xl mx-auto relative rounded-none flex flex-col md:flex-row'
-            : 'bg-[#fdfcf9] border border-stone-200/60 w-full max-w-3xl relative z-10 shadow-2xl max-h-[90vh] overflow-y-auto rounded-none flex flex-col md:flex-row animate-scale-up'
-        }
-      >
+      <div className="bg-[#fdfcf9] border border-stone-200/60 w-full relative rounded-none flex flex-col md:flex-row">
 
         {/* Left close button — on a page it is the way back to the shop, which
             is a different promise from dismissing a layer, so it says so. */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 left-4 z-20 p-2 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center gap-1.5"
+          className="absolute top-4 left-4 z-20 min-w-[44px] min-h-[44px] px-3 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center justify-center gap-1.5"
           id="close-detail-modal-btn"
           aria-label={isPage ? 'חזרה לחנות' : 'סגירה'}
         >
@@ -126,7 +171,7 @@ export default function ProductDetailModal({
         {/* Product Meta & Configuration (Right Side) */}
         <div className="w-full md:w-1/2 p-6 flex flex-col text-right">
           <div className="flex justify-between items-center flex-row-reverse mb-1">
-            <span className="text-xs font-mono font-normal text-stone-400 uppercase tracking-widest">
+            <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest">
               {product.brand}
             </span>
             {onEditProduct && (
@@ -148,7 +193,7 @@ export default function ProductDetailModal({
               Google reads the same path out of the JSON-LD the Netlify
               function writes, and shows it in place of the bare URL. */}
           {isPage && categoryName && (
-            <nav aria-label="נתיב ניווט" className="text-[11px] text-stone-400 mb-1" dir="rtl">
+            <nav aria-label="נתיב ניווט" className="text-xs text-stone-500 mb-1" dir="rtl">
               <ol className="flex items-center gap-1.5 flex-wrap">
                 <li>
                   <a href="/" onClick={crumb('/')} className="hover:text-stone-700 transition-colors">
@@ -197,7 +242,7 @@ export default function ProductDetailModal({
               </span>
               {product.originalPrice && (
                 <>
-                  <span className="text-xs text-stone-400 line-through font-mono">
+                  <span className="text-base text-stone-500 line-through font-mono">
                     ₪{product.originalPrice}
                   </span>
                   <img
@@ -211,13 +256,13 @@ export default function ProductDetailModal({
             </div>
 
             <div className="flex items-center gap-2 flex-row-reverse">
-              <span className="text-[11px] text-stone-400 uppercase tracking-wide">מידה</span>
+              <span className="text-xs text-stone-500 uppercase tracking-wide">מידה</span>
               {product.sizes.map((size) => (
                 <button
                   key={size}
                   type="button"
                   onClick={() => setSelectedSize(size)}
-                  className={`min-w-[44px] h-9 px-3 font-mono text-sm font-bold border transition-colors ${
+                  className={`min-w-[44px] h-11 px-3 font-mono text-sm font-bold border transition-colors ${
                     selectedSize === size
                       ? 'bg-stone-900 text-white border-stone-900'
                       : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
@@ -242,8 +287,8 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setActiveTab('details')}
-              className={`pb-2 px-3 text-xs font-normal border-b transition-colors ${
-                activeTab === 'details' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-400 hover:text-stone-800'
+              className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
+                activeTab === 'details' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
               פרטים נוספים
@@ -251,8 +296,8 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setActiveTab('sizing')}
-              className={`pb-2 px-3 text-xs font-normal border-b transition-colors ${
-                activeTab === 'sizing' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-400 hover:text-stone-800'
+              className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
+                activeTab === 'sizing' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
               מדריך מידות
@@ -260,8 +305,8 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setActiveTab('shipping')}
-              className={`pb-2 px-3 text-xs font-normal border-b transition-colors ${
-                activeTab === 'shipping' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-400 hover:text-stone-800'
+              className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
+                activeTab === 'shipping' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
               משלוחים והחזרות
@@ -286,7 +331,7 @@ export default function ProductDetailModal({
                     </p>
                   );
                 })()}
-                <p className="text-stone-400 text-[11px]">מומלץ למדוד מכנס קיים שלכם לפני ביצוע הרכישה לקבלת התאמה מקסימלית.</p>
+                <p className="text-stone-500 text-xs">מומלץ למדוד מכנס קיים שלכם לפני ביצוע הרכישה לקבלת התאמה מקסימלית.</p>
               </div>
             )}
             {activeTab === 'shipping' && (
@@ -306,7 +351,7 @@ export default function ProductDetailModal({
               <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
                 הפריט נמכר ואינו זמין להזמנה
               </div>
-              <p className="mt-2 text-[11px] text-stone-400 text-center">
+              <p className="mt-2 text-xs text-stone-500 text-center">
                 פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.
               </p>
             </div>
@@ -321,7 +366,11 @@ export default function ProductDetailModal({
                 trackProduct('whatsapp_purchase_click', product, { source: 'detail' });
                 onClose();
               }}
-              className="flex-grow h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
+              // h-14, not h-10. This is the whole checkout — every sale the
+              // shop makes leaves through this one control — and it measured
+              // 38px tall on a phone against the 44 a thumb needs. The card
+              // behind it was already fixed; this was the one that mattered.
+              className="flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
               id="detail-add-btn"
             >
               <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -332,8 +381,12 @@ export default function ProductDetailModal({
           </div>
           )}
 
-          {/* Guarantee / trust statements */}
-          <div className="mt-5 grid grid-cols-2 gap-2 text-[10px] text-stone-400 pt-4 border-t border-stone-100 font-normal text-center">
+          {/* Guarantee / trust statements.
+              These two lines are the entire argument for paying ₪250 for a
+              garment somebody else already wore, and they were set at 10px in
+              stone-400 — 2.5:1, the faintest thing on the page. The claim that
+              carries the price should not be the hardest sentence to read. */}
+          <div className="mt-5 grid grid-cols-2 gap-2 text-xs text-stone-600 pt-4 border-t border-stone-100 font-normal text-center">
             <div className="flex items-center gap-1 justify-center">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               {/* dir="auto" and not the stylesheet rule: this is a bare span in
@@ -349,7 +402,62 @@ export default function ProductDetailModal({
       </div>
   );
 
-  if (isPage) return card;
+  const suggestions = similarTo(product, catalogue);
+
+  const alsoLike = suggestions.length > 0 && (
+    <section
+      className="bg-[#fdfcf9] border border-t-0 border-stone-200/60 px-4 sm:px-6 py-6"
+      aria-labelledby="also-like-heading"
+    >
+      <h2
+        id="also-like-heading"
+        className="text-sm font-medium text-stone-900 mb-4 text-right tracking-wide"
+      >
+        אולי יעניין אותך גם
+      </h2>
+      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {suggestions.map((item) => (
+          <li key={item.id}>
+            <a
+              href={productPath(item.brand, item.num)}
+              onClick={crumb(productPath(item.brand, item.num))}
+              className="group block no-underline"
+            >
+              <div className="aspect-[4/5] overflow-hidden bg-stone-50 border border-stone-100">
+                <img
+                  src={item.image}
+                  srcSet={srcSetFor(item.image)}
+                  sizes="(min-width: 768px) 22vw, 45vw"
+                  alt={item.name}
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={onPhotoError}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <p className="mt-2 text-xs text-stone-700 line-clamp-1 text-right group-hover:text-stone-950 transition-colors">
+                {item.name}
+              </p>
+              <p className="mt-0.5 text-xs font-mono font-medium text-stone-900 text-right">
+                ₪{item.price}
+                <span className="font-sans font-normal text-stone-500"> · {item.sizes[0]}</span>
+              </p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+
+  if (isPage) {
+    return (
+      <div className="w-full max-w-3xl mx-auto">
+        {card}
+        {alsoLike}
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" id="detail-modal">
@@ -358,7 +466,12 @@ export default function ProductDetailModal({
         className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       ></div>
-      {card}
+      {/* The scroll box moved out here from the card so the suggestions ride
+          inside it rather than hanging off the bottom of a fixed-height layer. */}
+      <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up">
+        {card}
+        {alsoLike}
+      </div>
     </div>
   );
 }

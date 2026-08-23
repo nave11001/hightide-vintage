@@ -151,7 +151,11 @@ export default function ProductCard({
           </span>
           {product.originalPrice && (
             <>
-              <span className="text-xs text-gray-400 line-through">
+              {/* The saving is the reason this card sells, and it was set in
+                  12px gray-400 — 2.5:1 against the card, under half the
+                  readable minimum. A shopper could see the red price had a
+                  companion and not make out what it said. */}
+              <span className="text-sm text-stone-500 line-through">
                 ₪{product.originalPrice}
               </span>
               <img
@@ -190,7 +194,7 @@ export default function ProductCard({
             wants 44 — the one control on the card nobody should have to aim
             for twice. */}
         {product.isSold ? (
-          <span className="mt-3.5 w-full bg-stone-100 text-stone-400 border border-stone-200 font-medium py-2 px-4 flex items-center justify-center text-xs text-center cursor-not-allowed select-none">
+          <span className="mt-3.5 w-full bg-stone-100 text-stone-600 border border-stone-200 font-medium py-2 px-4 flex items-center justify-center text-xs text-center cursor-not-allowed select-none">
             נמכר
           </span>
         ) : (

@@ -16,6 +16,8 @@
 // unfurls of the same link cheap.
 
 import { numFromSlug, productSlug } from '../../shared/slug.mjs';
+import { brandName } from '../../shared/brands.mjs';
+import { displaySize } from '../../shared/sizing.mjs';
 import { categoryById } from '../../shared/categories.mjs';
 import snapshot from '../../src/catalog-snapshot.json' with { type: 'json' };
 
@@ -106,11 +108,16 @@ function buildHead(item, url) {
     : `${SHOP}/og-cover.jpg`;
 
   const kind = CATEGORY_WORD[item.category] || 'פריט וינטג׳';
-  const title = `${item.name} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
+  // Spelled the same way the page spells it. This is the more important of the
+  // two: the preview is what a customer reads in a DM before deciding whether
+  // to open the link at all, so a misspelt brand does its damage here first.
+  const brand = brandName(item.name);
+  const size = displaySize(item.size);
+  const title = `${brand} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
   const status = item.sold ? 'נמכר' : `₪${item.price}`;
   const description = item.sold
-    ? `${kind} של ${item.name}, מידה ${item.size}. הפריט נמכר — כל פריט אצלנו הוא יחיד.`
-    : `${kind} של ${item.name}, מידה ${item.size}, ₪${item.price}. פריט יחיד במלאי, מקורי ומאומת.`;
+    ? `${kind} של ${brand}, מידה ${size}. הפריט נמכר — כל פריט אצלנו הוא יחיד.`
+    : `${kind} של ${brand}, מידה ${size}, ₪${item.price}. פריט יחיד במלאי, מקורי ומאומת.`;
 
   // Two graphs: what the thing is, and where it sits. Google draws the second
   // as a path under the result — "hightide-vintage.netlify.app › בורדיז ›
@@ -122,18 +129,18 @@ function buildHead(item, url) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'HIGHTIDE VINTAGE', item: SHOP },
       { '@type': 'ListItem', position: 2, name: category.name, item: `${SHOP}/category/${category.id}` },
-      { '@type': 'ListItem', position: 3, name: `${item.name} #${item.num}` },
+      { '@type': 'ListItem', position: 3, name: `${brand} #${item.num}` },
     ],
   };
 
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${item.name} #${item.num}`,
+    name: `${brand} #${item.num}`,
     description,
     image,
     sku: String(item.num),
-    brand: { '@type': 'Brand', name: item.name },
+    brand: { '@type': 'Brand', name: brand },
     offers: {
       '@type': 'Offer',
       url,
@@ -153,7 +160,7 @@ function buildHead(item, url) {
     <meta property="og:site_name" content="HIGHTIDE VINTAGE" />
     <meta property="og:locale" content="he_IL" />
     <meta property="og:url" content="${attr(url)}" />
-    <meta property="og:title" content="${attr(`${item.name} #${item.num}`)} — ${attr(status)}" />
+    <meta property="og:title" content="${attr(`${brand} #${item.num}`)} — ${attr(status)}" />
     <meta property="og:description" content="${attr(description)}" />
     <meta property="og:image" content="${attr(image)}" />
     <meta property="og:image:width" content="1200" />
@@ -251,6 +258,7 @@ export default async (request) => {
     });
   }
 
-  // Always advertise the canonical spelling, whatever spelling was followed.
-  return ok(buildHead(item, `${SHOP}/product/${productSlug(item.name, item.num)}`));
+  // Always advertise the canonical spelling, whatever spelling was followed —
+  // including the sheet's own, now that brandName decides how a brand is spelt.
+  return ok(buildHead(item, `${SHOP}/product/${productSlug(brandName(item.name), item.num)}`));
 };

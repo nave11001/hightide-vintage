@@ -409,6 +409,33 @@ export default function App() {
     }
   }, [selectedProductForDetails, routeSlug]);
 
+  // Hold the shop still while a garment lies over it.
+  //
+  // Without this the page behind kept its own scroll: open an item on a phone,
+  // drag past the end of the card, and the category grid slid around underneath
+  // it. Worse on the way out — the modal closed onto a different part of the
+  // shop than the one it opened from.
+  //
+  // The scroll position is put back by hand because `position: fixed` on the
+  // body is what stops iOS Safari scrolling the page behind a layer, and it
+  // costs the offset to do it.
+  const modalIsOpen = Boolean(selectedProductForDetails) && !productAsPage;
+  useEffect(() => {
+    if (!modalIsOpen) return;
+    const y = window.scrollY;
+    const { body } = document;
+    const previous = body.style.cssText;
+    body.style.position = 'fixed';
+    body.style.top = `-${y}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.cssText = previous;
+      window.scrollTo(0, y);
+    };
+  }, [modalIsOpen]);
+
   // Links the Instagram bot hands out:
   //   ?item=boardies-126               opens straight onto that garment
   //   ?waist=32&shirt=L&gender=men     both sizes the bot asked for, one page
@@ -701,7 +728,7 @@ export default function App() {
       {(selectedCategory !== 'none' || searchTerm !== '') && (
         <section className="bg-white border-b border-stone-100 py-3 px-4 shadow-xs animate-fade-in" id="categories-bar">
           <div className="max-w-7xl mx-auto flex flex-wrap gap-2 items-center justify-between flex-row-reverse">
-            <span className="text-xs font-normal text-stone-400 uppercase tracking-widest ml-2 hidden sm:inline">
+            <span className="text-xs font-normal text-stone-600 uppercase tracking-widest ml-2 hidden sm:inline">
               סנן פריטים:
             </span>
             <div className="flex flex-wrap gap-1.5 justify-start flex-row-reverse w-full sm:w-auto">
@@ -755,6 +782,7 @@ export default function App() {
           <ProductDetailModal
             product={selectedProductForDetails}
             variant="page"
+            catalogue={products}
             onClose={closeProduct}
           />
         ) : productNotFound ? (
@@ -887,7 +915,7 @@ export default function App() {
                   only the tag differs. */}
               <h1 className="text-sm sm:text-base font-normal tracking-widest text-stone-900 flex items-center gap-2 flex-row-reverse uppercase">
                 <span>{selectedCategory === 'latest' ? 'הדרופ האחרון' : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'תוצאות חיפוש'}</span>
-                <span className="text-xs text-stone-400 font-mono font-normal bg-stone-100 px-2 py-0.5 border border-stone-200/60">
+                <span className="text-xs text-stone-600 font-mono font-normal bg-stone-100 px-2 py-0.5 border border-stone-200/60">
                   ({filteredProducts.length} פריטים)
                 </span>
               </h1>
@@ -976,12 +1004,12 @@ export default function App() {
             {isLoadingProducts ? (
               <div className="text-center py-24" id="catalog-loading">
                 <div className="inline-block w-8 h-8 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin"></div>
-                <p className="text-sm text-stone-400 mt-4 tracking-widest uppercase font-mono">טוען מלאי…</p>
+                <p className="text-sm text-stone-500 mt-4 tracking-widest uppercase font-mono">טוען מלאי…</p>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-24 bg-white border border-dashed border-gray-200 p-8 rounded-none">
                 <p className="text-lg font-normal text-gray-700">לא נמצאו פריטים העונים לחיפוש שלך</p>
-                <p className="text-sm text-gray-400 mt-1">נסו לשנות את מילות החיפוש או לבחור קטגוריה אחרת</p>
+                <p className="text-sm text-stone-500 mt-1">נסו לשנות את מילות החיפוש או לבחור קטגוריה אחרת</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -1028,7 +1056,10 @@ export default function App() {
       </main>
 
       {/* Footer component */}
-      <footer className="bg-black text-gray-400 border-t-4 border-black py-10 mt-16 px-4" id="store-footer">
+      {/* gray-300, not gray-400: on pure black the old grey measured 4.39:1,
+          just under the readable minimum, which put the pickup address and the
+          shop's own name below it. */}
+      <footer className="bg-black text-gray-300 border-t-4 border-black py-10 mt-16 px-4" id="store-footer">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
           
           {/* Logo and store pitch */}
@@ -1040,7 +1071,7 @@ export default function App() {
                 onClick={handleBrandClick} 
               />
             </div>
-            <p className="text-xs leading-relaxed max-w-xs text-gray-400">
+            <p className="text-xs leading-relaxed max-w-xs text-gray-300">
               חנות הוינטג׳ הבלעדית למכנסי גלישה, חולצות, סווטשרטים ואקססוריז של תור הזהב של מותגי הגלישה והספורט משנות ה-2000.
             </p>
             <div className="mt-4 flex gap-3 flex-row-reverse">
@@ -1066,25 +1097,49 @@ export default function App() {
           {/* Quick links */}
           <div className="flex flex-col items-end">
             <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">תפריט מהיר</span>
+            {/* Real addresses, not href="#".
+                They worked — the click handler switched category — but only
+                for a plain left click. Middle-click, ⌘-click, long-press and
+                "copy link address" all offered the top of the current page,
+                and a crawler following the footer found nothing at all. The
+                handler still routes instead of reloading; the href is simply
+                the truth about where the link goes. */}
             <ul className="space-y-2 text-xs">
-              <li><a href="#" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); setSelectedCategory('all'); setSearchTerm(''); }}>כל קטלוג המוצרים</a></li>
-              <li><a href="#" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); setSelectedCategory('boardies'); setSearchTerm(''); }}>מכנסי גלישה (Boardshorts)</a></li>
-              <li><a href="#" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); setSelectedCategory('shirts'); setSearchTerm(''); }}>חולצות וינטג׳</a></li>
+              {[
+                { id: 'all', label: 'כל קטלוג המוצרים' },
+                { id: 'boardies', label: 'מכנסי גלישה (Boardshorts)' },
+                { id: 'shirts', label: 'חולצות וינטג׳' },
+              ].map(({ id, label }) => (
+                <li key={id}>
+                  <a
+                    href={categoryPath(id)}
+                    className="hover:text-white transition-colors"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                      e.preventDefault();
+                      setSelectedCategory(id);
+                      setSearchTerm('');
+                    }}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Physical Address / Contact */}
           <div className="flex flex-col items-end">
             <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">צור קשר ואיסוף</span>
-            <div dir="rtl" className="text-xs leading-relaxed text-gray-400 space-y-1 text-right">
+            <div dir="rtl" className="text-xs leading-relaxed text-gray-300 space-y-1 text-right">
               <div>טלפון: <a href="tel:0528879922" className="hover:text-white transition-colors font-mono font-bold">052-8879922</a></div>
               <div>מייל: <a href="mailto:hightide1620@gmail.com" dir="ltr" className="hover:text-white transition-colors font-mono font-bold">hightide1620@gmail.com</a></div>
-              <div className="mt-1 text-stone-500">הגבעה 28 כפר האורנים (בתיאום מראש)</div>
+              <div className="mt-1 text-stone-300">הגבעה 28 כפר האורנים (בתיאום מראש)</div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-500 font-mono">
+        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-400 font-mono">
           © 2026 HIGHTIDE VINTAGE LTD. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
         </div>
       </footer>
@@ -1093,6 +1148,7 @@ export default function App() {
           the page above, or it would render twice. */}
       <ProductDetailModal
         product={productAsPage ? null : selectedProductForDetails}
+        catalogue={products}
         onClose={closeProduct}
         onEditProduct={isAdminSession ? (prod) => {
           setPreselectedEditProduct(prod);
@@ -1138,8 +1194,11 @@ export default function App() {
           >
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.58 1.981 14.11 1.012 11.48 1.01 6.046 1.01 1.622 5.38 1.618 10.807c-.001 1.701.453 3.361 1.314 4.815L1.879 21.16l5.768-1.506zM17.91 14.9c-.31-.155-1.832-.9-2.115-1.002-.282-.102-.489-.153-.695.155-.205.308-.797 1.002-.976 1.207-.18.205-.359.231-.669.077-.31-.155-1.307-.481-2.49-1.534-.92-.818-1.541-1.83-1.722-2.138-.18-.308-.02-.475.135-.629.14-.138.31-.36.465-.54.155-.18.205-.308.31-.514.105-.205.051-.385-.026-.54-.077-.155-.695-1.673-.951-2.29-.25-.6-.54-.515-.744-.526-.192-.01-.41-.01-.628-.01-.218 0-.573.082-.873.411-.3.308-1.148 1.121-1.148 2.733 0 1.612 1.174 3.172 1.336 3.393.162.22 2.311 3.52 5.597 4.939.781.337 1.39.539 1.86.688.784.249 1.497.214 2.061.13.629-.094 1.832-.749 2.088-1.439.256-.689.256-1.284.18-1.402-.077-.117-.282-.18-.592-.336z"/>
           </svg>
-          <span className="absolute left-14 bg-stone-900 text-white text-[10px] py-1 px-2.5 whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            דברו איתנו בווטסאפ! 💬
+          {/* The emoji is gone. It rendered as a different picture on every
+              phone and there is already a WhatsApp mark on the button it
+              labels — the tooltip was captioning an icon with a worse icon. */}
+          <span className="absolute left-14 bg-stone-900 text-white text-xs py-1 px-2.5 whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            דברו איתנו בווטסאפ
           </span>
         </a>
 

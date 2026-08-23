@@ -395,7 +395,17 @@ export default function Header({
               >
                 עמוד הבית
               </button>
-              <a href="#" className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors">אודות HIGHTIDE VINTAGE</a>
+              {/* Was href="#" with no handler at all — the one link in the menu
+                  that did nothing whatsoever. There is no about page to send it
+                  to, but the shop's story is written in the footer, so that is
+                  where it goes until there is one. */}
+              <a
+                href="#store-footer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors text-right"
+              >
+                אודות HIGHTIDE VINTAGE
+              </a>
               <a 
                 href="#store-footer" 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -406,7 +416,7 @@ export default function Header({
             </div>
 
             {/* Footer */}
-            <div className="mt-auto text-[10px] text-stone-400 font-mono text-center pt-5 border-t border-stone-100">
+            <div className="mt-auto text-xs text-stone-500 font-mono text-center pt-5 border-t border-stone-100">
               © 2026 HIGHTIDE VINTAGE LTD.
             </div>
           </div>

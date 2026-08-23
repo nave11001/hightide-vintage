@@ -2,6 +2,8 @@ import { Product } from './types';
 import { selectRows } from './supabase';
 import { storageUrl } from './photos';
 import snapshot from './catalog-snapshot.json';
+import { brandName } from '@/shared/brands.mjs';
+import { displaySize } from '@/shared/sizing.mjs';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
 // Nothing here is baked in at build time, so marking an item sold in the
@@ -45,18 +47,21 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
   if (images.length === 0) return null;
 
   const labels = CATEGORY_LABELS[category];
+  // Spelled the way the brand spells it, not the way the sheet was typed —
+  // see shared/brands.mjs. Links survive it: they end in the item number.
+  const brand = brandName(row.name);
   return {
     id: `${category}-${row.num}`,
     num: row.num,
-    name: `${row.name} #${row.num}`,
-    brand: row.name,
+    name: `${brand} #${row.num}`,
+    brand,
     price: row.price,
     // Set in the dashboard to mark a sale — renders struck through beside the price.
     originalPrice: row.original_price ?? undefined,
     image: images[0],
     images,
     borderType: 'retro-wave',
-    sizes: [row.size],
+    sizes: [displaySize(row.size)],
     condition: 'וינטג׳ במצב מעולה',
     category: category as Product['category'],
     description: `${labels.description} — פריט מס׳ ${row.num}`,
@@ -126,14 +131,16 @@ export function snapshotProducts(): Product[] {
     .map((row) => ({
       id: `${row.c}-${row.n}`,
       num: row.n,
-      name: `${row.b} #${row.n}`,
-      brand: row.b,
+      // Same spelling rules as the live catalogue, or the shop would rename
+      // every garment the moment Supabase stopped answering.
+      name: `${brandName(row.b)} #${row.n}`,
+      brand: brandName(row.b),
       price: row.p,
       originalPrice: row.o,
       image: storageUrl(row.ph[0]),
       images: row.ph.map(storageUrl),
       borderType: 'retro-wave' as const,
-      sizes: [row.s],
+      sizes: [displaySize(row.s)],
       condition: 'וינטג׳ במצב מעולה',
       category: row.c as Product['category'],
       description: `${CATEGORY_LABELS[row.c].description} — פריט מס׳ ${row.n}`,
