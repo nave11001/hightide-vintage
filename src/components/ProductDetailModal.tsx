@@ -4,8 +4,7 @@ import { X, ShieldCheck, RefreshCw, Star, Share2, Check } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
-import { categoryPath, navigate } from '../router';
-import { categoryById } from '@/shared/categories.mjs';
+import { navigate } from '../router';
 import { productPath } from '@/shared/slug.mjs';
 import { buyOnWhatsApp, productUrl } from '../whatsapp';
 
@@ -85,7 +84,6 @@ export default function ProductDetailModal({
   const [activeImage, setActiveImage] = useState(0);
 
   const isPage = variant === 'page';
-  const categoryName = categoryById(product.category)?.name;
 
   // Handing the garment's address to the person looking at it.
   //
@@ -128,7 +126,7 @@ export default function ProductDetailModal({
 
   // Real hrefs, so a crawler and a long-press both see a destination, but
   // handled in the router rather than reloading the whole shop.
-  const crumb = (to: string) => (event: React.MouseEvent) => {
+  const routed = (to: string) => (event: React.MouseEvent) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
     navigate(to);
@@ -250,34 +248,13 @@ export default function ProductDetailModal({
               </button>
             )}
           </div>
-          {/* Where this garment sits. Only on a page: inside a layer over the
-              shop the customer already knows, and can see, where they came
-              from — following a link from a DM they do not.
-              Google reads the same path out of the JSON-LD the Netlify
-              function writes, and shows it in place of the bare URL. */}
-          {isPage && categoryName && (
-            <nav aria-label="נתיב ניווט" className="text-xs text-stone-500 mb-1" dir="rtl">
-              <ol className="flex items-center gap-1.5 flex-wrap">
-                <li>
-                  <a href="/" onClick={crumb('/')} className="hover:text-stone-700 transition-colors">
-                    HIGHTIDE
-                  </a>
-                </li>
-                <li aria-hidden="true">›</li>
-                <li>
-                  <a
-                    href={categoryPath(product.category)}
-                    onClick={crumb(categoryPath(product.category))}
-                    className="hover:text-stone-700 transition-colors"
-                  >
-                    {categoryName}
-                  </a>
-                </li>
-                <li aria-hidden="true">›</li>
-                <li aria-current="page" className="text-stone-600">{product.name}</li>
-              </ol>
-            </nav>
-          )}
+          {/* The HIGHTIDE › בורדיז › Billabong #63 trail used to sit here and
+              is gone by request. Nothing is lost in search: Google reads that
+              path from the BreadcrumbList in the JSON-LD that
+              netlify/functions/product-meta.mjs writes into the page head, and
+              shows it above the result in place of the bare URL. The trail on
+              screen was a second copy of it, for people — and the way back to
+              the shop is already the button in the corner. */}
 
           {/* An h1 when the garment *is* the page, an h2 when it is a layer
               over the shop — there the category heading is already the h1, and
@@ -486,7 +463,7 @@ export default function ProductDetailModal({
           <li key={item.id}>
             <a
               href={productPath(item.brand, item.num)}
-              onClick={crumb(productPath(item.brand, item.num))}
+              onClick={routed(productPath(item.brand, item.num))}
               className="group block no-underline"
             >
               <div className="aspect-[4/5] overflow-hidden bg-stone-50 border border-stone-100">

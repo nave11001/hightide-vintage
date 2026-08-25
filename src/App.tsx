@@ -38,11 +38,6 @@ import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
 // and is now removed. shared/sizing.mjs stays: SizeLanding and the Instagram bot
 // both read it to answer "what have you got in 32?".
 
-// Narrower than Tailwind's `md`, which is the same line every layout in this
-// shop already turns on — so what counts as a phone here is what counts as a
-// phone in the stylesheet, rather than a second opinion that can drift from it.
-const PHONE = '(max-width: 767px)';
-
 export default function App() {
   // Store Core State
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,38 +82,19 @@ export default function App() {
   // is just a garment we have not loaded yet.
   const productNotFound = Boolean(routeSlug) && !selectedProductForDetails && products.length > 0;
 
-  // Whether the garment lies over the grid or replaces it — decided once, when
-  // it is opened, and left alone after.
+  // Whether the garment lies over the grid or replaces it.
   //
-  // Only a wide screen still gets the layer. There it earns its keep: the grid
-  // stays visible around it, the shopper's place in the category is kept, and
-  // the address bar above stays readable. On a phone none of that holds. The
-  // sheet covers the whole screen anyway, so there is no grid left to see
-  // behind it, and the address bar is collapsed — which means the garment's
-  // own address, the thing this shop is sold on, is on screen and out of
-  // reach: no visible bar to read it from and no right-click to copy it.
+  // The layer, on every screen the shop itself opened it from. A phone briefly
+  // got a page of its own instead, on the theory that a full-screen sheet with
+  // nothing behind it was no worse — but the rest of the shop showing at the
+  // edges is the point, not a side effect. A garment is one of one, and what
+  // sells the next one is seeing that there is a next one.
   //
-  // Same component and same URL either way; only the frame differs. What a
-  // phone gains is that the address now belongs to a page, so the browser will
-  // show it, share it and offer to copy it.
-  //
-  // Decided at open rather than on every render, because the `md` line is one
-  // rotation away on a phone: a garment that kept re-deciding would turn from
-  // a page into a layer mid-read, and take the shop's scroll position with it.
-  // Also true for a garment reached by its own link, which starts as a page on
-  // any screen — that is what a shared address should open.
-  const openedAsLayer = useRef(false);
-  const productAsPage = Boolean(selectedProductForDetails) && !openedAsLayer.current;
-
-  // Where the shop was standing when a garment replaced it.
-  //
-  // Only the page needs this. A layer leaves the grid mounted and scrolled
-  // exactly where it was, but a page unmounts it, and the browser's own scroll
-  // restore runs before React has rebuilt forty-five cards — so it lands on a
-  // document still too short to hold the old position and quietly clamps to
-  // the top. Coming back to the top of a category you were halfway down is the
-  // fastest way to lose someone who was browsing.
-  const shopScrollY = useRef<number | null>(null);
+  // The page is still what a link opens. Someone arriving from a DM has no
+  // shop behind them to reveal, and a layer over nothing is just a page with
+  // its corners cut.
+  const cameFromShop = useRef(false);
+  const productAsPage = Boolean(selectedProductForDetails) && !cameFromShop.current;
 
   // Secret Brand Clicks state
   const [brandClickCount, setBrandClickCount] = useState(0);
@@ -411,12 +387,7 @@ export default function App() {
   // filled from PostHog by scripts/sync_top_wanted.py, counting distinct
   // people — a second counter running in the browser would fight it.
   const openProduct = (product: Product) => {
-    const asLayer = !window.matchMedia(PHONE).matches;
-    openedAsLayer.current = asLayer;
-    // Only a page needs the scroll remembered; a layer leaves the grid exactly
-    // where it stands. Read before the navigation, because after it the grid is
-    // already on its way out.
-    shopScrollY.current = asLayer ? null : window.scrollY;
+    cameFromShop.current = true;
     navigate(productPath(product.brand, product.num));
   };
 
@@ -453,28 +424,6 @@ export default function App() {
       navigate(productPath(product.brand, product.num), { replace: true });
     }
   }, [selectedProductForDetails, routeSlug]);
-
-  // A page begins at its own top.
-  //
-  // Keyed on the garment as well as the frame, because the suggestions at the
-  // foot of one page lead to the next: tapping "you might also like" from the
-  // bottom of a garment must open the next garment at its top, not at the
-  // height the last one happened to be scrolled to.
-  useEffect(() => {
-    if (productAsPage) window.scrollTo(0, 0);
-  }, [productAsPage, selectedProductForDetails?.num]);
-
-  // ...and the shop resumes where it was left.
-  useEffect(() => {
-    if (productAsPage) return;
-    const y = shopScrollY.current;
-    if (y === null) return;
-    shopScrollY.current = null;
-    // After the grid has been painted, not before — see shopScrollY. The
-    // browser's own restore has already run and clamped by this point, so this
-    // is the value that stands.
-    requestAnimationFrame(() => window.scrollTo(0, y));
-  }, [productAsPage]);
 
   // Hold the shop still while a garment lies over it.
   //
