@@ -6,9 +6,9 @@ import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, snapshotProducts, cacheProducts, readCachedProducts, CATEGORIES } from './data';
 import { markBucketUnreachable, repairPhotos, srcSetFor } from './photos';
 import { supabaseIsPaused } from './supabase';
-import { RAIL_SIZES } from './components/CircularGallery';
+
 import { dismissSplash } from './splash';
-import TopWanted, { pickTopWanted } from './components/TopWanted';
+import TopWanted, { pickTopWanted, RAIL_SIZES } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
 import SpinningLogo from './components/SpinningLogo';
 import LiquidVeil from './components/LiquidVeil';
@@ -1104,10 +1104,17 @@ export default function App() {
         )}
 
         {/* Vintage Care Tip section */}
-        <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-col md:flex-row-reverse gap-4 items-start text-right" id="care-tips">
-          <SpinningLogo className="w-16 h-16 sm:w-20 sm:h-20" />
-          <div dir="rtl">
-            <h4 className="font-extrabold text-stone-900" style={{ fontFamily: 'Rubik, sans-serif', fontSize: '26px' }} dir="rtl">אהבתם מה שראיתם?</h4>
+        {/* A row on every width, not only from `md` up.
+            Stacked, the logo sat alone in the top-left corner of the panel —
+            left, because the column's cross-axis start is the left edge of an
+            LTR document, which is the wrong side of a Hebrew line and not
+            beside the words it belongs to. Reversed, the row packs to the
+            right, so the coin leads the sentence it introduces.
+            The heading steps down to 20px below `sm` to make room for it. */}
+        <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-row-reverse gap-4 items-center text-right" id="care-tips">
+          <SpinningLogo className="w-14 h-14 sm:w-20 sm:h-20" />
+          <div dir="rtl" className="min-w-0">
+            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight" style={{ fontFamily: 'Rubik, sans-serif' }} dir="rtl">אהבתם מה שראיתם?</h4>
             <p className="text-xs text-stone-700 mt-1 leading-relaxed" dir="rtl">
               תשלחו לנו הודעה בקישור למטה , באינסטגרם ובווצאפ
             </p>

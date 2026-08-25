@@ -157,13 +157,31 @@ export default function ProductDetailModal({
       return;
     }
 
-    // Instagram is the odd one, and worth being straight about: it has no web
-    // address that accepts a link to share, the way wa.me does. What it accepts
-    // is a paste — into a story sticker, a bio, a DM. So this copies the
-    // address, then opens Instagram, and the label says exactly that rather
-    // than implying something was posted.
+    // Instagram is the odd one. It has no web address that takes a link to
+    // share, the way wa.me does — so the route to a DM runs through the
+    // device's own share sheet, which lists Instagram among its targets and
+    // hands off to Direct and Stories from there. That is a phone thing;
+    // navigator.share does not exist on a desktop browser.
+    //
+    // So: the sheet where there is one, and where there is not, the DM
+    // composer with the address already on the clipboard, ready to paste.
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: `${product.name} — ₪${product.price}`,
+          url,
+        });
+        setShareOpen(false);
+        return;
+      } catch {
+        // Dismissed, or refused. Fall through rather than leave the tap with
+        // nothing to show for it.
+      }
+    }
+
     await copyLink(url);
-    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    window.open('https://www.instagram.com/direct/inbox/', '_blank', 'noopener,noreferrer');
     setShareOpen(false);
   };
 
@@ -319,9 +337,13 @@ export default function ProductDetailModal({
                     <span className="leading-tight">
                       שיתוף באינסטגרם
                       {/* Said out loud, because this option does something
-                          slightly different from the two above it. */}
+                          slightly different depending on the device — and a
+                          desktop tap ends in a paste, which is worth warning
+                          about before it happens. */}
                       <span className="block text-xs text-stone-500 mt-0.5">
-                        מעתיק את הקישור ופותח אינסטגרם
+                        {typeof navigator !== 'undefined' && navigator.share
+                          ? 'פותח שיתוף — Direct או סטורי'
+                          : 'מעתיק קישור ופותח את ההודעות'}
                       </span>
                     </span>
                   </button>
