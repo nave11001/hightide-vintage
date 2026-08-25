@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { track } from '../analytics';
@@ -43,6 +43,9 @@ export function pickTopWanted(products: Product[]): Product[] {
     .slice(0, HOW_MANY);
 }
 
+/** How many times the ten garments are laid end to end. */
+const COPIES = 3;
+
 export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   const rail = useRef<HTMLDivElement>(null);
   // Second angles are fetched only once a pointer asks for one. Ten cards each
@@ -50,7 +53,82 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   // an effect no phone can show at all.
   const [wantsAngle, setWantsAngle] = useState<Record<string, boolean>>({});
 
+  // The width of one run of ten garments, and which way this rail counts.
+  const setWidth = useRef(0);
+  const rtl = useRef(true);
+
   const top = pickTopWanted(products);
+  const count = top.length;
+
+  // Past the tenth garment comes the first again.
+  //
+  // The list is laid down three times and the scroll is parked in the middle
+  // run, so there is always a full run of track in either direction. Whenever
+  // the scroll drifts out of that middle run it is moved back by exactly one
+  // run — the same garment, the same pixel of it, so nothing moves on screen.
+  //
+  // Only ever while the rail is standing still. Writing scrollLeft during a
+  // flick kills the momentum on iOS, which is the one thing this rail is here
+  // for; and it is never needed mid-flick, because one run is over four screens
+  // wide and no single flick crosses that.
+  const loop = COPIES > 1 ? Array.from({ length: COPIES }, () => top).flat() : top;
+
+  useLayoutEffect(() => {
+    const el = rail.current;
+    if (!el || count === 0) return;
+    const cards = el.children;
+    if (cards.length <= count) return;
+
+    // offsetLeft counts from the element's own left edge whichever way the
+    // text runs, so the distance between a card and its twin one run along is
+    // the run's width in both directions.
+    const first = cards[0] as HTMLElement;
+    const twin = cards[count] as HTMLElement;
+    const width = Math.abs(twin.offsetLeft - first.offsetLeft);
+    if (!width) return;
+
+    setWidth.current = width;
+    rtl.current = getComputedStyle(el).direction === 'rtl';
+    el.scrollLeft = rtl.current ? -width : width;
+  }, [count]);
+
+  // Settled, not scrolling: `scrollend` where it exists, a short idle timer
+  // where it does not (Safari, at the time of writing).
+  useEffect(() => {
+    const el = rail.current;
+    if (!el) return;
+
+    const recentre = () => {
+      const width = setWidth.current;
+      if (!width) return;
+      const sign = rtl.current ? -1 : 1;
+      const travelled = Math.abs(el.scrollLeft);
+      // Anywhere inside the middle run is fine; only leaving it is worth a jump.
+      if (travelled < width * 0.5) el.scrollLeft = sign * (travelled + width);
+      else if (travelled > width * 1.5) el.scrollLeft = sign * (travelled - width);
+    };
+
+    // Both, deliberately. `scrollend` is the right event and fires the moment
+    // the rail settles, but Safari only learned it recently and a browser can
+    // carry the property without ever firing it — and a rail that silently
+    // stops looping is exactly the kind of thing nobody notices until a
+    // customer does. The idle timer is the floor under that. Recentring twice
+    // costs nothing: the second call finds it already in the middle run and
+    // does nothing.
+    let idle = 0;
+    const onScroll = () => {
+      window.clearTimeout(idle);
+      idle = window.setTimeout(recentre, 140);
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('scrollend', recentre);
+    return () => {
+      window.clearTimeout(idle);
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scrollend', recentre);
+    };
+  }, [count]);
 
   // Nothing viewed yet — say nothing rather than show an empty rail.
   if (top.length < 3) return null;
@@ -98,9 +176,15 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
           className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [touch-action:pan-x_pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           id="top-wanted-rail"
         >
-          {top.map((product, i) => {
+          {loop.map((product, i) => {
             const href = productPath(product.brand, product.num);
             const hasAngle = Boolean(product.images && product.images[1]);
+            const rank = (i % count) + 1;
+            // Only the first run is the real one. The copies carry the same
+            // garments, so they are kept out of the accessibility tree and out
+            // of the tab order, and they surrender the id — a garment has one
+            // of those, and three elements answering to it is a broken page.
+            const isClone = i >= count;
             // A real href, so a long press offers "open in new tab" and a
             // crawler sees ten garments rather than ten buttons. The plain
             // click is still routed rather than reloading the shop.
@@ -108,22 +192,24 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
               if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               if (event.button !== 0) return;
               event.preventDefault();
-              track('top_wanted_click', { product_id: product.id, rank: i + 1 });
+              track('top_wanted_click', { product_id: product.id, rank });
               onViewDetails(product);
             };
 
             return (
               <a
-                key={product.id}
+                key={`${product.id}-${i}`}
                 href={href}
                 onClick={open}
+                aria-hidden={isClone || undefined}
+                tabIndex={isClone ? -1 : undefined}
                 onMouseEnter={
                   hasAngle && !wantsAngle[product.id]
                     ? () => setWantsAngle((seen) => ({ ...seen, [product.id]: true }))
                     : undefined
                 }
                 className="snap-start shrink-0 w-[46%] sm:w-[31%] lg:w-[23%] text-right group cursor-pointer no-underline"
-                id={`top-wanted-${product.id}`}
+                id={isClone ? undefined : `top-wanted-${product.id}`}
               >
                 <div className="relative aspect-[4/5] bg-stone-50 border border-gray-100 overflow-hidden">
                   <img
@@ -155,7 +241,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                     />
                   )}
                   <span className="absolute top-2 right-2 bg-stone-900 text-white text-xs font-bold w-6 h-6 flex items-center justify-center select-none">
-                    {i + 1}
+                    {rank}
                   </span>
                 </div>
                 <h3 className="mt-2 text-sm font-normal text-gray-800 line-clamp-1">

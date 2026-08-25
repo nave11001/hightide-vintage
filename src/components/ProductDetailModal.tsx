@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../types';
-import { X, ShieldCheck, RefreshCw, Star, Share2, Check, Link2, Instagram } from 'lucide-react';
+import { X, ShieldCheck, RefreshCw, Star, Share2, Check, Link2 } from 'lucide-react';
 import WhatsAppMark from './WhatsAppMark';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
@@ -135,7 +135,13 @@ export default function ProductDetailModal({
     }
   };
 
-  const shareVia = async (target: 'copy' | 'whatsapp' | 'instagram') => {
+  // Instagram was a third option here and is removed: it has no web address
+  // that accepts a link the way wa.me does, and neither route to one worked
+  // well enough to keep — the share sheet is a phone-only thing that offers
+  // whatever is installed, and the desktop fallback ended in a paste the
+  // shopper had to be told about. Copy the link and paste it wherever it needs
+  // to go; that is what the option was doing anyway, with more steps.
+  const shareVia = async (target: 'copy' | 'whatsapp') => {
     const url = productUrl(product);
     trackProduct('product_share', product, { method: target });
 
@@ -144,44 +150,14 @@ export default function ProductDetailModal({
       return; // the menu stays open, holding the "הועתק" it just earned
     }
 
-    if (target === 'whatsapp') {
-      // wa.me with no number opens WhatsApp on the contact picker, so this is
-      // "send this garment to someone" rather than "message the shop" — which
-      // is what the buy button below already does.
-      window.open(
-        `https://wa.me/?text=${encodeURIComponent(`${product.name} — ₪${product.price}\n\n${url}`)}`,
-        '_blank',
-        'noopener,noreferrer',
-      );
-      setShareOpen(false);
-      return;
-    }
-
-    // Instagram is the odd one. It has no web address that takes a link to
-    // share, the way wa.me does — so the route to a DM runs through the
-    // device's own share sheet, which lists Instagram among its targets and
-    // hands off to Direct and Stories from there. That is a phone thing;
-    // navigator.share does not exist on a desktop browser.
-    //
-    // So: the sheet where there is one, and where there is not, the DM
-    // composer with the address already on the clipboard, ready to paste.
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.name,
-          text: `${product.name} — ₪${product.price}`,
-          url,
-        });
-        setShareOpen(false);
-        return;
-      } catch {
-        // Dismissed, or refused. Fall through rather than leave the tap with
-        // nothing to show for it.
-      }
-    }
-
-    await copyLink(url);
-    window.open('https://www.instagram.com/direct/inbox/', '_blank', 'noopener,noreferrer');
+    // wa.me with no number opens WhatsApp on the contact picker, so this is
+    // "send this garment to someone" rather than "message the shop" — which is
+    // what the buy button below already does.
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(`${product.name} — ₪${product.price}\n\n${url}`)}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
     setShareOpen(false);
   };
 
@@ -325,27 +301,6 @@ export default function ProductDetailModal({
                   >
                     <WhatsAppMark className="w-4 h-4 shrink-0 text-[#25D366]" />
                     <span>שיתוף בווטסאפ</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => shareVia('instagram')}
-                    className="w-full min-h-[44px] px-3 flex items-start gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer py-1.5"
-                  >
-                    <Instagram className="w-4 h-4 shrink-0 text-[#E1306C] mt-0.5" />
-                    <span className="leading-tight">
-                      שיתוף באינסטגרם
-                      {/* Said out loud, because this option does something
-                          slightly different depending on the device — and a
-                          desktop tap ends in a paste, which is worth warning
-                          about before it happens. */}
-                      <span className="block text-xs text-stone-500 mt-0.5">
-                        {typeof navigator !== 'undefined' && navigator.share
-                          ? 'פותח שיתוף — Direct או סטורי'
-                          : 'מעתיק קישור ופותח את ההודעות'}
-                      </span>
-                    </span>
                   </button>
                 </div>
               )}
