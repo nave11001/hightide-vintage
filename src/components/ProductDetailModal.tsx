@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../types';
-import { X, ShieldCheck, RefreshCw, Star, Share2, Check } from 'lucide-react';
+import { X, ShieldCheck, RefreshCw, Star, Share2, Check, Link2, Instagram } from 'lucide-react';
+import WhatsAppMark from './WhatsAppMark';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
@@ -91,37 +92,79 @@ export default function ProductDetailModal({
   // vintage.netlify.app, never /product/billabong-63 — so the one thing this
   // shop is built on, a garment with an address of its own, is on screen and
   // unreachable. There is no right-click to copy a link and no visible path to
-  // read. This is the only way a phone gives it back.
+  // read. This is the way a phone gives it back.
   //
-  // The share sheet where the browser has one, which on a phone is the whole
-  // point: it opens WhatsApp and Instagram directly, which is where these
-  // links are actually sent. The clipboard elsewhere, with the button saying
-  // so, because a copy that gives no sign of having happened reads as a
-  // button that does nothing.
-  const [shared, setShared] = useState<'idle' | 'copied'>('idle');
-  const shareGarment = async () => {
-    const url = productUrl(product);
-    trackProduct('product_share', product, { method: navigator.share ? 'sheet' : 'clipboard' });
+  // Three named destinations rather than the system share sheet. The sheet is
+  // one tap shorter on a phone and does not exist at all on a desktop, and it
+  // offers whatever that device happens to have installed — which for a shop
+  // whose whole trade runs through two apps is both less and less predictable.
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareBox = useRef<HTMLDivElement>(null);
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: product.name, text: `${product.name} — ₪${product.price}`, url });
-        return;
-      } catch {
-        // Dismissed, or refused by the browser. Fall through to the clipboard
-        // rather than leave the tap with nothing to show for it.
-      }
-    }
+  // A menu that will not close is a menu that traps the page under it.
+  useEffect(() => {
+    if (!shareOpen) return;
+    const outside = (event: MouseEvent) => {
+      if (!shareBox.current?.contains(event.target as Node)) setShareOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShareOpen(false);
+    };
+    document.addEventListener('mousedown', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [shareOpen]);
 
+  /** Put the address on the clipboard, and say so where the tap happened. */
+  const copyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      setShared('copied');
-      window.setTimeout(() => setShared('idle'), 2000);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+      return true;
     } catch {
-      // No clipboard permission. Select the address so it can be copied by
-      // hand — worse than a tap, still better than a dead button.
+      // No clipboard permission — an insecure origin, or a browser that refuses
+      // outside a user gesture it recognises. Put the address somewhere it can
+      // be copied by hand rather than let the tap do nothing at all.
       window.prompt('העתיקו את הקישור לפריט:', url);
+      return false;
     }
+  };
+
+  const shareVia = async (target: 'copy' | 'whatsapp' | 'instagram') => {
+    const url = productUrl(product);
+    trackProduct('product_share', product, { method: target });
+
+    if (target === 'copy') {
+      await copyLink(url);
+      return; // the menu stays open, holding the "הועתק" it just earned
+    }
+
+    if (target === 'whatsapp') {
+      // wa.me with no number opens WhatsApp on the contact picker, so this is
+      // "send this garment to someone" rather than "message the shop" — which
+      // is what the buy button below already does.
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(`${product.name} — ₪${product.price}\n\n${url}`)}`,
+        '_blank',
+        'noopener,noreferrer',
+      );
+      setShareOpen(false);
+      return;
+    }
+
+    // Instagram is the odd one, and worth being straight about: it has no web
+    // address that accepts a link to share, the way wa.me does. What it accepts
+    // is a paste — into a story sticker, a bio, a DM. So this copies the
+    // address, then opens Instagram, and the label says exactly that rather
+    // than implying something was posted.
+    await copyLink(url);
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    setShareOpen(false);
   };
 
   // Real hrefs, so a crawler and a long-press both see a destination, but
@@ -149,29 +192,6 @@ export default function ProductDetailModal({
         >
           <X className="w-4 h-4" />
           {isPage && <span className="text-xs font-medium pl-1">לחנות</span>}
-        </button>
-
-        {/* Facing the close button across the top of the card. Same 44px, so
-            it is as easy to hit as the way out — this is the way the shop
-            spreads, and on a phone it is the only way to get at the address. */}
-        <button
-          type="button"
-          onClick={shareGarment}
-          className="absolute top-4 right-4 z-20 min-w-[44px] min-h-[44px] px-3 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center justify-center gap-1.5"
-          id="share-product-btn"
-          aria-label={shared === 'copied' ? 'הקישור הועתק' : 'שיתוף הפריט'}
-        >
-          {shared === 'copied' ? (
-            <>
-              <Check className="w-4 h-4 text-green-700" />
-              <span className="text-xs font-medium text-green-700">הועתק</span>
-            </>
-          ) : (
-            <>
-              <Share2 className="w-4 h-4" />
-              <span className="text-xs font-medium">שיתוף</span>
-            </>
-          )}
         </button>
 
         {/* Product Visual Container */}
@@ -231,10 +251,84 @@ export default function ProductDetailModal({
 
         {/* Product Meta & Configuration (Right Side) */}
         <div className="w-full md:w-1/2 p-6 flex flex-col text-right">
-          <div className="flex justify-between items-center flex-row-reverse mb-1">
-            <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest">
+          {/* Share sits in this row, not floating in the card's corner.
+              Absolutely positioned at top-right it landed on top of the brand
+              name — OCEAN PACIFIC reading "OC" behind a button — because on a
+              wide screen this panel is the right half of the card and its own
+              first line starts exactly there. In the row it cannot collide
+              with anything: the layout keeps them apart. */}
+          <div className="flex justify-between items-center flex-row-reverse mb-1 gap-2">
+            <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest min-w-0 truncate">
               {product.brand}
             </span>
+
+            <div className="relative shrink-0" ref={shareBox}>
+              <button
+                type="button"
+                onClick={() => setShareOpen((open) => !open)}
+                className="min-h-[44px] px-3 -my-1 text-stone-600 hover:text-stone-900 rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
+                id="share-product-btn"
+                aria-haspopup="menu"
+                aria-expanded={shareOpen}
+                aria-label="שיתוף הפריט"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="text-xs font-medium">שיתוף</span>
+              </button>
+
+              {shareOpen && (
+                <div
+                  role="menu"
+                  dir="rtl"
+                  className="absolute top-full left-0 z-30 mt-1 w-52 bg-white border border-stone-200 shadow-lg py-1 animate-fade-in"
+                  id="share-menu"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => shareVia('copy')}
+                    className="w-full min-h-[44px] px-3 flex items-center gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4 shrink-0 text-green-700" />
+                    ) : (
+                      <Link2 className="w-4 h-4 shrink-0 text-stone-500" />
+                    )}
+                    <span className={copied ? 'text-green-700 font-medium' : undefined}>
+                      {copied ? 'הקישור הועתק' : 'העתקת קישור'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => shareVia('whatsapp')}
+                    className="w-full min-h-[44px] px-3 flex items-center gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
+                  >
+                    <WhatsAppMark className="w-4 h-4 shrink-0 text-[#25D366]" />
+                    <span>שיתוף בווטסאפ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => shareVia('instagram')}
+                    className="w-full min-h-[44px] px-3 flex items-start gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer py-1.5"
+                  >
+                    <Instagram className="w-4 h-4 shrink-0 text-[#E1306C] mt-0.5" />
+                    <span className="leading-tight">
+                      שיתוף באינסטגרם
+                      {/* Said out loud, because this option does something
+                          slightly different from the two above it. */}
+                      <span className="block text-xs text-stone-500 mt-0.5">
+                        מעתיק את הקישור ופותח אינסטגרם
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {onEditProduct && (
               <button
                 type="button"
@@ -416,9 +510,7 @@ export default function ProductDetailModal({
               className="flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
               id="detail-add-btn"
             >
-              <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.58 1.981 14.11 1.012 11.48 1.01 6.046 1.01 1.622 5.38 1.618 10.807c-.001 1.701.453 3.361 1.314 4.815L1.879 21.16l5.768-1.506zM17.91 14.9c-.31-.155-1.832-.9-2.115-1.002-.282-.102-.489-.153-.695.155-.205.308-.797 1.002-.976 1.207-.18.205-.359.231-.669.077-.31-.155-1.307-.481-2.49-1.534-.92-.818-1.541-1.83-1.722-2.138-.18-.308-.02-.475.135-.629.14-.138.31-.36.465-.54.155-.18.205-.308.31-.514.105-.205.051-.385-.026-.54-.077-.155-.695-1.673-.951-2.29-.25-.6-.54-.515-.744-.526-.192-.01-.41-.01-.628-.01-.218 0-.573.082-.873.411-.3.308-1.148 1.121-1.148 2.733 0 1.612 1.174 3.172 1.336 3.393.162.22 2.311 3.52 5.597 4.939.781.337 1.39.539 1.86.688.784.249 1.497.214 2.061.13.629-.094 1.832-.749 2.088-1.439.256-.689.256-1.284.18-1.402-.077-.117-.282-.18-.592-.336z"/>
-              </svg>
+              <WhatsAppMark className="w-4 h-4 text-[#25D366]" />
               <span>רכישה בווטסאפ</span>
             </a>
           </div>

@@ -216,9 +216,23 @@ export default function App() {
     };
     step(0.15);
 
-    // A fast visit must never see this. Only a shop that is still not ready
-    // after this long is worth covering.
-    const SHOW_AFTER_MS = 400;
+    // Normally a fast visit must never see this: only a shop still not ready
+    // after 400ms is worth covering, and a veil that flashes for 80ms is worse
+    // than no veil at all.
+    //
+    // While Supabase is paused there is nothing left to wait for. The shop
+    // answers out of its own pocket and is ready long before 400ms, so the
+    // loading screen simply stopped appearing — which is how a returning
+    // visitor lost it. Held open on purpose until the quota resets: shown from
+    // the first frame, and kept up long enough to be read rather than blinked.
+    //
+    // Both of these go back to 400 and 0 by themselves on 2 September, when
+    // supabaseIsPaused() stops being true and the wait is real again.
+    const paused = supabaseIsPaused();
+    const SHOW_AFTER_MS = paused ? 0 : 400;
+    const HOLD_MS = paused ? 900 : 0;
+    const startedAt = Date.now();
+
     const gate = window.setTimeout(() => {
       if (!cancelled) setVeil({ progress: veilProgress.current, failed: false });
     }, SHOW_AFTER_MS);
@@ -228,6 +242,33 @@ export default function App() {
       const ceiling = veilProgress.current < 0.7 ? 0.62 : 0.94;
       if (veilProgress.current < ceiling) step(Math.min(ceiling, veilProgress.current + 0.006));
     }, 120);
+
+    /**
+     * Take the veil down — but not before it has been up long enough to see.
+     *
+     * HOLD_MS is 0 unless Supabase is paused, so outside the pause this is the
+     * same immediate call it always was. Inside it, the shop is ready in a few
+     * milliseconds and this is what turns that into a loading screen a person
+     * can actually watch: 900ms of holding, then done()'s own 900ms of filling
+     * and fading on top — about 1.8 seconds on screen.
+     *
+     * Measured rather than assumed: with the hold set to 20s the veil was
+     * still up at 8.8s and came down at 21.5s, so the overhead either side is
+     * the 900ms fade plus roughly 580ms of load.
+     */
+    const finish = () => {
+      const waited = Date.now() - startedAt;
+      const remaining = Math.max(0, HOLD_MS - waited);
+      if (remaining === 0) {
+        done();
+        return;
+      }
+      // The creep keeps running underneath, so the level is still climbing
+      // while this waits — a bar that stops moving reads as a bar that stuck.
+      window.setTimeout(() => {
+        if (!cancelled) done();
+      }, remaining);
+    };
 
     const done = () => {
       window.clearTimeout(gate);
@@ -299,7 +340,7 @@ export default function App() {
         // Kept only so the shop still renders if Supabase is unreachable later
         cacheProducts(live);
         await warmImages(live);
-        done();
+        finish();
       } catch (e) {
         // A pause we set ourselves is not a fault, and logging it as one on
         // every single visit buries the outage that is worth seeing.
@@ -335,7 +376,7 @@ export default function App() {
           // then lifted onto a hero and a rail that had not started loading —
           // the loading screen finishing before the shop was ready to be seen.
           await warmImages(mended);
-          done();
+          finish();
           return;
         }
 
@@ -347,7 +388,7 @@ export default function App() {
           setProducts(shipped);
           step(0.7);
           await warmImages(shipped);
-          done();
+          finish();
           return;
         }
         // Nothing live and nothing cached: say so instead of showing an empty
