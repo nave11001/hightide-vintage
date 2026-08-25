@@ -73,8 +73,11 @@ function Card({ product, badge, onViewDetails }: CardProps) {
           >
             ₪{product.price}
           </span>
+          {/* This is the page the Instagram bot sends people to — the warmest
+              traffic the shop gets — and the discount on it was the one thing
+              too faint to read. */}
           {product.originalPrice && (
-            <span className="text-xs text-gray-400 line-through">₪{product.originalPrice}</span>
+            <span className="text-sm text-stone-500 line-through">₪{product.originalPrice}</span>
           )}
         </span>
         <span className="text-xs text-stone-500">מידה {product.sizes[0]}</span>

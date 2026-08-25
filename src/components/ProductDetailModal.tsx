@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { X, ShieldCheck, RefreshCw, Star } from 'lucide-react';
+import { X, ShieldCheck, RefreshCw, Star, Share2, Check } from 'lucide-react';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
 import { categoryPath, navigate } from '../router';
 import { categoryById } from '@/shared/categories.mjs';
 import { productPath } from '@/shared/slug.mjs';
+import { buyOnWhatsApp, productUrl } from '../whatsapp';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -86,6 +87,45 @@ export default function ProductDetailModal({
   const isPage = variant === 'page';
   const categoryName = categoryById(product.category)?.name;
 
+  // Handing the garment's address to the person looking at it.
+  //
+  // On a phone the address bar shows the domain and nothing else — hightide-
+  // vintage.netlify.app, never /product/billabong-63 — so the one thing this
+  // shop is built on, a garment with an address of its own, is on screen and
+  // unreachable. There is no right-click to copy a link and no visible path to
+  // read. This is the only way a phone gives it back.
+  //
+  // The share sheet where the browser has one, which on a phone is the whole
+  // point: it opens WhatsApp and Instagram directly, which is where these
+  // links are actually sent. The clipboard elsewhere, with the button saying
+  // so, because a copy that gives no sign of having happened reads as a
+  // button that does nothing.
+  const [shared, setShared] = useState<'idle' | 'copied'>('idle');
+  const shareGarment = async () => {
+    const url = productUrl(product);
+    trackProduct('product_share', product, { method: navigator.share ? 'sheet' : 'clipboard' });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, text: `${product.name} — ₪${product.price}`, url });
+        return;
+      } catch {
+        // Dismissed, or refused by the browser. Fall through to the clipboard
+        // rather than leave the tap with nothing to show for it.
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setShared('copied');
+      window.setTimeout(() => setShared('idle'), 2000);
+    } catch {
+      // No clipboard permission. Select the address so it can be copied by
+      // hand — worse than a tap, still better than a dead button.
+      window.prompt('העתיקו את הקישור לפריט:', url);
+    }
+  };
+
   // Real hrefs, so a crawler and a long-press both see a destination, but
   // handled in the router rather than reloading the whole shop.
   const crumb = (to: string) => (event: React.MouseEvent) => {
@@ -111,6 +151,29 @@ export default function ProductDetailModal({
         >
           <X className="w-4 h-4" />
           {isPage && <span className="text-xs font-medium pl-1">לחנות</span>}
+        </button>
+
+        {/* Facing the close button across the top of the card. Same 44px, so
+            it is as easy to hit as the way out — this is the way the shop
+            spreads, and on a phone it is the only way to get at the address. */}
+        <button
+          type="button"
+          onClick={shareGarment}
+          className="absolute top-4 right-4 z-20 min-w-[44px] min-h-[44px] px-3 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center justify-center gap-1.5"
+          id="share-product-btn"
+          aria-label={shared === 'copied' ? 'הקישור הועתק' : 'שיתוף הפריט'}
+        >
+          {shared === 'copied' ? (
+            <>
+              <Check className="w-4 h-4 text-green-700" />
+              <span className="text-xs font-medium text-green-700">הועתק</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              <span className="text-xs font-medium">שיתוף</span>
+            </>
+          )}
         </button>
 
         {/* Product Visual Container */}
@@ -359,7 +422,10 @@ export default function ProductDetailModal({
           <div className="mt-6 flex flex-row-reverse gap-3 items-center">
             {/* WhatsApp Purchase button */}
             <a
-              href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`)}`}
+              href={buyOnWhatsApp(
+                product,
+                `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+              )}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {

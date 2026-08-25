@@ -7,6 +7,7 @@ import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
 import { productPath } from '@/shared/slug.mjs';
+import { buyOnWhatsApp } from '../whatsapp';
 
 interface ProductCardProps {
   product: Product;
@@ -199,7 +200,7 @@ export default function ProductCard({
           </span>
         ) : (
         <a
-          href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! אני מעוניין לרכוש את הפריט "${product.name}" במחיר ₪${product.price}. האם הוא זמין במלאי?`)}`}
+          href={buyOnWhatsApp(product)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => {

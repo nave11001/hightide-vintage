@@ -16,6 +16,33 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
+// ── paused while the project is restricted ──────────────────────────────
+//
+// Supabase restricted this project for exceeding its egress allowance and
+// answers 402 to everything. Measured again on 2026-08-24, live:
+// `exceed_cached_egress_quota`, 91ms per attempt. There is no answer to be had
+// here until the quota resets, and every visitor was spending that 91ms
+// waiting for a refusal before the shop fell back to the catalogue it ships
+// with — a delay paid on the one request standing between a shopper and the
+// first thing they see.
+//
+// Dated rather than commented out, because a commented-out line needs someone
+// to remember it. This stops applying by itself on 2026-09-02 and the shop is
+// reading live again with no deploy and nobody's memory involved.
+//
+// Local dates: the reset is a date on the owner's calendar, not an instant.
+const PAUSED_UNTIL = new Date(2026, 8, 2).getTime(); // 2 September 2026
+
+/**
+ * True while the project is known to be restricted.
+ *
+ * Exported so callers can tell a deliberate pause from a real fault — the two
+ * look identical from inside a catch, and only one of them is worth an error.
+ */
+export function supabaseIsPaused(): boolean {
+  return Date.now() < PAUSED_UNTIL;
+}
+
 // Photo URLs and their fallbacks live in src/photos.ts — that is picture
 // plumbing, not database plumbing, and it has to keep working when everything
 // below this line has stopped answering.
@@ -37,6 +64,13 @@ export async function selectRows<T>(
     throw new Error(
       'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
     );
+  }
+
+  // Refused here rather than over the network: the throw is the same one a 402
+  // produces, so callers take the fallback path they already take today and
+  // nothing downstream needs to know the difference.
+  if (supabaseIsPaused()) {
+    throw new Error('Supabase paused until 2026-09-02 (exceed_cached_egress_quota)');
   }
 
   // A deadline, because the shop has somewhere else to go.

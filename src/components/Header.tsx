@@ -4,6 +4,7 @@ import { Product } from '../types';
 import Logo from './Logo';
 import HightideLogo from './HightideLogo';
 import { onPhotoError, srcSetFor } from '../photos';
+import { buyOnWhatsApp } from '../whatsapp';
 
 interface HeaderProps {
   searchTerm: string;
@@ -281,7 +282,7 @@ export default function Header({
 
             {/* Section 1: Categories */}
             <div className="mt-5">
-              <h3 className="font-medium text-xs text-stone-400 uppercase tracking-widest mb-2">קטגוריות</h3>
+              <h3 className="font-medium text-xs text-stone-500 uppercase tracking-widest mb-2">קטגוריות</h3>
               <div className="flex flex-col gap-1">
                 {categories.map((cat) => (
                   <button
@@ -306,8 +307,8 @@ export default function Header({
             {/* Section 2: FAVORITES SECTION (יצירת סל מועדפים ישירות מתחת לשלושת הפסים) */}
             <div className="mt-6 pt-5 border-t border-stone-200">
               <div className="flex items-center justify-between flex-row-reverse mb-3">
-                <span className="font-mono text-xs text-stone-400">({favoriteItems.length})</span>
-                <h3 className="font-medium text-xs text-stone-400 uppercase tracking-widest flex items-center gap-1 flex-row-reverse">
+                <span className="font-mono text-xs text-stone-500">({favoriteItems.length})</span>
+                <h3 className="font-medium text-xs text-stone-500 uppercase tracking-widest flex items-center gap-1 flex-row-reverse">
                   <Heart className="w-3.5 h-3.5 text-black stroke-[2px]" />
                   <span>המועדפים שלי</span>
                 </h3>
@@ -315,8 +316,8 @@ export default function Header({
 
               {favoriteItems.length === 0 ? (
                 <div className="text-center py-6 px-4 bg-stone-50 border border-stone-100 rounded-sm">
-                  <p className="text-xs text-stone-400 leading-relaxed">אין עדיין פריטים במועדפים.</p>
-                  <p className="text-[10px] text-stone-400 mt-1">לחצו על הלב במוצרים שאהבתם כדי לראות אותם כאן!</p>
+                  <p className="text-sm text-stone-600 leading-relaxed">אין עדיין פריטים במועדפים.</p>
+                  <p className="text-xs text-stone-500 mt-1">לחצו על הלב במוצרים שאהבתם כדי לראות אותם כאן!</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
@@ -343,7 +344,7 @@ export default function Header({
                         <p className="text-xs font-normal text-stone-900 mt-0.5">
                           ₪{item.price}
                           {item.isSold && (
-                            <span className="mr-2 text-[10px] text-stone-400 font-medium">נמכר</span>
+                            <span className="mr-2 text-xs text-stone-600 font-medium">נמכר</span>
                           )}
                         </p>
                       </div>
@@ -353,7 +354,10 @@ export default function Header({
                         {/* Buy on WhatsApp directly from Favorites list (in-stock items only) */}
                         {!item.isSold && (
                         <a
-                          href={`https://wa.me/972528879922?text=${encodeURIComponent(`שלום! ראיתי במועדפים באתר את הפריט "${item.name}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`)}`}
+                          href={buyOnWhatsApp(
+                            item,
+                            `שלום! ראיתי במועדפים באתר את הפריט "${item.name}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`,
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setIsMobileMenuOpen(false)}

@@ -62,6 +62,22 @@ export function initPostHog() {
         person_profiles: 'identified_only', // anonymous shoppers stay anonymous
         capture_pageview: true,
         capture_pageleave: true,
+
+        // Three further bundles PostHog fetches by default, on top of the
+        // library itself, none of which this shop has any use for. Measured on
+        // the live site: surveys.js 98KB, dead-clicks-autocapture.js 18KB,
+        // web-vitals.js 7KB — 123KB, more than the whole of this site's own
+        // JavaScript, downloaded by every visitor to power a survey that does
+        // not exist, a rage-click report nobody reads, and a speed metric GA4
+        // already sends.
+        //
+        // None of this is the measurement. Pageviews, product views and the
+        // WhatsApp clicks are captured by the library above and are untouched
+        // — which matters, because items.views is what orders the Most Wanted
+        // rail on the homepage.
+        disable_surveys: true,
+        capture_dead_clicks: false,
+        capture_performance: { web_vitals: false },
       });
       client = instance;
 

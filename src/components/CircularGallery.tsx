@@ -440,8 +440,13 @@ export default function CircularGallery({
                 >
                   ₪{item.price}
                 </span>
+                {/* The saving, on the homepage's most prominent rail, was set
+                    in a grey that measured 2.5:1 against the card — under half
+                    the readable minimum. Same defect ProductCard had, and
+                    missed here because the last contrast pass measured the
+                    category page and the garment, not the homepage. */}
                 {item.originalPrice && (
-                  <span className="text-xs text-gray-400 line-through">
+                  <span className="text-sm text-stone-500 line-through">
                     ₪{item.originalPrice}
                   </span>
                 )}
