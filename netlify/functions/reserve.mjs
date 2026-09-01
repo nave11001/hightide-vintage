@@ -12,13 +12,18 @@
 // an already-configured automation keeps working while it is being moved over.
 //
 // The rows hold customers' phone numbers. They are never read back through this
-// function and never written to the logs — see supabase/reservations.sql, where
-// anon is granted INSERT and nothing else.
+// function and never written to the logs.
+//
+// Under Supabase that was the database's job: row level security granted anon
+// INSERT and nothing else. Cloudflare D1 has no such thing, and does not need
+// it in the same shape — no browser holds a D1 credential, so the only way in
+// is a function we wrote. The guarantee moved from the database into the code,
+// which means it now rests on this staying true: nothing selects from
+// `reservations`. See cloudflare/schema.sql.
 
 import { parseSizeQuery } from '../../shared/sizing.mjs';
+import { d1Query, isD1Configured } from '../../shared/d1.mjs';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SECRET = process.env.BOT_SHARED_SECRET;
 const SHOP = 'https://hightide-vintage.netlify.app';
 
@@ -71,7 +76,7 @@ function itemNumberIn(description) {
 export default async (request) => {
   const params = new URL(request.url).searchParams;
 
-  if (!SUPABASE_URL || !ANON_KEY || !SECRET) {
+  if (!isD1Configured || !SECRET) {
     return send(request, 'אופס, יש תקלה זמנית. כתבו לנו ונסדר את זה ידנית 🙏');
   }
 
@@ -99,24 +104,19 @@ export default async (request) => {
   };
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations`, {
-      method: 'POST',
-      headers: {
-        apikey: ANON_KEY,
-        Authorization: `Bearer ${ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(row),
-    });
-    if (!res.ok) {
-      // Status only. The body can echo the row, and the row holds a phone number.
-      console.error('reservation insert failed', res.status);
-      return send(request, 'אופס, לא הצלחתי לשמור את הבקשה 🙏\nכתבו לנו כאן ונשריין ידנית.');
-    }
+    // Bound parameters, never an interpolated string: every value here arrived
+    // on a query string. The length limits the old RLS policy enforced are now
+    // CHECK constraints on the table — see cloudflare/schema.sql.
+    await d1Query(
+      `INSERT INTO reservations (description, phone, instagram_user, item_num)
+       VALUES (?, ?, ?, ?)`,
+      [row.description, row.phone, row.instagram_user, row.item_num],
+    );
   } catch {
-    console.error('reservation insert threw');
-    return send(request, 'אופס, לא הצלחתי לשמור את הבקשה 🙏\nכתבו לנו כאן ונשריין ידנית.');
+    // No detail, ever. A D1 error can quote the statement back, and the
+    // statement carries a phone number.
+    console.error('reservation insert failed');
+      return send(request, 'אופס, לא הצלחתי לשמור את הבקשה 🙏\nכתבו לנו כאן ונשריין ידנית.');
   }
 
   return send(

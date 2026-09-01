@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { Product } from './types';
-import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath } from './router';
+import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath, legalFromPath } from './router';
 import { productPath, productSlug, numFromSlug } from '@/shared/slug.mjs';
 import ProductNotFound from './components/ProductNotFound';
 import { loadProducts, snapshotProducts, cacheProducts, readCachedProducts, CATEGORIES } from './data';
-import { markBucketUnreachable, repairPhotos, srcSetFor } from './photos';
-import { supabaseIsPaused } from './supabase';
+import { repairPhotos, srcSetFor } from './photos';
 
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted, RAIL_SIZES } from './components/TopWanted';
@@ -15,6 +14,7 @@ import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
+import LegalPage, { FOOTER_LEGAL_LINKS } from './components/LegalPage';
 // Loaded only when the panel is actually opened. It is 11KB gzipped that no
 // shopper will ever reach, and on the live site it cannot even authenticate —
 // its /api/admin/* endpoints only exist under server.ts, which Netlify does not
@@ -95,6 +95,9 @@ export default function App() {
   // its corners cut.
   const cameFromShop = useRef(false);
   const productAsPage = Boolean(selectedProductForDetails) && !cameFromShop.current;
+
+  /** /privacy, /terms or /accessibility — null anywhere else. */
+  const legalPage = legalFromPath(path);
 
   // Secret Brand Clicks state
   const [brandClickCount, setBrandClickCount] = useState(0);
@@ -216,21 +219,20 @@ export default function App() {
     };
     step(0.15);
 
-    // Normally a fast visit must never see this: only a shop still not ready
-    // after 400ms is worth covering, and a veil that flashes for 80ms is worse
-    // than no veil at all.
+    // The loading screen is shown on purpose, not only when the shop is slow.
     //
-    // While Supabase is paused there is nothing left to wait for. The shop
-    // answers out of its own pocket and is ready long before 400ms, so the
-    // loading screen simply stopped appearing — which is how a returning
-    // visitor lost it. Held open on purpose until the quota resets: shown from
-    // the first frame, and kept up long enough to be read rather than blinked.
+    // Left to itself it would rarely appear at all: the catalogue is one
+    // request away and a returning visitor has every photograph cached, so the
+    // shop is usually ready inside 400ms and a veil that flashes for 80ms is
+    // worse than no veil. Shown from the first frame instead, and held long
+    // enough to be read — roughly 1.8s all in, once done()'s own fill and fade
+    // are counted.
     //
-    // Both of these go back to 400 and 0 by themselves on 2 September, when
-    // supabaseIsPaused() stops being true and the wait is real again.
-    const paused = supabaseIsPaused();
-    const SHOW_AFTER_MS = paused ? 0 : 400;
-    const HOLD_MS = paused ? 900 : 0;
+    // This was asked for while Supabase was paused; that pause is now
+    // permanent, so this is simply how the shop opens. Set HOLD_MS to 0 and
+    // SHOW_AFTER_MS to 400 to have the veil appear only when it is earned.
+    const SHOW_AFTER_MS = 0;
+    const HOLD_MS = 900;
     const startedAt = Date.now();
 
     const gate = window.setTimeout(() => {
@@ -342,20 +344,9 @@ export default function App() {
         await warmImages(live);
         finish();
       } catch (e) {
-        // A pause we set ourselves is not a fault, and logging it as one on
-        // every single visit buries the outage that is worth seeing.
-        if (supabaseIsPaused()) {
-          console.info('Supabase paused until 2026-09-02 — serving the shipped catalogue.');
-        } else {
-          console.error('Failed to load inventory from Supabase:', e);
-        }
+        console.error('Failed to load the catalogue:', e);
         if (cancelled) return;
 
-        // The catalogue request is also the photo probe. REST and Storage are
-        // restricted together — both answered 402 through the August outage —
-        // so this one refusal spares every photograph below the same trip, and
-        // sends them straight to the copy that shipped with the site.
-        markBucketUnreachable();
         setCatalogueIsLive(false);
 
         // Anything this build cannot use is refused here rather than rendered
@@ -623,13 +614,8 @@ export default function App() {
       cacheProducts(live);
       showToast(`המלאי רוענן מהדאטהבייס — ${live.length} פריטים`);
     } catch (e) {
-      // The admin is the one person who needs to know *why* nothing came back.
-      if (supabaseIsPaused()) {
-        showToast('הדאטהבייס מושהה עד 2.9 (חריגת תעבורה) — המלאי מוגש מהעותק המקומי');
-        return;
-      }
-      console.error('Failed to refresh inventory from Supabase:', e);
-      showToast('שגיאה בטעינת המלאי מהדאטהבייס');
+      console.error('Failed to refresh the catalogue:', e);
+      showToast('שגיאה בטעינת המלאי — המלאי מוגש מהעותק המקומי');
     }
   };
 
@@ -701,7 +687,7 @@ export default function App() {
       )}
 
       {/* Standard White Sticky Header: only shown when NOT on the homepage landing view */}
-      {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding) && (
+      {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding || legalPage) && (
         <Header
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -715,7 +701,7 @@ export default function App() {
       )}
 
       {/* Homepage Landing View Hero & Navigation (Seamlessly integrated with NO gaps) */}
-      {selectedCategory === 'none' && searchTerm === '' && !sizeLanding && (
+      {selectedCategory === 'none' && searchTerm === '' && !sizeLanding && !legalPage && (
         <div className="w-full flex flex-col" id="landing-page-hero-wrapper">
           {/* The homepage's h1. Nothing here is a text heading — the shop's
               name is artwork inside a photograph — so a search engine and a
@@ -787,7 +773,7 @@ export default function App() {
       )}
 
       {/* Dynamic Categories Filtering Bar below the header (Visual helper) - Only visible when in catalog view */}
-      {(selectedCategory !== 'none' || searchTerm !== '') && (
+      {(selectedCategory !== 'none' || searchTerm !== '') && !legalPage && (
         <section className="bg-white border-b border-stone-100 py-3 px-4 shadow-xs animate-fade-in" id="categories-bar">
           <div className="max-w-7xl mx-auto flex flex-wrap gap-2 items-center justify-between flex-row-reverse">
             <span className="text-xs font-normal text-stone-600 uppercase tracking-widest ml-2 hidden sm:inline">
@@ -840,7 +826,12 @@ export default function App() {
             the shop it stays a layer over the grid, so the scroll position and
             the filters survive underneath. Same URL and same component either
             way — only the frame around it differs. */}
-        {productAsPage && selectedProductForDetails ? (
+        {/* A document replaces the shop rather than laying over it: nobody
+            arrives at a privacy policy by accident, and nobody reading one
+            wants a grid of boardshorts behind it. */}
+        {legalPage ? (
+          <LegalPage page={legalPage} />
+        ) : productAsPage && selectedProductForDetails ? (
           <ProductDetailModal
             product={selectedProductForDetails}
             variant="page"
@@ -1208,7 +1199,31 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-400 font-mono">
+        {/* The three documents, in the one place people look for them and
+            nobody browsing garments has to see. Real addresses, so each can be
+            handed to a customer, a lawyer or a crawler on its own. */}
+        <nav
+          dir="rtl"
+          aria-label="מסמכים משפטיים"
+          className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 flex flex-wrap items-center justify-center gap-x-6 gap-y-1"
+        >
+          {FOOTER_LEGAL_LINKS.map((link) => (
+            <a
+              key={link.to}
+              href={link.to}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                e.preventDefault();
+                navigate(link.to);
+              }}
+              className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="max-w-7xl mx-auto mt-2 text-center text-xs text-gray-400 font-mono">
           © 2026 HIGHTIDE VINTAGE LTD. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
         </div>
       </footer>

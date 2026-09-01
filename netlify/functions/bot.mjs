@@ -22,23 +22,24 @@ import {
   genderIsClear,
   byViews,
 } from '../../shared/sizing.mjs';
+import { d1Query, isD1Configured } from '../../shared/d1.mjs';
+// The shop spells brands the way the brands do; the bot was still quoting the
+// spreadsheet, so one customer met "billabong" from the bot and "Billabong"
+// on the site. The bot is the first of the two they see.
+import { brandName } from '../../shared/brands.mjs';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SHOP = 'https://hightide-vintage.netlify.app';
 const MAX_RESULTS = 5;
 
 async function catalogue() {
-  const url =
-    `${SUPABASE_URL}/rest/v1/items` +
-    // views drives the ranking — without it every sort is a no-op.
-    `?select=num,category,name,size,price,original_price,sold,views` +
-    `&sold=eq.false&order=num.asc`;
-  const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
-  });
-  if (!res.ok) throw new Error(`Supabase ${res.status}`);
-  return res.json();
+  // views drives the ranking — without it every sort is a no-op.
+  // sold is 0/1 in SQLite, and the bot only ever wants what is still for sale.
+  return d1Query(
+    `SELECT num, category, name, size, price, original_price, views
+       FROM items
+      WHERE sold = 0 AND category IS NOT NULL
+      ORDER BY num ASC`,
+  );
 }
 
 const CATEGORY_LABEL = {
@@ -127,7 +128,7 @@ export default async (request) => {
   const wantedSize = params.get('size');
   const wantedItem = params.get('item');
 
-  if (!SUPABASE_URL || !ANON_KEY) {
+  if (!isD1Configured) {
     return send(request, 'אופס, יש תקלה זמנית. נחזור אליך תוך כמה דקות 🙏');
   }
 
@@ -159,7 +160,7 @@ export default async (request) => {
     return send(
       request,
       `פריט #${found.num} — זמין ✅\n\n` +
-        `${found.name}\n` +
+        `${brandName(found.name)}\n` +
         `${CATEGORY_LABEL[found.category] || ''} · מידה ${found.size}\n` +
         `${priceText(found)}\n\n` +
         `${SHOP}/?item=${found.category}-${found.num}`,
@@ -286,7 +287,7 @@ export default async (request) => {
     }
 
     const line = (item) =>
-      `#${item.num} · ${item.name} · מידה ${item.size} · ${priceText(item)}\n` +
+      `#${item.num} · ${brandName(item.name)} · מידה ${item.size} · ${priceText(item)}\n` +
       `${SHOP}/?item=${item.category}-${item.num}`;
 
     const top = [...exact].sort(byViews).slice(0, MAX_RESULTS).map(line);
@@ -300,7 +301,7 @@ export default async (request) => {
     const alsoFits = [...maybe].sort(byViews).slice(0, 3);
     const alsoText = alsoFits.length
       ? `\n\nוגם אלה עשויים להתאים:\n` +
-        alsoFits.map((i) => `#${i.num} · ${i.name} · מידה ${i.size} · ${priceText(i)}`).join('\n')
+        alsoFits.map((i) => `#${i.num} · ${brandName(i.name)} · מידה ${i.size} · ${priceText(i)}`).join('\n')
       : '';
 
     if (exact.length === 0) {

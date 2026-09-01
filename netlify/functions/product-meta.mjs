@@ -18,11 +18,10 @@
 import { numFromSlug, productSlug } from '../../shared/slug.mjs';
 import { brandName } from '../../shared/brands.mjs';
 import { displaySize } from '../../shared/sizing.mjs';
+import { d1Query, isD1Configured } from '../../shared/d1.mjs';
 import { categoryById } from '../../shared/categories.mjs';
 import snapshot from '../../src/catalog-snapshot.json' with { type: 'json' };
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SHOP = 'https://hightide-vintage.netlify.app';
 
 // Which item numbers have a share card in public/og/. A garment added since the
@@ -46,21 +45,20 @@ const attr = (value) =>
 const json = (value) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 async function fetchItem(num) {
-  if (!SUPABASE_URL || !ANON_KEY) return null;
-
-  const query = new URLSearchParams({
-    select: 'num,category,name,size,price,original_price,sold,item_photos(path,position)',
-    num: `eq.${num}`,
-    limit: '1',
-  });
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/items?${query}`, {
-    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
-  });
-  if (!response.ok) return null;
-
-  const rows = await response.json();
-  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  if (!isD1Configured) return null;
+  try {
+    const rows = await d1Query(
+      `SELECT num, category, name, size, price, original_price, sold
+         FROM items WHERE num = ? LIMIT 1`,
+      [num],
+    );
+    if (!rows.length) return null;
+    // SQLite has no boolean, and everything downstream reads item.sold as one.
+    return { ...rows[0], sold: rows[0].sold === 1 };
+  } catch {
+    // The shipped snapshot answers below. A share card is not worth a 500.
+    return null;
+  }
 }
 
 /**

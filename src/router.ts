@@ -74,3 +74,19 @@ export function categoryFromPath(path: string): string | null {
 export function categoryPath(id: string): string {
   return `/category/${id}`;
 }
+
+/** The three documents that live at their own addresses. */
+export const LEGAL_PAGES = ['privacy', 'terms', 'accessibility'] as const;
+export type LegalPage = (typeof LEGAL_PAGES)[number];
+
+/**
+ * Which document a path names, or null.
+ *
+ * Their own routes rather than one page with anchors: a policy is a document,
+ * and a document that cannot be linked to on its own is hard to hand to
+ * anybody — a customer, a lawyer, or Google.
+ */
+export function legalFromPath(path: string): LegalPage | null {
+  const match = /^\/(privacy|terms|accessibility)\/?$/.exec(path);
+  return match ? (match[1] as LegalPage) : null;
+}

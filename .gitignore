@@ -34,3 +34,7 @@ assets/_originals/
 # The Excel sheets underneath it stay in git — see the un-ignore below.
 assets/inventory/*
 !assets/inventory/excel/
+
+# Python bytecode from scripts/
+__pycache__/
+*.pyc

@@ -1,5 +1,5 @@
 import { Product } from './types';
-import { selectRows } from './supabase';
+import { fetchCatalogue } from './catalogue';
 import { storageUrl } from './photos';
 import snapshot from './catalog-snapshot.json';
 import { brandName } from '@/shared/brands.mjs';
@@ -78,11 +78,10 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
 }
 
 export async function loadProducts(): Promise<Product[]> {
-  const rows = await selectRows<ItemRow>('items', {
-    select:
-      'num,category,name,size,price,original_price,drop_date,sold,waist_cm,length_cm,views,item_photos(path,position)',
-    order: 'num.asc',
-  });
+  // One request to this site's own endpoint, which reads Cloudflare D1 and
+  // returns the rows in the shape PostgREST used to. The column list, the
+  // ordering and the nested photos all live in shared/d1.mjs now.
+  const rows = await fetchCatalogue<ItemRow>();
 
   // The latest drop = the most recent arrival date in the whole catalogue.
   const latestDropDate =

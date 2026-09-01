@@ -1,28 +1,23 @@
-// Where a garment's photograph comes from.
+// Where a garment's photograph comes from: this site, and nowhere else.
 //
-// Supabase Storage first, the copy that ships with the site behind it. A
-// picture uploaded to the dashboard is visible without a deploy, and when the
-// bucket does not answer the shop still shows the garment.
+// It used to be Supabase Storage first with the shipped copy behind it. In
+// August 2026 Supabase restricted the project for exceeding its bandwidth
+// allowance and answered 402 to everything — catalogue and photographs alike —
+// and the shop showed names and prices with holes where the clothes should
+// have been. It has since auto-paused and its hostname no longer resolves at
+// all.
 //
-// The fallback is not hypothetical. In August 2026 Supabase restricted the
-// project for exceeding its bandwidth allowance and answered 402 to everything
-// — catalogue and photographs alike — and the shop showed names and prices with
-// holes where the clothes should have been. Three things now stand between that
-// and a customer:
+// The local copy was already first in line, which is the only reason the
+// garments stayed on screen through both. Now it is the only line. Two things
+// still stand between an old URL and a broken image:
 //
-//   1. the catalogue request doubles as a probe (markBucketUnreachable below),
-//      so once Supabase has refused once, nothing else is asked of it;
-//   2. repairPhotos() rewrites URLs recovered from a visitor's own cache, which
-//      were resolved on an earlier visit and may point anywhere;
-//   3. onPhotoError() catches whatever still slips through, per <img>.
+//   1. repairPhotos() rewrites bucket URLs recovered from a visitor's own
+//      cache — a shopper who last came in July is carrying a pocketful of
+//      addresses whose host is gone from DNS;
+//   2. onPhotoError() catches whatever still slips through, per <img>.
 //
-// Only the third can save a photo the other two never saw coming, so it is the
+// Only the second can save a photo the first never saw coming, so it is the
 // one that must never be omitted from an <img> showing a garment.
-
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-
-const BUCKET = 'inventory';
-const REMOTE_PREFIX = url ? `${url}/storage/v1/object/public/${BUCKET}/` : '';
 
 // Every photograph the database knows about, compressed and renamed after the
 // item number it belongs to. Built by scripts/make_inventory_web.py; verified
@@ -87,8 +82,9 @@ const SRCSET_BY_URL: Record<string, string> = {};
 /**
  * The widths available for an already-resolved URL, or undefined.
  *
- * Undefined for a bucket URL: Supabase holds one size, so there is nothing to
- * choose between, and an <img> with no srcset simply uses its src.
+ * Undefined for anything this build did not ship, and for a master that was
+ * already smaller than the smallest variant. An <img> with no srcset simply
+ * uses its src.
  */
 export function srcSetFor(url: string): string | undefined {
   return SRCSET_BY_URL[url];
@@ -108,53 +104,34 @@ export const PHOTO_PLACEHOLDER =
      </svg>`,
   );
 
-// Set the first time Supabase refuses. Not persisted: a restriction that is
-// lifted should reach the next visit, not the next month.
-let bucketReachable = true;
-
-/**
- * Stop asking Supabase for photographs.
- *
- * Called by App when the catalogue request fails, which is the cheapest probe
- * available — REST and Storage are restricted together, so one refusal already
- * answers for the other. Without this, an outage costs every visitor one failed
- * request per photograph before the fallbacks get their turn.
- */
-export function markBucketUnreachable(): void {
-  bucketReachable = false;
-}
-
-export function isBucketReachable(): boolean {
-  return bucketReachable;
-}
-
 /**
  * Where to load the photo stored at e.g. "boardies/47.jpeg".
  *
- * A photograph this build shipped is served from here; anything else comes from
- * the bucket. So a garment photographed this morning still appears without a
- * deploy — Supabase is what makes new pictures reachable — while the ones
- * already on this site cost nobody's bandwidth.
+ * From this site, always. There is no second place to look any more, and the
+ * numbers say there should not be: the bucket held one size, the
+ * full-resolution upload, so filling a 164-pixel card from it meant sending
+ * 564KB where the local copy is 19KB with srcset choosing it. That difference
+ * is what put 56GB through a 5GB allowance and paused the project.
  *
- * The bucket holds one size, and it is the full-resolution upload. Serving a
- * card from it means sending 564KB to fill 164 CSS pixels; the local copy at
- * the same place is 19KB with srcset choosing it. That difference is what put
- * 56GB through a 5GB allowance in August.
- *
- * To put the bucket first again — every photo from Supabase while it answers —
- * make this `if (bucketReachable) return REMOTE_PREFIX + path;` above the
- * lookup. One line, and it reverses.
+ * A path with no local file falls to the placeholder rather than to an empty
+ * string, so a missing photograph is a drawn frame instead of a broken icon.
  */
 export function storageUrl(path: string): string {
-  const local = localPhotoUrl(path);
-  if (local) return local;
-  return REMOTE_PREFIX ? REMOTE_PREFIX + path : '';
+  return localPhotoUrl(path) ?? PHOTO_PLACEHOLDER;
 }
 
-/** The stored path behind a bucket URL, or null if it is not one. */
+/**
+ * The stored path behind an old bucket URL, or null if it is not one.
+ *
+ * Matched on `/inventory/` rather than on the project's hostname, because the
+ * hostname is gone and a URL saved months ago may not even be the last one the
+ * project had. Everything after the bucket name is the path this site knows.
+ */
 function pathFromRemote(src: string): string | null {
-  if (!REMOTE_PREFIX || !src.startsWith(REMOTE_PREFIX)) return null;
-  return decodeURIComponent(src.slice(REMOTE_PREFIX.length).split('?')[0]);
+  const marker = '/inventory/';
+  const at = src.indexOf(marker);
+  if (at === -1 || !/^https?:\/\//i.test(src)) return null;
+  return decodeURIComponent(src.slice(at + marker.length).split('?')[0]);
 }
 
 /** The local twin of an already-resolved URL, if there is one. */
@@ -176,7 +153,11 @@ export function localTwin(src: string): string | undefined {
  * added since that visit is still reachable.
  */
 export function repairPhotos<T extends { image: string; images?: string[] }>(items: T[]): T[] {
-  if (bucketReachable) return items;
+  // Unconditional now. It used to be a no-op while the bucket answered, so a
+  // cached URL kept working; there is no bucket to answer any more, so every
+  // one of them is a broken image waiting to happen. A shopper who last
+  // visited in July is carrying a pocketful of URLs whose host no longer
+  // exists in DNS — this is what turns them back into pictures.
   return items.map((item) => {
     const image = localTwin(item.image) ?? item.image;
     const images = item.images?.map((src) => localTwin(src) ?? src);
@@ -202,9 +183,6 @@ export function onPhotoError(event: { currentTarget: HTMLImageElement }): void {
     }
     return;
   }
-
-  // One refusal is enough: spare every photograph after this one the same trip.
-  markBucketUnreachable();
 
   const twin = localTwin(img.src);
   img.dataset.photoFallback = twin ? 'local' : 'placeholder';
