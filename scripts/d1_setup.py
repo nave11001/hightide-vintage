@@ -31,6 +31,15 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_NAME = "hightide"
+
+# The date the newest drop is recorded under.
+#
+# Reconstructed, not original: src/catalog-snapshot.json stores "is this the
+# latest drop" as a flag and never stored the date itself, and the real dates
+# went with the Supabase project. This one is evidenced — the snapshot built on
+# 2026-08-22 already recorded those garments as newest, so the drop was on or
+# before it. Change it here if the true date is known.
+LATEST_DROP = "2026-08-22"
 API = "https://api.cloudflare.com/client/v4"
 
 
@@ -171,15 +180,22 @@ def cmd_load():
         result = query(
             db_id,
             "INSERT INTO items (num, category, name, size, price, original_price, "
-            "waist_cm, length_cm, views, sold) VALUES (?,?,?,?,?,?,?,?,?,?) "
+            "waist_cm, length_cm, views, sold, drop_date) VALUES (?,?,?,?,?,?,?,?,?,?,?) "
             "ON CONFLICT (category, num) DO UPDATE SET "
             "name=excluded.name, size=excluded.size, price=excluded.price, "
             "original_price=excluded.original_price, waist_cm=excluded.waist_cm, "
-            "length_cm=excluded.length_cm, views=excluded.views, sold=excluded.sold",
+            "length_cm=excluded.length_cm, views=excluded.views, sold=excluded.sold, "
+            # Only ever fill a blank. A reload must not overwrite a real date
+            # with one reconstructed from the snapshot's derived `new` flag.
+            "drop_date=COALESCE(items.drop_date, excluded.drop_date)",
             [
                 row["n"], row["c"], row["b"], row["s"], row["p"],
                 row.get("o"), row.get("w"), row.get("l"),
                 row.get("v", 0), 1 if row.get("sold") == 1 else 0,
+                # The snapshot keeps `new`, not the date. Anything flagged as
+                # the latest drop gets LATEST_DROP so the badge survives a
+                # reload; everything else keeps whatever the database holds.
+                LATEST_DROP if row.get("new") == 1 else None,
             ],
         )
         if not result.get("success"):
