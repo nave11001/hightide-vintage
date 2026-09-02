@@ -39,5 +39,23 @@ export async function fetchCatalogue<T>(): Promise<T[]> {
     throw new Error(`catalogue ${response.status}`);
   }
 
+  // A 200 that is not JSON means the function did not answer.
+  //
+  // netlify.toml sends every unmatched path to /index.html with status 200, so
+  // a function that failed to register does not 404 — it serves the shop's own
+  // HTML, `response.json()` throws a parse error, and the catalogue quietly
+  // falls back to the shipped copy. The site looks fine and the database is
+  // ignored, which is the worst of both. Verified: before this function was
+  // deployed, /api/catalogue returned 200 text/html.
+  //
+  // Named here so the console says which of the two went wrong.
+  const type = response.headers.get('Content-Type') ?? '';
+  if (!type.includes('json')) {
+    throw new Error(
+      `catalogue returned ${type || 'no content type'} — the /api/catalogue ` +
+        'function is not answering, so the SPA redirect served index.html instead',
+    );
+  }
+
   return response.json();
 }
