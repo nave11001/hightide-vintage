@@ -1,12 +1,27 @@
 name: סנכרון פריטים מבוקשים
 
-# Copies PostHog's product_view counts into items.views so the shop's
-# "Our Top Wanted Pieces" rail reflects what people actually opened.
-# No site rebuild is needed — the shop reads the numbers from Supabase live.
+# Two jobs in one run, both against Cloudflare D1:
+#
+#   1. copy PostHog's product_view counts into items.views, so the shop's
+#      "Our Most Wanted" rail reflects what people actually opened;
+#   2. rebuild src/catalog-snapshot.json from the database and commit it.
+#
+# The second is the one that matters when something breaks. That file is what
+# the shop falls back to when the database cannot be reached — it is the reason
+# the shop kept trading through the entire Supabase collapse — and a fallback is
+# only worth having if it is current. Left to a person to run by hand it went
+# stale within a day: it said a garment was a 33 while the database said 26.
+#
+# No site rebuild is needed for the view counts; the shop reads them live. The
+# snapshot commit does trigger a Netlify deploy, which is the point — that is
+# how the shipped fallback catches up.
 on:
   schedule:
     - cron: '0 */6 * * *'   # every six hours; the ranking does not move fast
   workflow_dispatch: {}     # or run it on demand from the Actions tab
+
+permissions:
+  contents: write
 
 jobs:
   sync:
@@ -18,12 +33,33 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install --quiet supabase
+      # No pip install. scripts/d1.py talks to D1 over urllib, which is in the
+      # standard library — the Supabase client was a package download on every
+      # single run.
 
-      - name: Pull view counts from PostHog into Supabase
+      - name: Pull view counts from PostHog into D1
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: python scripts/sync_top_wanted.py
+
+      - name: Rebuild the shipped fallback catalogue from D1
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python scripts/make_catalog_snapshot.py
+
+      - name: Commit it if the shop changed
+        run: |
+          git config user.name "HighTide Inventory Bot"
+          git config user.email "galnimrod9@gmail.com"
+          git add src/catalog-snapshot.json
+          if git diff --cached --quiet; then
+            echo "Catalogue unchanged since the last run."
+          else
+            git commit -m "chore: rebuild the fallback catalogue from D1"
+            git push
+          fi

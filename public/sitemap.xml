@@ -74,7 +74,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/picko-35</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/picko-38</loc>
@@ -254,7 +254,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/rr-108</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-109</loc>
@@ -284,7 +284,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-115</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/ocean-pacific-116</loc>
@@ -314,7 +314,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-122</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-x-bob-marley-124</loc>

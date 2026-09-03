@@ -3,13 +3,16 @@
 
 Everything marked sold is written to assets/inventory/excel/sold_log.csv (the
 permanent sales record, committed to the repo), then removed from Supabase:
-the item row, its item_photos rows, and the photo files in storage.
+the item row and its item_photos rows. The photograph files themselves are
+listed rather than deleted: they live in this repository now, not in a bucket,
+and a scheduled job that removes a shop's photographs on its own is one bad
+query away from being unrecoverable. Delete them by hand once the reset looks
+right.
 
 The sales history is never lost — only the listing is.
 
 Setup (same .env as the migration script):
-  SUPABASE_URL=https://xxxxx.supabase.co
-  SUPABASE_SERVICE_KEY=eyJhbGci...
+  CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_D1_DATABASE_ID / CLOUDFLARE_API_TOKEN
 
 Usage:
   python scripts/reset_inventory.py --dry-run
@@ -18,6 +21,9 @@ Usage:
 import csv
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import d1
 from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -53,21 +59,17 @@ def append_to_log(rows):
 
 def main():
     load_env()
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_KEY")
-    if not url or not key:
-        sys.exit("SUPABASE_URL / SUPABASE_SERVICE_KEY missing.")
+    d1.credentials()
 
-    try:
-        from supabase import create_client
-    except ImportError:
-        sys.exit("supabase client missing. Run: pip install supabase")
-
-    db = create_client(url, key)
-
-    sold = db.table("items").select(
-        "id, num, category, name, size, price, sold_at, item_photos(path)"
-    ).eq("sold", True).execute().data
+    sold = d1.query(
+        "SELECT id, num, category, name, size, price, sold_at FROM items "
+        "WHERE sold = 1 ORDER BY num"
+    )
+    photos_by_item = {}
+    for photo in d1.query("SELECT item_id, path FROM item_photos"):
+        photos_by_item.setdefault(photo["item_id"], []).append(photo["path"])
+    for row in sold:
+        row["item_photos"] = [{"path": p} for p in photos_by_item.get(row["id"], [])]
 
     if not sold:
         print("nothing marked sold — inventory unchanged")

@@ -1,9 +1,17 @@
 name: איפוס מלאי אוטומטי
 
 # Runs on the 1st and the 15th of every month at 03:00 UTC (06:00 Israel).
-# Every item marked sold in Supabase is appended to sold_log.csv, then deleted
-# from the catalogue along with its photos. No site rebuild is needed — the
-# shop reads the database live, so the change is visible immediately.
+# Every item marked sold in Cloudflare D1 is appended to sold_log.csv, then
+# deleted from the catalogue along with its item_photos rows.
+#
+# The photograph files are listed, not deleted. They live in this repository
+# now rather than in a bucket, which makes them the only copies there are, and
+# a scheduled job that removes a shop's photographs unattended is one bad query
+# away from being unrecoverable. The run prints their paths; removing them is a
+# decision for a person.
+#
+# The shipped fallback catalogue is rebuilt afterwards, so it does not go on
+# offering garments the database has just let go of.
 on:
   schedule:
     - cron: '0 3 1,15 * *'
@@ -22,20 +30,29 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install --quiet supabase
+      # No pip install. scripts/d1.py talks to D1 over urllib, which is in the
+      # standard library — the Supabase client was a package download on every
+      # single run, and one more thing that could fail before any work started.
 
       - name: Reset inventory (log and remove sold items)
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: python scripts/reset_inventory.py
 
-      - name: Commit the sales log
+      - name: Rebuild the shipped fallback catalogue from D1
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python scripts/make_catalog_snapshot.py
+
+      - name: Commit the sales log and the rebuilt catalogue
         run: |
           git config user.name "HighTide Inventory Bot"
           git config user.email "galnimrod9@gmail.com"
-          git add assets/inventory/excel/sold_log.csv
+          git add assets/inventory/excel/sold_log.csv src/catalog-snapshot.json
           if git diff --cached --quiet; then
             echo "Nothing sold since the last reset — no changes."
           else

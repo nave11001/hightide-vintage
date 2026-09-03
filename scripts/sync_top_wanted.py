@@ -11,7 +11,7 @@ let a single visitor decide the front page.
 
 Setup (.env locally, GitHub secrets in CI):
   POSTHOG_PERSONAL_API_KEY=phx_...      <- Query Read scope, never commit
-  SUPABASE_URL / SUPABASE_SERVICE_KEY
+  CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_D1_DATABASE_ID / CLOUDFLARE_API_TOKEN
 
 Usage:
   python scripts/sync_top_wanted.py --dry-run
@@ -20,6 +20,9 @@ Usage:
 import json
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import d1
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -73,22 +76,18 @@ def posthog_counts(api_key):
 def main():
     load_env()
     api_key = os.environ.get("POSTHOG_PERSONAL_API_KEY")
-    url = os.environ.get("SUPABASE_URL")
-    service_key = os.environ.get("SUPABASE_SERVICE_KEY")
     if not api_key:
         sys.exit("POSTHOG_PERSONAL_API_KEY missing — see the docstring above.")
-    if not url or not service_key:
-        sys.exit("SUPABASE_URL / SUPABASE_SERVICE_KEY missing.")
 
-    from supabase import create_client
-
-    db = create_client(url, service_key)
+    # d1.credentials() exits with the names of anything missing.
+    d1.credentials()
 
     counts = posthog_counts(api_key)
     print(f"PostHog: {len(counts)} items viewed in the last {WINDOW_DAYS} days")
 
-    items = db.table("items").select("id, category, num, views, sold").execute().data
-    print(f"Supabase: {len(items)} items in stock\n")
+    items = d1.query("SELECT id, category, num, views, sold FROM items")
+    print(f"D1: {len(items)} items in stock")
+    print()
 
     changed = 0
     for row in sorted(items, key=lambda r: -counts.get((r["category"], r["num"]), 0)):
@@ -98,7 +97,7 @@ def main():
         mark = "  SOLD" if row["sold"] else ""
         print(f"  {row['category']}-{row['num']:<5} {row['views'] or 0:>4} -> {people:<4}{mark}")
         if not DRY:
-            db.table("items").update({"views": people}).eq("id", row["id"]).execute()
+            d1.execute("UPDATE items SET views = ? WHERE id = ?", [people, row["id"]])
         changed += 1
 
     verb = "[dry-run] would update" if DRY else "updated"

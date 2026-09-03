@@ -18,6 +18,8 @@ import json
 import os
 import re
 import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import d1
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,24 +45,18 @@ def slugify(text: str) -> str:
     return re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9]+", "-", str(text).lower()))
 
 
-def fetch_items(url: str, key: str):
-    query = "select=num,name,sold&order=num.asc"
-    request = urllib.request.Request(
-        f"{url}/rest/v1/items?{query}",
-        headers={"apikey": key, "Authorization": f"Bearer {key}"},
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
+def fetch_items():
+    # sold comes back as 0/1 from SQLite; the writer below tests it truthily,
+    # which works either way, but normalise so the two cannot drift.
+    rows = d1.query("SELECT num, name, sold FROM items ORDER BY num ASC")
+    for row in rows:
+        row["sold"] = bool(row["sold"])
+    return rows
 
 
 def main() -> None:
     load_env()
-    url = os.environ.get("VITE_SUPABASE_URL") or os.environ.get("SUPABASE_URL")
-    key = os.environ.get("VITE_SUPABASE_ANON_KEY")
-    if not url or not key:
-        sys.exit("VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing.")
-
-    items = fetch_items(url, key)
+    items = fetch_items()
 
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',

@@ -1,7 +1,8 @@
 [build]
   publish = "dist"
-  # The inventory is read from Supabase at runtime, so the build is just the site.
-  # Requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the Netlify env vars.
+  # The inventory is read from Cloudflare D1 at runtime, so the build is just
+  # the site. The functions need CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_D1_DATABASE_ID
+  # and CLOUDFLARE_API_TOKEN in the Netlify environment variables.
   command = "npm run build:static"
 
 # Everything under /assets/ carries a content hash in its filename — Vite puts
