@@ -1,0 +1,39 @@
+name: בדיקת תקינות שרת
+
+# The alarm for the failure mode that actually happened.
+#
+# Supabase did not fall over in one go. It ran 56GB through a 5GB allowance,
+# was restricted, auto-paused for inactivity, and finally lost its hostname —
+# and nobody was told at any step, because the shop kept trading on its shipped
+# fallback the whole time. That fallback is doing its job; the missing half was
+# anyone knowing.
+#
+# So this is the half that was missing. It runs hourly, checks the things that
+# would show the same story starting again, and exits non-zero when one trips —
+# which is what makes GitHub email you. No new service, no new account, no
+# subscription to forget about: the same mechanism that has been telling you the
+# sync job was broken.
+#
+# It reads. It never writes, never deletes and never touches the catalogue.
+on:
+  schedule:
+    - cron: '17 * * * *'    # hourly, off the hour so it does not queue behind
+                            # every other scheduled job on GitHub
+  workflow_dispatch: {}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check the shop's backend
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python scripts/healthcheck.py
