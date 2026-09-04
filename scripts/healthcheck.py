@@ -124,25 +124,29 @@ def check_endpoint():
 
     note("catalogue endpoint  %d items in %.2fs" % (len(rows), elapsed))
 
-    # The first request has just filled the edge cache, so a second one should
-    # be served from it. This reads the header rather than timing the request:
-    # a hit and a miss are told apart by what Netlify says, not by a stopwatch
-    # that is mostly measuring a TLS handshake.
+    # Is the answer being cached at all? Read it from the header rather than
+    # timing a second request: a hit and a miss are told apart by what Netlify
+    # says, not by a stopwatch that is mostly measuring a TLS handshake.
+    #
+    # The question is "cached", not "hit". Two requests from here rarely reach
+    # the same edge node — this job runs from a GitHub runner — so a second one
+    # landing on a fresh node and missing is normal and healthy. What matters is
+    # what the node did about it: `hit` served it from cache, `stored` put it in
+    # cache. Either means the caching works. `bypass` means it does not, and
+    # then every visitor waits on D1.
     second = fetch_catalogue()
     if second is not None:
         # Netlify sends Cache-Status more than once — one line per layer, the
         # durable cache and the edge. .get() would return only the first, which
         # is the layer that always says bypass, so read every one of them.
         status = ", ".join(second[1].get_all("Cache-Status") or [])
-        note("edge cache          %s" % ("serving hits" if "hit" in status
-                                         else "NOT serving hits — %s" % (status or "no header")))
-        if "hit" not in status:
-            # Not an alarm on its own: a second request can land on a different
-            # edge node, or on the far side of the 30s TTL. Worth seeing, and
-            # worth checking if it says this every morning.
-            note("                    (every visitor then waits on D1 — check "
-                 "the Cache-Control header on netlify/functions/catalogue.mjs "
-                 "if this persists)")
+        cached = "hit" in status or "stored" in status
+        note("edge cache          %s" % ("working" if cached
+                                         else "NOT caching — %s" % (status or "no header")))
+        if not cached:
+            problem("the catalogue is not being cached at the edge, so every "
+                    "visitor waits on D1 — check the Cache-Control header in "
+                    "netlify/functions/catalogue.mjs")
 
     if elapsed > SLOW_SECONDS:
         problem("the catalogue took %.1fs and the shop gives up at 5s — the "
