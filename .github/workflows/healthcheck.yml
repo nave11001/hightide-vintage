@@ -8,17 +8,23 @@ name: בדיקת תקינות שרת
 # fallback the whole time. That fallback is doing its job; the missing half was
 # anyone knowing.
 #
-# So this is the half that was missing. It runs hourly, checks the things that
-# would show the same story starting again, and exits non-zero when one trips —
-# which is what makes GitHub email you. No new service, no new account, no
-# subscription to forget about: the same mechanism that has been telling you the
-# sync job was broken.
+# So this is the half that was missing. It runs every morning, checks the things
+# that would show the same story starting again, and exits non-zero when one
+# trips — which is what makes GitHub email you. No new service, no new account,
+# no subscription to forget about: the same mechanism that has been telling you
+# the sync job was broken.
 #
 # It reads. It never writes, never deletes and never touches the catalogue.
+#
+# Once a day, at 04:00 UTC. That is 07:00 in Israel through the summer and
+# 06:00 once the clocks go back — GitHub's scheduler speaks UTC only and has no
+# idea about daylight saving. It could be made exact with a second cron and a
+# timezone check, and it is deliberately not: this is the alarm, and an alarm
+# with a condition in front of it is an alarm that can quietly decide not to
+# ring. An hour's drift in winter costs nothing.
 on:
   schedule:
-    - cron: '17 * * * *'    # hourly, off the hour so it does not queue behind
-                            # every other scheduled job on GitHub
+    - cron: '0 4 * * *'
   workflow_dispatch: {}
 
 jobs:

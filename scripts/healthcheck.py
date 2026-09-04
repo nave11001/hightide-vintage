@@ -16,7 +16,8 @@ threshold trips, which makes GitHub send an email.
 What it checks
 --------------
   1. the shop's own catalogue endpoint answers, with JSON, with a sane count
-  2. it answers quickly enough to be used rather than timed out
+  2. it answers quickly enough to be used rather than timed out — measured both
+     cold and cached, because those are different numbers with different risks
   3. the database is nowhere near its size limit
   4. the row counts are what a shop this size should have
   5. the shipped fallback has not drifted far from the database
@@ -61,7 +62,17 @@ WARN_AT = 0.80
 # has gone wrong in a way row counts alone cannot explain — a bad migration, a
 # truncated table, a runaway import.
 MIN_ITEMS, MAX_ITEMS = 20, 500
-SLOW_SECONDS = 3.0
+
+# How slow is too slow. src/catalogue.ts gives up at 5 seconds and drops the
+# visitor onto the shipped fallback, so 4 means the margin is nearly gone.
+#
+# It is deliberately one loose bound rather than a tight one. Each request here
+# opens its own TLS connection, and from a cold runner the handshake alone can
+# be a second — measured times swing by more than the thing being measured, and
+# a threshold tuned to a fast morning would cry wolf on a slow one. Whether the
+# edge cache is working is read from the Cache-Status header below, which says
+# so directly instead of being guessed at from a stopwatch.
+SLOW_SECONDS = 4.0
 
 problems = []
 notes = []
@@ -75,22 +86,27 @@ def note(line):
     notes.append(line)
 
 
-def check_endpoint():
-    """The shop's own catalogue endpoint — the thing a customer depends on."""
+def fetch_catalogue():
+    """One request. Returns (seconds, headers, body) or None on failure."""
     started = time.time()
     try:
         request = urllib.request.Request(CATALOGUE, headers={"Accept": "application/json"})
         with urllib.request.urlopen(request, timeout=20) as response:
-            content_type = response.headers.get("Content-Type", "")
-            body = response.read()
+            return time.time() - started, response.headers, response.read()
     except urllib.error.HTTPError as err:
         problem("catalogue endpoint returned HTTP %s" % err.code)
-        return None
     except Exception as err:
         problem("catalogue endpoint unreachable: %s" % type(err).__name__)
-        return None
+    return None
 
-    elapsed = time.time() - started
+
+def check_endpoint():
+    """The shop's own catalogue endpoint — the thing a customer depends on."""
+    first = fetch_catalogue()
+    if first is None:
+        return None
+    elapsed, headers, body = first
+    content_type = headers.get("Content-Type", "")
 
     # A 200 that is not JSON means the function did not answer and netlify.toml's
     # catch-all served index.html instead. The shop then falls back silently and
@@ -107,9 +123,31 @@ def check_endpoint():
         return None
 
     note("catalogue endpoint  %d items in %.2fs" % (len(rows), elapsed))
+
+    # The first request has just filled the edge cache, so a second one should
+    # be served from it. This reads the header rather than timing the request:
+    # a hit and a miss are told apart by what Netlify says, not by a stopwatch
+    # that is mostly measuring a TLS handshake.
+    second = fetch_catalogue()
+    if second is not None:
+        # Netlify sends Cache-Status more than once — one line per layer, the
+        # durable cache and the edge. .get() would return only the first, which
+        # is the layer that always says bypass, so read every one of them.
+        status = ", ".join(second[1].get_all("Cache-Status") or [])
+        note("edge cache          %s" % ("serving hits" if "hit" in status
+                                         else "NOT serving hits — %s" % (status or "no header")))
+        if "hit" not in status:
+            # Not an alarm on its own: a second request can land on a different
+            # edge node, or on the far side of the 30s TTL. Worth seeing, and
+            # worth checking if it says this every morning.
+            note("                    (every visitor then waits on D1 — check "
+                 "the Cache-Control header on netlify/functions/catalogue.mjs "
+                 "if this persists)")
+
     if elapsed > SLOW_SECONDS:
-        problem("catalogue endpoint took %.1fs — the shop's own deadline is 5s, "
-                "past which every visitor silently gets the fallback" % elapsed)
+        problem("the catalogue took %.1fs and the shop gives up at 5s — the "
+                "margin is nearly gone, and past it every visitor silently "
+                "gets the fallback" % elapsed)
     if not MIN_ITEMS <= len(rows) <= MAX_ITEMS:
         problem("catalogue has %d items, outside the sane range %d-%d"
                 % (len(rows), MIN_ITEMS, MAX_ITEMS))
