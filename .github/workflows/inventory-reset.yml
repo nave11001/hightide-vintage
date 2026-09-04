@@ -4,6 +4,8 @@ name: איפוס מלאי אוטומטי
 # Every item marked sold in Cloudflare D1 is appended to sold_log.csv, then
 # deleted from the catalogue along with its item_photos rows.
 #
+# Except the ones on sale — see --keep-sale on the step below.
+#
 # The photograph files are listed, not deleted. They live in this repository
 # now rather than in a bucket, which makes them the only copies there are, and
 # a scheduled job that removes a shop's photographs unattended is one bad query
@@ -34,12 +36,19 @@ jobs:
       # standard library — the Supabase client was a package download on every
       # single run, and one more thing that could fail before any work started.
 
-      - name: Reset inventory (log and remove sold items)
+      # --keep-sale leaves sold items that have an original_price. A sale that
+      # still shows the pieces that went is a sale that looks like it is
+      # working, and that is worth more than a tidy table.
+      #
+      # The cost: nothing here ever clears them, and most of the shop is on
+      # sale, so they build up. When a sale ends, run this job by hand from the
+      # Actions tab after taking the flag off, or clear the prices first.
+      - name: Reset inventory (log and remove sold items, except sale)
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: python scripts/reset_inventory.py
+        run: python scripts/reset_inventory.py --keep-sale
 
       - name: Rebuild the shipped fallback catalogue from D1
         env:

@@ -20,8 +20,11 @@ Usage:
 
 --keep-sale spares anything with an original_price. A sale that still shows the
 pieces that went is a sale that looks like it is working, so there is a reason
-to hold them back for a round; the scheduled job does not pass it, and takes
-them on its next run.
+to hold them back — and the scheduled job passes it, by choice.
+
+That choice has a cost worth knowing: nothing automatic ever clears a sold sale
+item, and most of the shop is on sale, so they accumulate. Run this without the
+flag when the sale ends and they should go.
 """
 import csv
 import os
