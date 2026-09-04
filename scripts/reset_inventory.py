@@ -2,12 +2,11 @@
 """Scheduled inventory reset — runs on the 1st and the 15th of every month.
 
 Everything marked sold is written to assets/inventory/excel/sold_log.csv (the
-permanent sales record, committed to the repo), then removed from Supabase:
-the item row and its item_photos rows. The photograph files themselves are
-listed rather than deleted: they live in this repository now, not in a bucket,
-and a scheduled job that removes a shop's photographs on its own is one bad
-query away from being unrecoverable. Delete them by hand once the reset looks
-right.
+permanent sales record, committed to the repo), then removed from D1: the item
+row and its item_photos rows. The photograph files themselves are listed rather
+than deleted: they live in this repository now, not in a bucket, and a
+scheduled job that removes a shop's photographs on its own is one bad query
+away from being unrecoverable. Delete them by hand once the reset looks right.
 
 The sales history is never lost — only the listing is.
 
@@ -17,6 +16,12 @@ Setup (same .env as the migration script):
 Usage:
   python scripts/reset_inventory.py --dry-run
   python scripts/reset_inventory.py
+  python scripts/reset_inventory.py --keep-sale   # leave sold sale items up
+
+--keep-sale spares anything with an original_price. A sale that still shows the
+pieces that went is a sale that looks like it is working, so there is a reason
+to hold them back for a round; the scheduled job does not pass it, and takes
+them on its next run.
 """
 import csv
 import os
@@ -28,10 +33,10 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOLD_LOG = os.path.join(ROOT, "assets", "inventory", "excel", "sold_log.csv")
-BUCKET = "inventory"
 FIELDS = ["removed_on", "num", "category", "name", "size", "price", "sold_at"]
 
 DRY = "--dry-run" in sys.argv
+KEEP_SALE = "--keep-sale" in sys.argv
 
 
 def load_env():
@@ -61,9 +66,12 @@ def main():
     load_env()
     d1.credentials()
 
+    where = "sold = 1"
+    if KEEP_SALE:
+        where += " AND original_price IS NULL"
     sold = d1.query(
         "SELECT id, num, category, name, size, price, sold_at FROM items "
-        "WHERE sold = 1 ORDER BY num"
+        "WHERE %s ORDER BY num" % where
     )
     photos_by_item = {}
     for photo in d1.query("SELECT item_id, path FROM item_photos"):
@@ -71,8 +79,13 @@ def main():
     for row in sold:
         row["item_photos"] = [{"path": p} for p in photos_by_item.get(row["id"], [])]
 
+    if KEEP_SALE:
+        spared = d1.query("SELECT COUNT(*) AS c FROM items "
+                          "WHERE sold = 1 AND original_price IS NOT NULL")[0]["c"]
+        print("--keep-sale: %d sold sale item(s) stay up\n" % spared)
+
     if not sold:
-        print("nothing marked sold — inventory unchanged")
+        print("nothing to remove — inventory unchanged")
         return
 
     today = date.today().isoformat()
@@ -96,24 +109,34 @@ def main():
         item_ids.append(row["id"])
 
     if DRY:
-        print(f"\n[dry-run] would log {len(log_rows)} sales, "
-              f"delete {len(photo_paths)} photos and {len(item_ids)} items")
+        print(f"\n[dry-run] would log {len(log_rows)} sales and remove "
+              f"{len(item_ids)} items with {len(photo_paths)} photo row(s)")
         return
 
     # Record the sale first — if anything below fails, the history still exists.
     append_to_log(log_rows)
     print(f"\nlogged {len(log_rows)} sales to {os.path.relpath(SOLD_LOG, ROOT)}")
 
+    # item_photos has ON DELETE CASCADE, but delete it explicitly: the count
+    # comes back, so the run says how many rows actually went rather than
+    # trusting a constraint to have been enforced.
+    marks = ",".join("?" * len(item_ids))
+    gone_photos = d1.execute(
+        f"DELETE FROM item_photos WHERE item_id IN ({marks})", item_ids)
+    gone_items = d1.execute(f"DELETE FROM items WHERE id IN ({marks})", item_ids)
+    print(f"removed {gone_items} items and {gone_photos} photo rows from the catalogue")
+
+    remaining = d1.query("SELECT COUNT(*) AS c FROM items")[0]["c"]
+    print(f"\n{remaining} items remain in stock")
+
+    # The files themselves stay. They are under assets/inventory/, they are the
+    # only copies there are, and this job is not the thing that should decide a
+    # photograph is finished with.
     if photo_paths:
-        db.storage.from_(BUCKET).remove(photo_paths)
-        print(f"deleted {len(photo_paths)} photos from storage")
-
-    # item_photos rows go with it — the foreign key is ON DELETE CASCADE.
-    db.table("items").delete().in_("id", item_ids).execute()
-    print(f"removed {len(item_ids)} items from the catalogue")
-
-    remaining = db.table("items").select("id", count="exact").execute()
-    print(f"\n{remaining.count} items remain in stock")
+        print(f"\n{len(photo_paths)} photo file(s) are now unreferenced. They are "
+              f"NOT deleted — remove them by hand if you want the space:")
+        for path in photo_paths:
+            print(f"  {path}")
 
 
 if __name__ == "__main__":
