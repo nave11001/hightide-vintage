@@ -212,9 +212,16 @@ def check_usage():
         return
 
     if payload.get("errors"):
-        note("usage               NOT CHECKED - the token may not read analytics. "
-             "Add 'Account Analytics: Read' to it to enable this, or leave it off "
-             "and rely on the checks above.")
+        # Say what Cloudflare said. The first version of this collapsed every
+        # error into "the token may not read analytics", which is a guess — and
+        # it read the same whether the permission was missing, the query was
+        # malformed, or the dataset had been renamed. A check that reports its
+        # own guess instead of the answer sends you looking in the wrong place.
+        said = "; ".join(str(e.get("message")) for e in payload["errors"]) or "no message"
+        note("usage               NOT CHECKED - Cloudflare said: %s" % said)
+        note("                    'not authorized' means the token is missing "
+             "'Account Analytics: Read'. Everything above works without it; "
+             "this is the check that would have caught Supabase early.")
         return
 
     groups = []

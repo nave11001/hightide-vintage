@@ -18,13 +18,11 @@ Usage:
   python scripts/reset_inventory.py
   python scripts/reset_inventory.py --keep-sale   # leave sold sale items up
 
---keep-sale spares anything with an original_price. A sale that still shows the
-pieces that went is a sale that looks like it is working, so there is a reason
-to hold them back — and the scheduled job passes it, by choice.
-
-That choice has a cost worth knowing: nothing automatic ever clears a sold sale
-item, and most of the shop is on sale, so they accumulate. Run this without the
-flag when the sale ends and they should go.
+--keep-sale spares anything with an original_price. It was built for a sale
+running across the whole shop, where clearing the sold pieces would have left
+the rails looking empty and the sale looking dead. The scheduled job does not
+pass it — that is a call to make on the day, not a standing rule — so pass it
+by hand on a run where it applies.
 """
 import csv
 import os
