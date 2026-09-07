@@ -1,4 +1,4 @@
-{"note":"Built by scripts/make_catalog_snapshot.py. The shop falls back to this when the database cannot be reached. Do not edit by hand.","generatedAt":"2026-09-06","items":[
+{"note":"Built by scripts/make_catalog_snapshot.py. The shop falls back to this when the database cannot be reached. Do not edit by hand.","generatedAt":"2026-09-07","items":[
 {"n": 9, "c": "women", "b": "Roxy", "s": "31", "p": 189, "ph": ["women/9.jpeg", "women/9a.jpeg"], "v": 24, "o": 240},
 {"n": 10, "c": "boardies", "b": "Hawaii", "s": "32", "p": 169, "ph": ["boardies/10.png"], "v": 24, "o": 230},
 {"n": 22, "c": "boardies", "b": "FireFighter", "s": "34", "p": 159, "ph": ["boardies/22.jpeg"], "v": 28, "o": 240},
