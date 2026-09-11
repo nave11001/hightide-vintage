@@ -1,5 +1,5 @@
-{"note":"Built by scripts/make_catalog_snapshot.py. The shop falls back to this when the database cannot be reached. Do not edit by hand.","generatedAt":"2026-09-10","items":[
-{"n": 9, "c": "women", "b": "Roxy", "s": "31", "p": 189, "ph": ["women/9.jpeg", "women/9a.jpeg"], "v": 21, "o": 240},
+{"note":"Built by scripts/make_catalog_snapshot.py. The shop falls back to this when the database cannot be reached. Do not edit by hand.","generatedAt":"2026-09-11","items":[
+{"n": 9, "c": "women", "b": "Roxy", "s": "31", "p": 189, "ph": ["women/9.jpeg", "women/9a.jpeg"], "v": 22, "o": 240},
 {"n": 10, "c": "boardies", "b": "Hawaii", "s": "32", "p": 169, "ph": ["boardies/10.png"], "v": 16, "o": 230},
 {"n": 22, "c": "boardies", "b": "FireFighter", "s": "34", "p": 159, "ph": ["boardies/22.jpeg"], "v": 14, "o": 240},
 {"n": 30, "c": "shirts", "b": "T&C SHIRTS", "s": "L", "p": 179, "ph": ["shirts/30.jpeg", "shirts/30a.jpeg"], "v": 21},
