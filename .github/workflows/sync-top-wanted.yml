@@ -52,8 +52,18 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: python scripts/make_catalog_snapshot.py
 
+      # Commit only when something a customer would notice changed. The file
+      # nearly always differs, because it carries view counts that move by one
+      # or two every run — and every commit is a Netlify build. That was 44
+      # builds in the first 13 days of September, almost all for nothing.
+      # scripts/snapshot_matters.py ignores the view counts and the date, and
+      # says what did change when it lets a build through.
       - name: Commit it if the shop changed
         run: |
+          if ! python scripts/snapshot_matters.py; then
+            git checkout -- src/catalog-snapshot.json
+            exit 0
+          fi
           git config user.name "HighTide Inventory Bot"
           git config user.email "galnimrod9@gmail.com"
           git add src/catalog-snapshot.json

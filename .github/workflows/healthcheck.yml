@@ -16,15 +16,21 @@ name: בדיקת תקינות שרת
 #
 # It reads. It never writes, never deletes and never touches the catalogue.
 #
-# Once a day, at 04:00 UTC. That is 07:00 in Israel through the summer and
-# 06:00 once the clocks go back — GitHub's scheduler speaks UTC only and has no
-# idea about daylight saving. It could be made exact with a second cron and a
-# timezone check, and it is deliberately not: this is the alarm, and an alarm
-# with a condition in front of it is an alarm that can quietly decide not to
-# ring. An hour's drift in winter costs nothing.
+# Once a day, at 03:37 UTC — 06:37 in Israel through the summer, 05:37 once the
+# clocks go back. GitHub's scheduler speaks UTC only and has no idea about
+# daylight saving. It could be made exact with a second cron and a timezone
+# check, and it is deliberately not: this is the alarm, and an alarm with a
+# condition in front of it is an alarm that can quietly decide not to ring.
+#
+# Why 37 past and not the hour: GitHub queues every scheduled job in the world
+# at the top of the hour, and under that load it delays them and sometimes
+# drops them outright. At 04:00 sharp this ran at 11:30 Israel time most days
+# and on 13 September did not run at all. An odd minute is the documented way
+# to stay out of that queue. It still is not a promise of punctuality — GitHub
+# makes none — which is why it sits a little before seven rather than on it.
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '37 3 * * *'
   workflow_dispatch: {}
 
 jobs:
