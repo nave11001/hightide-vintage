@@ -982,7 +982,19 @@ export default function App() {
                       type on small screens only; the desktop label is
                       unchanged. */}
                   <div className="relative z-10 bg-white/95 backdrop-blur-xs px-5 py-3 sm:px-12 sm:py-5 min-w-[180px] sm:min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
-                    <h3 className="text-sm sm:text-lg font-groovy font-normal tracking-wide text-stone-900 leading-tight uppercase">
+                    {/* Nudged up by 0.142em, which is not a taste call but the
+                        font's own arithmetic. Flowers Kingdom declares an
+                        ascent of 2.357em against a descent of 0.214em, and
+                        these labels are all caps, so the ink runs 1.929em up
+                        from the baseline and only 0.071em below it. Centring
+                        happens on the line box, and the line box is placed
+                        from those lopsided declared metrics, so the letters
+                        you can actually see land 0.142em below the middle of
+                        the white card: measured on the live page at 375px, 9.8
+                        pixels of white above the text and 5.8 below.
+                        Expressed in em so it holds at both type sizes, and as
+                        a transform so the card does not change size. */}
+                    <h3 className="text-sm sm:text-lg font-groovy font-normal tracking-wide text-stone-900 leading-tight uppercase -translate-y-[0.142em]">
                       {category.subText}
                     </h3>
                     <span className="hidden">
