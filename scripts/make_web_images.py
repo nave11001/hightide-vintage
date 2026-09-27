@@ -64,20 +64,12 @@ VARIANTS = (480, 800)
 CROPS = {
     'photos/boardshorts.jpg': (280, 0, 0, 0),
 
-    # women.jpg is the one portrait photograph among five landscape tiles, so
-    # most of its height is cropped away by object-cover and never reaches a
-    # screen — but phones still download it. It arrived as the heaviest file on
-    # the homepage: 250KB for the copy a phone loads, against 32KB to 103KB for
-    # the others.
-    #
-    # This takes 196 rows off the top and the same off the bottom, which is
-    # strictly less than the narrowest tile ever shows. The widest slice any
-    # supported width asks for is at a 768px tablet, where the tile is 356x380
-    # and wants 1306 rows of the shipped 1224-wide image; the tightest phone,
-    # 320px, wants 1190. What ships after this crop is 1320. So the framing is
-    # identical everywhere — the same centre, the same visible band — and the
-    # picture is simply not carrying rows that no layout can reach.
-    'photos/women.jpg': (0, 196, 0, 196),
+    # women is not cropped here. The first version of it was a tall portrait
+    # carrying rows no layout could reach, and 196 came off each end; the
+    # replacement is already cut close — 1208x1302, where the widest slice any
+    # supported width asks for is 1289 rows at a 768px tablet. Thirteen rows
+    # spare is not a saving, it is a margin, and taking it would start cutting
+    # into what a tablet shows.
 }
 
 # The category tiles were all 1170 and two of them should not have been. The
@@ -99,7 +91,10 @@ JOBS = [
     ('photos/boardshorts.jpg',    1224,  82, True),   # 341 on a phone, 612 wide
     ('photos/T-shirts.jpg',       1224,  82, True),
     ('photos/accessories.jpg',    1224,  82, True),
-    ('photos/women.jpg',          1224,  82, True),
+    # A PNG this time, and 1208 wide — just under the 1224 the tiles are built
+    # at. The script never upscales, so it ships at 1208: 1.3% short of the
+    # target, which is nothing a viewer can see.
+    ('photos/women.png',          1224,  82, True),
     ('photos/all products.jpg',   2048,  82, True),   # 1248 on a desktop
 ]
 
