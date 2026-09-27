@@ -29,7 +29,7 @@ import heroImageUrl from '@/assets/homepage_photo.webp';
 import catBoardiesImg from '@/assets/photos/boardshorts.webp';
 import catShirtsImg from '@/assets/photos/T-shirts.webp';
 import catAccessoriesImg from '@/assets/photos/accessories.webp';
-import catWomenImg from '@/assets/photos/Women (1).webp';
+import catWomenImg from '@/assets/photos/women.webp';
 import catAllImg from '@/assets/photos/all products.webp';
 import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
 import { track, trackProduct } from './analytics';
@@ -37,6 +37,14 @@ import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
 // The size finder — MySizePanel and SizeFinder — was built, never switched on,
 // and is now removed. shared/sizing.mjs stays: SizeLanding and the Instagram bot
 // both read it to answer "what have you got in 32?".
+
+// How wide a half-width category tile really is drawn, for the browser to pick
+// a file against. The grid is one column until md (768px) and two above it, so
+// below 768 a tile is the full viewport and above it half. The container tops
+// out at max-w-7xl, which is why 50vw over-states it on a very wide screen —
+// deliberately, because over-stating costs a few kilobytes and under-stating
+// costs sharpness.
+const HALF_TILE_SIZES = '(min-width: 768px) 50vw, 100vw';
 
 export default function App() {
   // Store Core State
@@ -886,6 +894,7 @@ export default function App() {
                   name: 'בורדיז',
                   subText: 'BOARDSHORTS',
                   image: catBoardiesImg,
+                  sizes: HALF_TILE_SIZES,
                   className: 'md:col-span-1 h-[280px] sm:h-[380px]'
                 },
                 {
@@ -893,6 +902,7 @@ export default function App() {
                   name: 'חולצות',
                   subText: 'VINTAGE TEES & HOODIES',
                   image: catShirtsImg,
+                  sizes: HALF_TILE_SIZES,
                   className: 'md:col-span-1 h-[280px] sm:h-[380px]'
                 },
                 {
@@ -900,6 +910,7 @@ export default function App() {
                   name: 'אקססוריז',
                   subText: 'ACCESSORIES',
                   image: catAccessoriesImg,
+                  sizes: HALF_TILE_SIZES,
                   className: 'md:col-span-1 h-[280px] sm:h-[380px]'
                 },
                 {
@@ -907,6 +918,7 @@ export default function App() {
                   name: 'נשים',
                   subText: 'WOMEN',
                   image: catWomenImg,
+                  sizes: HALF_TILE_SIZES,
                   className: 'md:col-span-1 h-[280px] sm:h-[380px]'
                 },
                 {
@@ -914,6 +926,8 @@ export default function App() {
                   name: 'כל הפריטים',
                   subText: 'ALL VINTAGE ITEMS',
                   image: catAllImg,
+                  // Full container width at every breakpoint, never half.
+                  sizes: '100vw',
                   className: 'md:col-span-2 h-[300px] sm:h-[450px]'
                 }
               ].map((category) => (
@@ -927,7 +941,17 @@ export default function App() {
                       document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 80);
                   }}
-                  className={`group relative overflow-hidden flex items-center justify-center border border-stone-200/40 shadow-xs cursor-pointer ${category.className}`}
+                  // The label sits at the foot of the tile, not across its
+                  // middle. Centred, it covered the one thing each tile is
+                  // selling — the shorts on ALL VINTAGE ITEMS, the sunglasses
+                  // on ACCESSORIES — because a photographer puts the subject in
+                  // the middle, which is exactly where a centred label goes.
+                  // Nudging the photograph instead only trades one subject for
+                  // another, and the axis it can move on changes with the
+                  // breakpoint. Moving the label solves every tile at once, on
+                  // both, and leaves the photographs alone. Still centred
+                  // horizontally.
+                  className={`group relative overflow-hidden flex items-end justify-center pb-5 sm:pb-8 border border-stone-200/40 shadow-xs cursor-pointer ${category.className}`}
                   id={`home-cat-card-${category.id}`}
                 >
                   {/* Category Image with dark elegant overlay */}
@@ -935,9 +959,14 @@ export default function App() {
                     <img
                       src={category.image}
                       srcSet={srcSetFor(category.image)}
-                      // Full width on a phone; two to a row, and one wide one,
-                      // once there is room.
-                      sizes="(min-width: 640px) 50vw, 100vw"
+                      // Each tile says how wide it really is — see the cards
+                      // above. This was one shared claim of 50vw from 640px up,
+                      // which was wrong twice: the grid does not split until
+                      // 768, and the wide tile never splits at all. Both errors
+                      // under-state the slot, and an under-stated slot is the
+                      // browser being told it may send a smaller file than the
+                      // box needs, which is what a blurry tile is.
+                      sizes={category.sizes}
                       alt={category.name}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"
@@ -945,8 +974,15 @@ export default function App() {
                   </div>
 
                   {/* Centered White Card overlay (Exactly like the Malboshim style!) */}
-                  <div className="relative z-10 bg-white/95 backdrop-blur-xs px-8 py-3.5 sm:px-12 sm:py-5 min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
-                    <h3 className="text-base sm:text-lg font-groovy font-normal tracking-wide text-stone-900 leading-tight uppercase">
+                  {/* On a phone this was 300px of label inside a 343px tile —
+                      VINTAGE TEES & HOODIES ran from 6% to 94% of the card,
+                      leaving 21px of photograph either side. Dead centre, and
+                      it still read as crowded, because being centred is not the
+                      same as having room. Narrower padding and a step down in
+                      type on small screens only; the desktop label is
+                      unchanged. */}
+                  <div className="relative z-10 bg-white/95 backdrop-blur-xs px-5 py-3 sm:px-12 sm:py-5 min-w-[180px] sm:min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
+                    <h3 className="text-sm sm:text-lg font-groovy font-normal tracking-wide text-stone-900 leading-tight uppercase">
                       {category.subText}
                     </h3>
                     <span className="hidden">

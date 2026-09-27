@@ -50,17 +50,57 @@ ORIGINALS = os.path.join(ROOT, 'assets', '_originals')
 # because it has to cut the background away first.
 VARIANTS = (480, 800)
 
+# Pixels to take off a master before anything else, as (left, top, right, bottom).
+#
+# This is for defects in the frame, not for composition. boardshorts.jpg carries
+# a black wedge down its left edge — part of the photograph, not something the
+# page adds — and because the tile fills its width there is no CSS that can hide
+# it: object-position only slides an image where there is slack, and there is
+# none across the width. So it comes off the master.
+#
+# 270 is measured, not judged: scripts saw every row of the image and the last
+# black column was 270 at its worst, 217 at its narrowest. 280 clears it with a
+# margin, because a wedge left one pixel short is still a black line on the tile.
+CROPS = {
+    'photos/boardshorts.jpg': (280, 0, 0, 0),
+
+    # women.jpg is the one portrait photograph among five landscape tiles, so
+    # most of its height is cropped away by object-cover and never reaches a
+    # screen — but phones still download it. It arrived as the heaviest file on
+    # the homepage: 250KB for the copy a phone loads, against 32KB to 103KB for
+    # the others.
+    #
+    # This takes 196 rows off the top and the same off the bottom, which is
+    # strictly less than the narrowest tile ever shows. The widest slice any
+    # supported width asks for is at a 768px tablet, where the tile is 356x380
+    # and wants 1306 rows of the shipped 1224-wide image; the tightest phone,
+    # 320px, wants 1190. What ships after this crop is 1320. So the framing is
+    # identical everywhere — the same centre, the same visible band — and the
+    # picture is simply not carrying rows that no layout can reach.
+    'photos/women.jpg': (0, 196, 0, 196),
+}
+
+# The category tiles were all 1170 and two of them should not have been. The
+# container is max-w-7xl (1280) inside px-4, so it is 1248 wide; the grid is two
+# columns with a 24px gap. That makes a half tile 612 CSS pixels and the wide
+# "all products" tile 1248 — and 1248 drawn from a 1170 file is an image being
+# stretched past its own size on every desktop, before retina is even asked for.
+#
+# So each tile is now twice the widest box it is drawn in, capped by the source:
+#   half tiles   612 x 2 = 1224   (sources are 2048 wide, so this is a downscale)
+#   all products 1248 x 2 = 2496, and the source is 2048 — so 2048, whole.
+# The script never upscales, so a number above the source is simply the source.
 JOBS = [
     # name                        width  q   variants
     ('font_homepage.png',          320,  90, False),  # drawn at 102px, always
     ('photos/sold_stamp.png',      180,  90, False),  # drawn at 54px
     ('photos/sale_stamp.png',      140,  90, False),  # drawn at 42px
     ('homepage_photo.png',        1600,  82, True),   # 375 on a phone, 1432 wide
-    ('photos/boardshorts.jpg',    1170,  82, True),   # 341 on a phone, 610 wide
-    ('photos/T-shirts.jpg',       1170,  82, True),
-    ('photos/accessories.jpeg',   1170,  82, True),
-    ('photos/Women (1).jpeg',     1170,  82, True),
-    ('photos/all products.jpg',   1170,  82, True),   # 1246 on a desktop
+    ('photos/boardshorts.jpg',    1224,  82, True),   # 341 on a phone, 612 wide
+    ('photos/T-shirts.jpg',       1224,  82, True),
+    ('photos/accessories.jpg',    1224,  82, True),
+    ('photos/women.jpg',          1224,  82, True),
+    ('photos/all products.jpg',   2048,  82, True),   # 1248 on a desktop
 ]
 
 
@@ -97,6 +137,11 @@ def main() -> None:
         # Alpha is kept where it exists: these sit on the page as cut-outs, and
         # flattening them onto white would put a box around them.
         master = master.convert('RGBA' if master.mode in ('RGBA', 'LA', 'P') else 'RGB')
+
+        crop = CROPS.get(name)
+        if crop:
+            left, top, right, bottom = crop
+            master = master.crop((left, top, master.width - right, master.height - bottom))
 
         widths = [max_w] + ([w for w in VARIANTS if w < max_w] if wants_variants else [])
         after = 0
