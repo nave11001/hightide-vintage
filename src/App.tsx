@@ -928,7 +928,21 @@ export default function App() {
                   image: catAllImg,
                   // Full container width at every breakpoint, never half.
                   sizes: '100vw',
-                  className: 'md:col-span-2 h-[300px] sm:h-[450px]'
+                  // Below md this tile is shaped to the photograph instead of
+                  // given a fixed height. The picture is 3:2; the phone tile
+                  // was 343x300, which is nearly square, and object-cover fills
+                  // the short dimension — so it kept the height and threw away
+                  // 12% of the width from each side. That is precisely where
+                  // the outer pairs of shorts are, so the phone was cropping
+                  // off the merchandise. A desktop never showed the fault: at
+                  // 1248x450 the tile is wider than the photograph, so it trims
+                  // top and bottom and every pair survives.
+                  //
+                  // 3/2 is a hair wider than the file's 1.4993, so the crop
+                  // falls on a rounding error's worth of height rather than on
+                  // anything down the sides. From md the fixed height returns,
+                  // where the tile is wide enough for it to be safe again.
+                  className: 'md:col-span-2 aspect-[3/2] md:aspect-auto md:h-[450px]'
                 }
               ].map((category) => (
                 <button
