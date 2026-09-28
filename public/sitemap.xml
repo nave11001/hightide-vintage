@@ -39,12 +39,12 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/roxy-9</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/hawaii-10</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/firefighter-22</loc>
@@ -89,11 +89,6 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/gray-59</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/oniell-61</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
@@ -109,7 +104,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-70</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-78</loc>
@@ -139,7 +134,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/captain-santa-86</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/t-r-87</loc>
@@ -169,22 +164,12 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/andy-irons-94</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/kirra-95</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/andy-irons-96</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/quicksilver-97</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/roxy-98</loc>
@@ -212,11 +197,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hightide-vintage.netlify.app/product/billabong-104</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://hightide-vintage.netlify.app/product/hawaii-105</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -225,16 +205,6 @@
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-106</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/billabong-107</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/rr-108</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-109</loc>
@@ -259,12 +229,12 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/rip-curl-114</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/ocean-pacific-116</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-117</loc>
@@ -274,17 +244,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-118</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/billabong-119</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/oniell-128</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/oniell-130</loc>
@@ -294,7 +254,7 @@
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-x-taj-burrow-131</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/ocean-pacific-133</loc>
@@ -302,19 +262,14 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hightide-vintage.netlify.app/product/billabong-135</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-137</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quicksilver-138</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/billabong-139</loc>
