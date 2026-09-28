@@ -1249,7 +1249,7 @@ export default function App() {
             <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">צור קשר ואיסוף</span>
             <div dir="rtl" className="text-xs leading-relaxed text-gray-300 space-y-1 text-right">
               <div>טלפון: <a href="tel:0528879922" className="hover:text-white transition-colors font-mono font-bold">052-8879922</a></div>
-              <div>מייל: <a href="mailto:hightide1620@gmail.com" dir="ltr" className="hover:text-white transition-colors font-mono font-bold">hightide1620@gmail.com</a></div>
+              <div>מייל: <a href="mailto:hightide1622@gmail.com" dir="ltr" className="hover:text-white transition-colors font-mono font-bold">hightide1622@gmail.com</a></div>
               <div className="mt-1 text-stone-300">הגבעה 28 כפר האורנים (בתיאום מראש)</div>
             </div>
           </div>

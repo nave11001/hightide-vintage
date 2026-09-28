@@ -19,7 +19,7 @@ import { navigate, type LegalPage as PageId } from '../router';
 // invents them is worth less than one with a hole in it.
 
 const SHOP = 'HIGHTIDE VINTAGE';
-const EMAIL = 'hightide1620@gmail.com';
+const EMAIL = 'hightide1622@gmail.com';
 const PHONE = '052-8879922';
 const ADDRESS = 'הגבעה 28, כפר האורנים';
 const UPDATED = 'אוגוסט 2026';
