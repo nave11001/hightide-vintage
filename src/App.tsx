@@ -14,6 +14,7 @@ import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import CategoryBar from './components/CategoryBar';
+import CatalogFilters from './components/CatalogFilters';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import WhatsAppMark from './components/WhatsAppMark';
 import ProductCard from './components/ProductCard';
@@ -143,8 +144,7 @@ export default function App() {
 
   const setSelectedCategory = (id: string) => {
     navigate(id === 'none' ? '/' : categoryPath(id));
-  };
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  };  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'' | 'available' | 'sold'>('');
   const [saleFilter, setSaleFilter] = useState<'' | 'sale'>('');
   // Set when a shopper arrives from the Instagram bot with their size. Replaces
@@ -203,6 +203,10 @@ export default function App() {
       setSelectedSizes([]);
       setAvailabilityFilter('');
     }
+    // The sale filter too. It was left set, and a category with nothing on
+    // sale does not draw that filter at all — so "במבצע בלבד" carried over
+    // from boardies emptied women with no control on screen to undo it.
+    setSaleFilter('');
     if (selectedCategory !== 'none') {
       track('category_view', { category: selectedCategory });
     }
@@ -840,7 +844,23 @@ export default function App() {
 
       {/* The category menu under the header, in catalogue view. */}
       {(selectedCategory !== 'none' || searchTerm !== '') && !legalPage && (
-        <CategoryBar selected={selectedCategory} onSelect={setSelectedCategory} />
+        <CategoryBar
+          selected={selectedCategory}
+          onSelect={(id) => {
+            if (id !== selectedCategory) {
+              setSelectedCategory(id);
+              return;
+            }
+            // The category already showing, tapped again: start it over. The
+            // address does not change, so nothing else would — this is the
+            // one way back to the whole category from a search or a filter.
+            closeSearch();
+            setSelectedSizes([]);
+            setAvailabilityFilter('');
+            setSaleFilter('');
+            window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+          }}
+        />
       )}
 
       {/* Main Container */}
@@ -1052,71 +1072,62 @@ export default function App() {
               </button>
             </div>
 
-            {/* Filters row (Excel data-validation style dropdowns) */}
-            <div dir="rtl" className="flex items-center gap-2 mb-6 flex-wrap" id="catalog-filters">
-              {availableSizes.length > 1 && (
-                <div className="flex items-center gap-2" id="size-filter">
-                  <label htmlFor="size-select" className="text-xs text-stone-500 font-normal">
-                    סינון לפי מידה:
-                  </label>
-                  <select
-                    id="size-select"
-                    value={selectedSizes[0] || ''}
-                    onChange={(e) => {
-                      setSelectedSizes(e.target.value ? [e.target.value] : []);
-                      if (e.target.value) track('size_filter', { size: e.target.value, category: selectedCategory });
-                    }}
-                    className="border border-stone-300 bg-white text-stone-900 text-xs font-mono px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
-                  >
-                    <option value="">כל המידות</option>
-                    {availableSizes.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2" id="availability-filter">
-                <label htmlFor="availability-select" className="text-xs text-stone-500 font-normal">
-                  זמינות:
-                </label>
-                <select
-                  id="availability-select"
-                  value={availabilityFilter}
-                  onChange={(e) => {
-                    setAvailabilityFilter(e.target.value as '' | 'available' | 'sold');
-                    if (e.target.value) track('availability_filter', { value: e.target.value, category: selectedCategory });
-                  }}
-                  className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
-                >
-                  <option value="">הכל</option>
-                  <option value="available">זמין במלאי</option>
-                  <option value="sold">נמכר</option>
-                </select>
-              </div>
-
-              {/* Only worth offering once something is actually discounted */}
-              {categoryProducts.some((p) => p.originalPrice) && (
-                <div className="flex items-center gap-2" id="sale-filter">
-                  <label htmlFor="sale-select" className="text-xs text-stone-500 font-normal">
-                    מבצעים:
-                  </label>
-                  <select
-                    id="sale-select"
-                    value={saleFilter}
-                    onChange={(e) => {
-                      setSaleFilter(e.target.value as '' | 'sale');
-                      if (e.target.value) track('sale_filter', { value: e.target.value, category: selectedCategory });
-                    }}
-                    className="border border-stone-300 bg-white text-stone-900 text-xs px-3 py-1.5 cursor-pointer focus:outline-none focus:border-stone-900 min-w-[110px]"
-                  >
-                    <option value="">הכל</option>
-                    <option value="sale">במבצע בלבד</option>
-                  </select>
-                </div>
-              )}
+            {/* Filters, in the category tabs' style. See CatalogFilters. */}
+            <div className="mb-4">
+              <CatalogFilters
+                filters={[
+                  ...(availableSizes.length > 1
+                    ? [
+                        {
+                          id: 'size-select',
+                          wrapperId: 'size-filter',
+                          label: 'מידה',
+                          mono: true,
+                          value: selectedSizes[0] || '',
+                          onChange: (v: string) => {
+                            setSelectedSizes(v ? [v] : []);
+                            if (v) track('size_filter', { size: v, category: selectedCategory });
+                          },
+                          options: [{ value: '', label: 'כל המידות' }, ...availableSizes.map((size) => ({ value: size, label: size }))],
+                        },
+                      ]
+                    : []),
+                  {
+                    id: 'availability-select',
+                    wrapperId: 'availability-filter',
+                    label: 'זמינות',
+                    value: availabilityFilter,
+                    onChange: (v: string) => {
+                      setAvailabilityFilter(v as '' | 'available' | 'sold');
+                      if (v) track('availability_filter', { value: v, category: selectedCategory });
+                    },
+                    options: [
+                      { value: '', label: 'הכל' },
+                      { value: 'available', label: 'זמין במלאי' },
+                      { value: 'sold', label: 'נמכר' },
+                    ],
+                  },
+                  // Only worth offering once something is actually discounted
+                  ...(categoryProducts.some((p) => p.originalPrice)
+                    ? [
+                        {
+                          id: 'sale-select',
+                          wrapperId: 'sale-filter',
+                          label: 'מבצעים',
+                          value: saleFilter,
+                          onChange: (v: string) => {
+                            setSaleFilter(v as '' | 'sale');
+                            if (v) track('sale_filter', { value: v, category: selectedCategory });
+                          },
+                          options: [
+                            { value: '', label: 'הכל' },
+                            { value: 'sale', label: 'במבצע בלבד' },
+                          ],
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             </div>
 
             {/* Grid of Items */}
@@ -1340,8 +1351,7 @@ export default function App() {
 
       {/* The floating WhatsApp button. Tucks itself away while the page is
           being scrolled down, and stands aside while a garment is open. */}
-      <FloatingWhatsApp suppressed={modalIsOpen} />
-      {/* Interactive floating feedback Toast */}
+      <FloatingWhatsApp suppressed={modalIsOpen} />      {/* Interactive floating feedback Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 border-2 border-stone-800 shadow-[4px_4px_0px_0px_rgba(28,25,23,1)] text-right font-bold text-xs sm:text-sm max-w-xs sm:max-w-md animate-scale-up">
           {toastMessage}

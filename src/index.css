@@ -143,6 +143,18 @@ p, h1, h2, h3, h4, h5, h6, li, dt, dd, figcaption, blockquote, label, th, td {
   .animate-drawer-in { animation: none; }
 }
 
+/* A filter's options, dropping out of the filter above them. */
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-drop-in {
+  animation: dropIn 0.15s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-drop-in { animation: none; }
+}
+
 /* Rows that scroll sideways — the category menus — without a scrollbar
    drawn across them. The class was in use on the hero's category links long
    before it existed, so those showed one. */
