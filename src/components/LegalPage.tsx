@@ -22,7 +22,7 @@ const SHOP = 'HIGHTIDE VINTAGE';
 const EMAIL = 'hightide1622@gmail.com';
 const PHONE = '052-8879922';
 const ADDRESS = 'הגבעה 28, כפר האורנים';
-const UPDATED = 'אוגוסט 2026';
+const UPDATED = 'ספטמבר 2026';
 
 /** A run of prose, a list, or a sub-heading. */
 type Block =
@@ -123,7 +123,7 @@ const TERMS: Doc = {
     { h: 'משלוח ואיסוף' },
     {
       ul: [
-        'משלוח מבוצע תוך 3 עד 7 ימי עסקים ממועד אישור ההזמנה.',
+        'משלוח מבוצע תוך 2 עד 7 ימי עסקים ממועד אישור ההזמנה.',
         `איסוף עצמי מ${ADDRESS} — בתיאום מראש.`,
         'עלות ואופן המשלוח: ⟦למילוי⟧',
       ],
