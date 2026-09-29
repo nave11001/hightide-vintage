@@ -71,8 +71,12 @@ export default function Header({
           left edge of the screen and the logo on its true centre. It was
           capped at the catalogue's width everywhere but the homepage, which
           on a wide screen left the icons floating inward and the header not
-          matching the one above the photograph. */}
-      <div className="px-4 sm:px-6 h-16 sm:h-24 flex items-center justify-between relative">
+          matching the one above the photograph.
+
+          No fixed height: the row is the logo plus a little air above and
+          almost none below, so the category row sits right under it. A fixed
+          80px row left the logo floating in the middle of empty space. */}
+      <div className="px-4 sm:px-6 pt-3 pb-1 sm:pt-4 flex items-center justify-between relative">
         
         {/* Left Side: Hamburger (Three lines) & Search */}
         <div className="flex items-center gap-3 md:gap-4 w-1/3 justify-start">

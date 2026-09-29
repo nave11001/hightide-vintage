@@ -120,7 +120,7 @@ export default function CategoryBar({ selected, onSelect, tone = 'dark' }: Categ
                   // not widen and shove its neighbours when it is chosen.
                   // 13px and tighter on a phone, so all five fit across even
                   // a 360px screen and the row needs no sliding at all.
-                  className={`relative shrink-0 snap-center h-11 px-2.5 sm:px-4 text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`relative shrink-0 snap-center h-8 sm:h-9 px-2.5 sm:px-4 text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     light
                       ? 'text-white hover:text-stone-200'
                       : active
