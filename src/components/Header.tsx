@@ -72,7 +72,7 @@ export default function Header({
           capped at the catalogue's width everywhere but the homepage, which
           on a wide screen left the icons floating inward and the header not
           matching the one above the photograph. */}
-      <div className="px-4 sm:px-6 h-20 sm:h-28 flex items-center justify-between relative">
+      <div className="px-4 sm:px-6 h-16 sm:h-24 flex items-center justify-between relative">
         
         {/* Left Side: Hamburger (Three lines) & Search */}
         <div className="flex items-center gap-3 md:gap-4 w-1/3 justify-start">

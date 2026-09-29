@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import WhatsAppMark from './WhatsAppMark';
+import { WhatsAppDisc } from './WhatsAppMark';
 
 /**
  * The floating "talk to us" button.
@@ -54,11 +54,9 @@ export default function FloatingWhatsApp({ suppressed = false }: { suppressed?: 
       id="floating-whatsapp"
     >
       {/* A disc, not the bubble logo: a round button with a round shadow,
-          and the white glyph on WhatsApp's green is how every chat button on
+          and the white mark on WhatsApp's green is how every chat button on
           the web looks, so it is recognised before it is read. */}
-      <span className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center text-white">
-        <WhatsAppMark className="w-8 h-8" />
-      </span>
+      <WhatsAppDisc className="w-14 h-14 block" />
     </a>
   );
 }

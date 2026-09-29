@@ -32,6 +32,35 @@ const BUBBLE =
 const HANDSET = GLYPH.slice(GLYPH.indexOf('M17.91'));
 
 /**
+ * The floating button's mark: a green disc, and on it the bubble drawn as a
+ * bold white outline around the white handset — the way WhatsApp's own
+ * "chat with us" buttons draw it.
+ *
+ * It was the stock glyph on the disc, whose ring is a hairline a twelfth of
+ * its width. At 32px that came out 1.4px thick, so the bubble read as a faint
+ * scribble around a phone. Here the ring is a stroke three times heavier.
+ */
+export function WhatsAppDisc({ className = 'w-14 h-14' }: { className?: string }) {
+  return (
+    <svg
+      className={`shrink-0 ${className}`}
+      viewBox="0 0 48 48"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="24" cy="24" r="24" fill="#25D366" />
+      {/* The 24-unit bubble at 1.15x, centred on the disc: 27.6 units wide,
+          so 10.2 either side, and the stroke kept inside that margin. */}
+      <g transform="translate(10.2 10.2) scale(1.15)">
+        <path d={BUBBLE} fill="none" stroke="#fff" strokeWidth="2.1" strokeLinejoin="round" />
+        <path d={HANDSET} fill="#fff" transform="translate(12 12) scale(1.08) translate(-12 -12)" />
+      </g>
+    </svg>
+  );
+}
+
+/**
  * The logo the way WhatsApp itself draws it: a green speech bubble with a white
  * rim and a white handset.
  *
