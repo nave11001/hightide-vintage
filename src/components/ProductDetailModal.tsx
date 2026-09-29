@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star, Share2, Check, Link2 } from 'lucide-react';
-import WhatsAppMark from './WhatsAppMark';
+import { WhatsAppBadge } from './WhatsAppMark';
 import { trackProduct } from '../analytics';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
@@ -299,7 +299,7 @@ export default function ProductDetailModal({
                     onClick={() => shareVia('whatsapp')}
                     className="w-full min-h-[44px] px-3 flex items-center gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
                   >
-                    <WhatsAppMark className="w-4 h-4 shrink-0 text-[#25D366]" />
+                    <WhatsAppBadge className="w-5 h-5" />
                     <span>שיתוף בווטסאפ</span>
                   </button>
                 </div>
@@ -487,7 +487,7 @@ export default function ProductDetailModal({
               className="flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
               id="detail-add-btn"
             >
-              <WhatsAppMark className="w-4 h-4 text-[#25D366]" />
+              <WhatsAppBadge className="w-6 h-6" />
               <span>רכישה בווטסאפ</span>
             </a>
           </div>

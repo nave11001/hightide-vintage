@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Menu, X, Heart, Trash2 } from 'lucide-react';
 import { Product } from '../types';
 import Logo from './Logo';
 import HightideLogo from './HightideLogo';
 import { onPhotoError, srcSetFor } from '../photos';
 import { buyOnWhatsApp } from '../whatsapp';
-import WhatsAppMark from './WhatsAppMark';
+import { WhatsAppBadge } from './WhatsAppMark';
+import { useScrollLock } from '../useScrollLock';
 
 interface HeaderProps {
   searchTerm: string;
@@ -13,7 +15,12 @@ interface HeaderProps {
   selectedCategory: string;
   onSelectCategory: (cat: string) => void;
   categories: { id: string; name: string }[];
-  
+
+  // The search bar itself lives in App, not here — see SearchBar.tsx for why.
+  // The header only opens it.
+  isSearchOpen: boolean;
+  onOpenSearch: () => void;
+
   // Favorites Support:
   favoriteItems: Product[];
   onToggleFavorite: (product: Product) => void;
@@ -26,12 +33,24 @@ export default function Header({
   selectedCategory,
   onSelectCategory,
   categories,
+  isSearchOpen,
+  onOpenSearch,
   favoriteItems,
   onToggleFavorite,
   isTransparent = false,
 }: HeaderProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  useScrollLock(isMobileMenuOpen);
+
+  // Escape closes the drawer, the way it closes every other layer in the shop.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isMobileMenuOpen]);
 
   const iconColorClass = isTransparent 
     ? "text-white hover:text-stone-200 hover:bg-white/10" 
@@ -69,11 +88,12 @@ export default function Header({
             )}
           </button>
           
-          <button 
+          <button
             type="button"
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={onOpenSearch}
             className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${iconColorClass}`}
-            aria-label="Search"
+            aria-label="חיפוש"
+            aria-expanded={isSearchOpen}
             id="search-toggle-btn"
           >
             <Search className="w-5 h-5 sm:w-6 h-6" />
@@ -109,163 +129,64 @@ export default function Header({
         <div className="flex items-center gap-3 md:gap-4 w-1/3 justify-end" />
       </div>
 
-      {/* Overlaid Navigation Links for Transparent Hero View (flanking desktop) */}
+      {/* Category links over the hero. They only change the category — App
+          scrolls to the top of the page on every change, which is where the
+          filters are. These used to scroll themselves to #catalog-section,
+          an anchor that sat below the filter bar and under the sticky header,
+          so a shopper arrived past the very controls they might not know were
+          there. */}
       {isTransparent && (
-        <div className="hidden md:flex items-center justify-center gap-6 lg:gap-8 xl:gap-10 text-white/90 text-xs font-light tracking-wider flex-row-reverse w-full pb-6 select-none translate-x-3">
-          <button 
-            onClick={() => {
-              onSelectCategory('all');
-              onSearchChange('');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
-          >
-            כל הפריטים
-          </button>
-          <button
-            onClick={() => {
-              onSelectCategory('shirts');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
-          >
-            חולצות
-          </button>
-          <button
-            onClick={() => {
-              onSelectCategory('boardies');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5 font-medium tracking-wide"
-          >
-            בורדיז
-          </button>
-          <button 
-            onClick={() => {
-              onSelectCategory('accessories');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
-          >
-            אקססוריז
-          </button>
-          <button
-            onClick={() => {
-              onSelectCategory('women');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-            className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
-          >
-            נשים
-          </button>
-        </div>
-      )}
+        <>
+          <div className="hidden md:flex items-center justify-center gap-6 lg:gap-8 xl:gap-10 text-white/90 text-xs font-light tracking-wider flex-row-reverse w-full pb-6 select-none translate-x-3">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  onSearchChange('');
+                  onSelectCategory(cat.id);
+                }}
+                className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
 
-      {/* Mobile Horizontal Navigation Links Scroll for Transparent Hero View */}
-      {isTransparent && (
-        <div className="md:hidden flex items-center gap-4 text-white/95 text-[11px] overflow-x-auto px-4 pb-4 max-w-full no-scrollbar flex-row-reverse select-none">
-          <button 
-            onClick={() => {
-              onSelectCategory('all');
-              onSearchChange('');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
-          >
-            כל הפריטים
-          </button>
-          <span className="text-white/20 shrink-0">|</span>
-          <button
-            onClick={() => {
-              onSelectCategory('shirts');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
-          >
-            חולצות
-          </button>
-          <span className="text-white/20 shrink-0">|</span>
-          <button
-            onClick={() => {
-              onSelectCategory('boardies');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="shrink-0 hover:text-white transition-colors cursor-pointer px-1 font-medium"
-          >
-            בורדיז
-          </button>
-          <span className="text-white/20 shrink-0">|</span>
-          <button 
-            onClick={() => {
-              onSelectCategory('accessories');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
-          >
-            אקססוריז
-          </button>
-          <span className="text-white/20 shrink-0">|</span>
-          <button
-            onClick={() => {
-              onSelectCategory('women');
-              document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
-          >
-            נשים
-          </button>
-        </div>
-      )}
-
-      {/* Slide-down Search Bar */}
-      {isSearchOpen && (
-        <div className="bg-stone-50/50 border-y border-stone-100 py-3 px-4 animate-fade-in" id="search-bar-container">
-          <div className="max-w-2xl mx-auto flex items-center gap-2">
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                placeholder="חפש בגדים, חולצות, מכנסי גלישה..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-white border border-stone-200 py-2.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-stone-800 font-normal"
-                autoFocus
-                id="search-input"
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              {searchTerm && (
+          <div className="md:hidden flex items-center gap-4 text-white/95 text-[11px] overflow-x-auto px-4 pb-4 max-w-full no-scrollbar flex-row-reverse select-none">
+            {categories.map((cat, i) => (
+              <React.Fragment key={cat.id}>
+                {i > 0 && <span className="text-white/20 shrink-0" aria-hidden="true">|</span>}
                 <button
                   type="button"
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-black"
-                  id="clear-search-btn"
+                  onClick={() => {
+                    onSearchChange('');
+                    onSelectCategory(cat.id);
+                  }}
+                  className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
                 >
-                  <X className="w-4 h-4" />
+                  {cat.name}
                 </button>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsSearchOpen(false);
-                onSearchChange('');
-              }}
-              className="px-4 py-2 bg-stone-900 text-white text-sm font-normal hover:bg-stone-800"
-              id="close-search-btn"
-            >
-              ביטול
-            </button>
+              </React.Fragment>
+            ))}
           </div>
-        </div>
+        </>
       )}
 
-      {/* Mobile Drawer Menu featuring Categories AND My Favorites directly below the menu lines */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-row-reverse" id="mobile-menu-drawer">
+      {/* The drawer is portalled to <body>. Rendered inside the header it was
+          position:fixed in name only — on the homepage the header sits inside
+          the hero, and an ancestor there makes a containing block for fixed
+          children, so "the whole screen" meant "the hero" and the drawer
+          stopped at the hero's bottom edge with the shop showing below it.
+          From <body> there is no ancestor to capture it. h-dvh rather than
+          h-full so it follows a phone's collapsing address bar. */}
+      {isMobileMenuOpen && createPortal(
+        <div className="fixed left-0 top-0 w-full h-dvh z-[70]" id="mobile-menu-drawer">
           {/* Backdrop */}
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsMobileMenuOpen(false)}></div>
           
           {/* Drawer Content */}
-          <div className="relative bg-[#fdfcf9] w-80 max-w-sm h-full p-6 flex flex-col shadow-2xl z-10 overflow-y-auto transition-transform duration-300 mr-auto text-right">
+          <div role="dialog" aria-modal="true" aria-label="תפריט" className="absolute inset-y-0 left-0 bg-[#fdfcf9] w-80 max-w-[85vw] h-dvh p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain text-right animate-drawer-in">
             
             {/* Header of Drawer */}
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
@@ -273,6 +194,7 @@ export default function Header({
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-1.5 hover:bg-stone-100 rounded-full text-stone-800 transition-colors"
+                aria-label="סגירת התפריט"
                 id="close-menu-btn"
               >
                 <X className="w-6 h-6" />
@@ -365,7 +287,7 @@ export default function Header({
                           className="p-1.5 text-stone-700 hover:text-stone-900 hover:bg-stone-100 rounded-full transition-colors flex items-center justify-center"
                           title="רכישה בווטסאפ"
                         >
-                          <WhatsAppMark className="w-4 h-4 text-[#25D366]" />
+                          <WhatsAppBadge className="w-5 h-5" />
                         </a>
                         )}
 
@@ -423,7 +345,8 @@ export default function Header({
               © 2026 HIGHTIDE VINTAGE LTD.
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </header>
   );

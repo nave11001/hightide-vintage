@@ -131,6 +131,36 @@ p, h1, h2, h3, h4, h5, h6, li, dt, dd, figcaption, blockquote, label, th, td {
   animation: fadeIn 0.15s ease-out forwards;
 }
 
+/* The menu drawer slides in from the edge it is anchored to. */
+@keyframes drawerIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-drawer-in {
+  animation: drawerIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-drawer-in { animation: none; }
+}
+
+/* Rows that scroll sideways — the category menus — without a scrollbar
+   drawn across them. The class was in use on the hero's category links long
+   before it existed, so those showed one. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* The search field draws its own clear button; WebKit's built-in one for
+   type="search" would sit beside it as a second X. */
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Both faces of the coin live in the same 3D space, so the disc reads as solid. */
 .animate-coin {
   animation: coinSpin 6s linear infinite;

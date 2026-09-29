@@ -87,7 +87,8 @@ JOBS = [
     ('font_homepage.png',          320,  90, False),  # drawn at 102px, always
     ('photos/sold_stamp.png',      180,  90, False),  # drawn at 54px
     ('photos/sale_stamp.png',      140,  90, False),  # drawn at 42px
-    ('homepage_photo.png',        1600,  82, True),   # 375 on a phone, 1432 wide
+    # 1536 wide, so it ships whole: the 1600 is the ceiling, not the size.
+    ('homepage_photo.webp',       1600,  82, True),   # 375 on a phone, 1432 wide
     ('photos/boardshorts.jpg',    1224,  82, True),   # 341 on a phone, 612 wide
     ('photos/T-shirts.jpg',       1224,  82, True),
     ('photos/accessories.jpg',    1224,  82, True),
@@ -107,7 +108,7 @@ def make_og_cover() -> None:
     still will not decode WebP — a card with no picture is the failure this
     exists to prevent. 1200x630 is the size they all crop to.
     """
-    src = os.path.join(ORIGINALS, 'homepage_photo.png')
+    src = os.path.join(ORIGINALS, 'homepage_photo.webp')
     dst = os.path.join(ROOT, 'public', 'og-cover.jpg')
     width, height = 1200, 630
 

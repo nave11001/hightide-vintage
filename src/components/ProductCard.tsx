@@ -8,7 +8,7 @@ import { trackProduct } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
 import { productPath } from '@/shared/slug.mjs';
 import { buyOnWhatsApp } from '../whatsapp';
-import WhatsAppMark from './WhatsAppMark';
+import { WhatsAppBadge } from './WhatsAppMark';
 
 interface ProductCardProps {
   product: Product;
@@ -211,7 +211,7 @@ export default function ProductCard({
           className="mt-3.5 w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 hover:border-stone-800 font-medium py-3.5 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center no-underline"
           id={`quick-buy-btn-${product.id}`}
         >
-          <WhatsAppMark className="w-4 h-4 text-[#25D366]" />
+          <WhatsAppBadge className="w-5 h-5" />
           <span>רכישה בווטסאפ</span>
         </a>
         )}

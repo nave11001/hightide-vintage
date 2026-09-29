@@ -12,6 +12,10 @@ import SizeLanding from './components/SizeLanding';
 import SpinningLogo from './components/SpinningLogo';
 import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
+import SearchBar from './components/SearchBar';
+import CategoryBar from './components/CategoryBar';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
+import WhatsAppMark from './components/WhatsAppMark';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
 import LegalPage, { FOOTER_LEGAL_LINKS } from './components/LegalPage';
@@ -31,7 +35,7 @@ import catShirtsImg from '@/assets/photos/T-shirts.webp';
 import catAccessoriesImg from '@/assets/photos/accessories.webp';
 import catWomenImg from '@/assets/photos/women.webp';
 import catAllImg from '@/assets/photos/all products.webp';
-import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag } from 'lucide-react';
+import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag, Instagram } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
 // The size finder — MySizePanel and SizeFinder — was built, never switched on,
@@ -116,6 +120,14 @@ export default function App() {
   
   // Filtering & Search
   const [searchTerm, setSearchTerm] = useState('');
+  // Whether the search field is open. Here rather than in Header because there
+  // are two Headers — the homepage's and everyone else's — and typing is what
+  // switches between them. See SearchBar.tsx.
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const closeSearch = () => {
+    setIsSearchOpen(false);
+    setSearchTerm('');
+  };
   // Which category is showing is read from the address bar, the same way the
   // open garment is. Every call site below still calls setSelectedCategory and
   // does not know the difference — it navigates instead of setting state.
@@ -147,6 +159,39 @@ export default function App() {
   // over to. Switching category clears the filters, which would otherwise wipe
   // them the moment they were set.
   const carriedSizes = useRef<string[] | null>(null);
+
+  // A new category starts at the top of the page, where its title and its
+  // filters are.
+  //
+  // The links used to scroll themselves to #catalog-section — an anchor placed
+  // below the filter bar, landing under the sticky header besides — so a
+  // shopper arrived past the size and availability filters and might never
+  // learn they existed. The menu's own buttons did not scroll at all, leaving
+  // someone halfway down one category halfway down the next.
+  //
+  // Instant, not smooth: the whole page underneath has just been replaced, so
+  // there is nothing meaningful to animate through. Skipped on first render so
+  // the browser's own scroll restoration is left alone on load.
+  const categoryMounted = useRef(false);
+  useEffect(() => {
+    if (!categoryMounted.current) {
+      categoryMounted.current = true;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [selectedCategory]);
+
+  // The first letter of a search from the homepage swaps the hero out for the
+  // results. Wherever the page happened to be scrolled, the results start at
+  // the top, so that is where to look.
+  const wasSearching = useRef(false);
+  useEffect(() => {
+    const searching = searchTerm !== '';
+    if (searching && !wasSearching.current) {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
+    wasSearching.current = searching;
+  }, [searchTerm]);
 
   // Filters reset when switching category
   useEffect(() => {
@@ -232,15 +277,19 @@ export default function App() {
     // Left to itself it would rarely appear at all: the catalogue is one
     // request away and a returning visitor has every photograph cached, so the
     // shop is usually ready inside 400ms and a veil that flashes for 80ms is
-    // worse than no veil. Shown from the first frame instead, and held long
-    // enough to be read — roughly 1.8s all in, once done()'s own fill and fade
-    // are counted.
+    // worse than no veil. Shown from the first frame instead, and held just
+    // long enough to register as the logo rather than as a flicker.
     //
-    // This was asked for while Supabase was paused; that pause is now
-    // permanent, so this is simply how the shop opens. Set HOLD_MS to 0 and
-    // SHOW_AFTER_MS to 400 to have the veil appear only when it is earned.
+    // It was 1.8s all in, which was right while the point was to be seen. Now
+    // the point is to be brief: 250ms of hold plus the bar's 500ms fill comes to
+    // roughly 0.8s on a fast visit — the logo is unmistakably on screen, and
+    // gone before anyone is waiting on it. A slow network still gets as long
+    // as it needs, because the hold is a floor, not a wait.
+    //
+    // Set HOLD_MS to 0 and SHOW_AFTER_MS to 400 to have the veil appear only
+    // when it is earned.
     const SHOW_AFTER_MS = 0;
-    const HOLD_MS = 900;
+    const HOLD_MS = 250;
     const startedAt = Date.now();
 
     const gate = window.setTimeout(() => {
@@ -256,11 +305,10 @@ export default function App() {
     /**
      * Take the veil down — but not before it has been up long enough to see.
      *
-     * HOLD_MS is 0 unless Supabase is paused, so outside the pause this is the
-     * same immediate call it always was. Inside it, the shop is ready in a few
-     * milliseconds and this is what turns that into a loading screen a person
-     * can actually watch: 900ms of holding, then done()'s own 900ms of filling
-     * and fading on top — about 1.8 seconds on screen.
+     * The shop is often ready in a few milliseconds, and this is what turns
+     * that into a loading screen a person can register at all: HOLD_MS of
+     * holding, then done()'s 550ms of filling on top — about 0.8 seconds on
+     * screen on a fast visit.
      *
      * Measured rather than assumed: with the hold set to 20s the veil was
      * still up at 8.8s and came down at 21.5s, so the overhead either side is
@@ -288,10 +336,11 @@ export default function App() {
       // On a fast visit the veil never mounted, so nothing else will take the
       // splash down. On a slow one the veil already did, and this is a no-op.
       dismissSplash();
-      // Long enough for the sphere to fill and the fade to run.
+      // The bar's fill is a 500ms transition (LiquidVeil); 550 lets it land on
+      // full before the veil goes, so it reads as finished rather than cut off.
       window.setTimeout(() => {
         if (!cancelled) setVeil(null);
-      }, 900);
+      }, 550);
     };
 
     /**
@@ -694,6 +743,11 @@ export default function App() {
         <LiquidVeil progress={veil.progress} failed={veil.failed} onRetry={retryLoad} />
       )}
 
+      {/* One search field for the whole shop, above whichever header is up. */}
+      {isSearchOpen && (
+        <SearchBar value={searchTerm} onChange={setSearchTerm} onClose={closeSearch} />
+      )}
+
       {/* Standard White Sticky Header: only shown when NOT on the homepage landing view */}
       {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding || legalPage) && (
         <Header
@@ -702,6 +756,8 @@ export default function App() {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           categories={CATEGORIES}
+          isSearchOpen={isSearchOpen}
+          onOpenSearch={() => setIsSearchOpen(true)}
           favoriteItems={freshFavorites}
           onToggleFavorite={handleToggleFavorite}
           isTransparent={false}
@@ -741,7 +797,10 @@ export default function App() {
               // Edge to edge at every width, so the slot is the window.
               sizes="100vw"
               alt="HighTide Vintage New Drop Editorial"
-              className="absolute inset-0 w-full h-full object-cover object-[40%_75%]"
+              // 90% down: on the wider frames the photo is cut top and bottom,
+              // and this keeps the whole of the boardshorts above the button.
+              // A phone shows the full height, so it only matters from sm up.
+              className="absolute inset-0 w-full h-full object-cover object-[40%_90%]"
             />
 
             {/* Dark elegant dual-gradients for perfect contrast overlay (top & bottom) */}
@@ -755,22 +814,21 @@ export default function App() {
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
                 categories={CATEGORIES}
+                isSearchOpen={isSearchOpen}
+                onOpenSearch={() => setIsSearchOpen(true)}
                 favoriteItems={freshFavorites}
                 onToggleFavorite={handleToggleFavorite}
                 isTransparent={true}
               />
             </div>
 
-            {/* Bottom Center Action Button: NEW DROP */}
-            <div className="absolute bottom-6 sm:bottom-12 inset-x-0 flex justify-center z-20">
-              <button 
-                onClick={() => {
-                  setSelectedCategory('latest');
-                  setTimeout(() => {
-                    document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 80);
-                }}
-                className="px-8 py-2.5 sm:px-10 sm:py-3 border border-white text-white text-xs sm:text-sm font-light uppercase tracking-[0.25em] bg-black/10 backdrop-blur-xs hover:bg-white hover:text-stone-950 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+            {/* NEW DROP, sitting low in the frame. Higher up it stood across
+                the boardshorts the man in the photo is wearing — the one
+                garment in the picture, on a shop that sells them. */}
+            <div className="absolute bottom-3 sm:bottom-6 inset-x-0 flex justify-center z-20">
+              <button
+                onClick={() => setSelectedCategory('latest')}
+                className="px-8 py-2 sm:px-10 sm:py-3 border border-white text-white text-xs sm:text-sm font-light uppercase tracking-[0.25em] bg-black/10 backdrop-blur-xs hover:bg-white hover:text-stone-950 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]"
               >
                 NEW DROP
               </button>
@@ -780,52 +838,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Dynamic Categories Filtering Bar below the header (Visual helper) - Only visible when in catalog view */}
+      {/* The category menu under the header, in catalogue view. */}
       {(selectedCategory !== 'none' || searchTerm !== '') && !legalPage && (
-        <section className="bg-white border-b border-stone-100 py-3 px-4 shadow-xs animate-fade-in" id="categories-bar">
-          <div className="max-w-7xl mx-auto flex flex-wrap gap-2 items-center justify-between flex-row-reverse">
-            <span className="text-xs font-normal text-stone-600 uppercase tracking-widest ml-2 hidden sm:inline">
-              סנן פריטים:
-            </span>
-            <div className="flex flex-wrap gap-1.5 justify-start flex-row-reverse w-full sm:w-auto">
-              {/* Home button to return to category navigation */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory('none');
-                  setSearchTerm('');
-                }}
-                className={`py-1.5 px-4 text-xs font-normal border transition-all rounded-none cursor-pointer flex-grow sm:flex-grow-0 text-center ${
-                  selectedCategory === 'none'
-                    ? 'bg-stone-900 text-white border-stone-900'
-                    : 'bg-stone-50 text-stone-500 border-stone-200 hover:border-stone-800 hover:bg-stone-50'
-                }`}
-                id="cat-filter-home"
-              >
-                קטגוריות
-              </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`py-1.5 px-4 text-xs font-normal border transition-all rounded-none cursor-pointer flex-grow sm:flex-grow-0 text-center ${
-                    selectedCategory === cat.id
-                      ? 'bg-stone-900 text-white border-stone-900'
-                      : 'bg-white text-stone-800 border-stone-200 hover:border-stone-800 hover:bg-stone-50'
-                  }`}
-                  id={`cat-filter-${cat.id}`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+        <CategoryBar selected={selectedCategory} onSelect={setSelectedCategory} />
       )}
-
-      {/* Scroll anchor target for smooth scrolling to catalog / category selector */}
-      <div id="catalog-section" className="scroll-mt-10"></div>
 
       {/* Main Container */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-6 sm:py-8">
@@ -948,13 +964,7 @@ export default function App() {
                 <button
                   key={category.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedCategory(category.id);
-                    // Scroll to catalog section for visibility
-                    setTimeout(() => {
-                      document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 80);
-                  }}
+                  onClick={() => setSelectedCategory(category.id)}
                   // The label sits at the foot of the tile, not across its
                   // middle. Centred, it covered the one thing each tile is
                   // selling — the shorts on ALL VINTAGE ITEMS, the sunglasses
@@ -1175,7 +1185,9 @@ export default function App() {
       {/* gray-300, not gray-400: on pure black the old grey measured 4.39:1,
           just under the readable minimum, which put the pickup address and the
           shop's own name below it. */}
-      <footer className="bg-black text-gray-300 border-t-4 border-black py-10 mt-16 px-4" id="store-footer">
+      {/* pb-24 on a phone so the last line clears the floating WhatsApp
+          button, which is showing by the time anyone has scrolled this far. */}
+      <footer className="bg-black text-gray-300 border-t-4 border-black pt-10 pb-24 sm:pb-10 mt-16 px-4" id="store-footer">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
           
           {/* Logo and store pitch */}
@@ -1190,22 +1202,31 @@ export default function App() {
             <p className="text-xs leading-relaxed max-w-xs text-gray-300">
               חנות הוינטג׳ הבלעדית למכנסי גלישה, חולצות, סווטשרטים ואקססוריז של תור הזהב של מותגי הגלישה והספורט משנות ה-2000.
             </p>
+            {/* Icons rather than two words in grey boxes. The brand marks are
+                what people scan a footer for, and read faster than the names.
+                Each is a 44px target — the old boxes were 26px tall — and each
+                carries its name for a screen reader, since the icon alone
+                says nothing to one. */}
             <div className="mt-4 flex gap-3 flex-row-reverse">
-              <a 
+              <a
                 href="https://www.instagram.com/_hightide_vintage?igsh=M2xrYTI0eHZ0YjY0&utm_source=qr"
-                target="_blank" 
+                target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-gray-900 border border-gray-800 px-3 py-1.5 hover:text-white transition-colors cursor-pointer font-mono font-bold"
+                aria-label="HIGHTIDE VINTAGE באינסטגרם"
+                title="אינסטגרם"
+                className="w-11 h-11 rounded-full border border-gray-700 flex items-center justify-center text-white hover:bg-white hover:text-black hover:border-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                INSTAGRAM
+                <Instagram className="w-5 h-5" aria-hidden="true" />
               </a>
-              <a 
-                href="https://wa.me/972528879922" 
-                target="_blank" 
+              <a
+                href="https://wa.me/972528879922"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-gray-900 border border-gray-800 px-3 py-1.5 hover:text-white transition-colors cursor-pointer font-mono font-bold"
+                aria-label="שיחה איתנו בווטסאפ"
+                title="ווטסאפ"
+                className="w-11 h-11 rounded-full border border-gray-700 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                WHATSAPP
+                <WhatsAppMark className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -1317,33 +1338,9 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Interactive floating accessibility and WhatsApp controls on bottom-left corner */}
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-center">
-        {/* WhatsApp Icon */}
-        <a
-          href="https://wa.me/972528879922"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer group relative"
-          title="צ׳אט איתנו ב-WhatsApp"
-        >
-          <svg 
-            className="w-6.5 h-6.5 fill-current" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.58 1.981 14.11 1.012 11.48 1.01 6.046 1.01 1.622 5.38 1.618 10.807c-.001 1.701.453 3.361 1.314 4.815L1.879 21.16l5.768-1.506zM17.91 14.9c-.31-.155-1.832-.9-2.115-1.002-.282-.102-.489-.153-.695.155-.205.308-.797 1.002-.976 1.207-.18.205-.359.231-.669.077-.31-.155-1.307-.481-2.49-1.534-.92-.818-1.541-1.83-1.722-2.138-.18-.308-.02-.475.135-.629.14-.138.31-.36.465-.54.155-.18.205-.308.31-.514.105-.205.051-.385-.026-.54-.077-.155-.695-1.673-.951-2.29-.25-.6-.54-.515-.744-.526-.192-.01-.41-.01-.628-.01-.218 0-.573.082-.873.411-.3.308-1.148 1.121-1.148 2.733 0 1.612 1.174 3.172 1.336 3.393.162.22 2.311 3.52 5.597 4.939.781.337 1.39.539 1.86.688.784.249 1.497.214 2.061.13.629-.094 1.832-.749 2.088-1.439.256-.689.256-1.284.18-1.402-.077-.117-.282-.18-.592-.336z"/>
-          </svg>
-          {/* The emoji is gone. It rendered as a different picture on every
-              phone and there is already a WhatsApp mark on the button it
-              labels — the tooltip was captioning an icon with a worse icon. */}
-          <span className="absolute left-14 bg-stone-900 text-white text-xs py-1 px-2.5 whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            דברו איתנו בווטסאפ
-          </span>
-        </a>
-
-      </div>
-
+      {/* The floating WhatsApp button. Tucks itself away while the page is
+          being scrolled down, and stands aside while a garment is open. */}
+      <FloatingWhatsApp suppressed={modalIsOpen} />
       {/* Interactive floating feedback Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 border-2 border-stone-800 shadow-[4px_4px_0px_0px_rgba(28,25,23,1)] text-right font-bold text-xs sm:text-sm max-w-xs sm:max-w-md animate-scale-up">
