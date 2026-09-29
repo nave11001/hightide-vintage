@@ -4,6 +4,7 @@ import { Search, Menu, X, Heart, Trash2 } from 'lucide-react';
 import { Product } from '../types';
 import Logo from './Logo';
 import HightideLogo from './HightideLogo';
+import CategoryBar from './CategoryBar';
 import { onPhotoError, srcSetFor } from '../photos';
 import { buyOnWhatsApp } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
@@ -53,7 +54,7 @@ export default function Header({
   }, [isMobileMenuOpen]);
 
   const iconColorClass = isTransparent 
-    ? "text-white hover:text-stone-200 hover:bg-white/10" 
+    ? "text-white hover:text-stone-200 hover:bg-white/10 [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.6))]" 
     : "text-black hover:text-stone-800 hover:bg-stone-50";
 
   return (
@@ -66,7 +67,12 @@ export default function Header({
       id="store-header"
     >
       {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 h-20 sm:h-28 flex items-center justify-between relative">
+      {/* Full width on every page, so the menu and search sit against the
+          left edge of the screen and the logo on its true centre. It was
+          capped at the catalogue's width everywhere but the homepage, which
+          on a wide screen left the icons floating inward and the header not
+          matching the one above the photograph. */}
+      <div className="px-4 sm:px-6 h-20 sm:h-28 flex items-center justify-between relative">
         
         {/* Left Side: Hamburger (Three lines) & Search */}
         <div className="flex items-center gap-3 md:gap-4 w-1/3 justify-start">
@@ -112,17 +118,12 @@ export default function Header({
             className="flex flex-col items-center cursor-pointer" 
             id="logo-link"
           >
-            {isTransparent ? (
-              <HightideLogo 
-                className="h-10 sm:h-12 md:h-14 lg:h-16 transition-all duration-300 hover:scale-105" 
-                color="white" 
-              />
-            ) : (
-              <HightideLogo
-                className="h-8 sm:h-10 md:h-12 transition-all duration-300 hover:scale-105"
-                color="black"
-              />
-            )}
+            {/* One size on every page — only the colour changes. It shrank
+                a step on the way from the homepage into a category. */}
+            <HightideLogo
+              className="h-10 sm:h-12 md:h-14 lg:h-16 transition-all duration-300 hover:scale-105"
+              color={isTransparent ? 'white' : 'black'}
+            />
           </button>
         </div>
 
@@ -134,43 +135,24 @@ export default function Header({
           filters are. These used to scroll themselves to #catalog-section,
           an anchor that sat below the filter bar and under the sticky header,
           so a shopper arrived past the very controls they might not know were
-          there. */}
-      {isTransparent && (
-        <>
-          <div className="hidden md:flex items-center justify-center gap-6 lg:gap-8 xl:gap-10 text-white/90 text-xs font-light tracking-wider flex-row-reverse w-full pb-6 select-none translate-x-3">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  onSearchChange('');
-                  onSelectCategory(cat.id);
-                }}
-                className="hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white py-0.5"
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
+          there.
 
-          <div className="md:hidden flex items-center gap-4 text-white/95 text-[11px] overflow-x-auto px-4 pb-4 max-w-full no-scrollbar flex-row-reverse select-none">
-            {categories.map((cat, i) => (
-              <React.Fragment key={cat.id}>
-                {i > 0 && <span className="text-white/20 shrink-0" aria-hidden="true">|</span>}
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSearchChange('');
-                    onSelectCategory(cat.id);
-                  }}
-                  className="shrink-0 hover:text-white transition-colors cursor-pointer px-1"
-                >
-                  {cat.name}
-                </button>
-              </React.Fragment>
-            ))}
-          </div>
-        </>
+          This is the catalogue's own category bar, drawn in white, a pixel
+          below the header exactly where the black one sits on a category page
+          — on a phone as on a computer — so choosing one does not move a
+          single word. Each word sits on a soft dark shadow of its own; plain
+          white went grey against the sky and vanished into the palms. */}
+      {isTransparent && (
+        <div className="pt-px">
+          <CategoryBar
+            tone="light"
+            selected="none"
+            onSelect={(id) => {
+              onSearchChange('');
+              onSelectCategory(id);
+            }}
+          />
+        </div>
       )}
 
       {/* The drawer is portalled to <body>. Rendered inside the header it was

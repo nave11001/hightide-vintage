@@ -739,6 +739,16 @@ export default function App() {
     // sort() is stable, so within each group the catalogue order is untouched.
     .sort((a, b) => Number(a.isSold) - Number(b.isSold));
 
+
+  // The line over the top of every page. Scrolls away; the header under it
+  // is what sticks.
+  const announcementStrip = (
+    <div className="bg-white py-2 text-center border-b border-stone-100 flex items-center justify-center select-none" id="global-announcement-strip">
+      <span className="text-[10px] sm:text-xs font-medium tracking-[0.25em] uppercase text-stone-900 font-display">
+        NEW DROP EVERY WEEK
+      </span>
+    </div>
+  );
   return (
     <div className="min-h-screen bg-white text-stone-950 flex flex-col font-sans text-right" id="app-root">
 
@@ -752,7 +762,11 @@ export default function App() {
         <SearchBar value={searchTerm} onChange={setSearchTerm} onClose={closeSearch} />
       )}
 
-      {/* Standard White Sticky Header: only shown when NOT on the homepage landing view */}
+      {/* Standard White Sticky Header: only shown when NOT on the homepage landing view.
+          The strip goes above it here too, so the header — logo, icons and
+          category bar — stands at the same height as on the homepage, and
+          choosing a category from there does not lift everything by a strip. */}
+      {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding || legalPage) && announcementStrip}
       {(selectedCategory !== 'none' || searchTerm !== '' || sizeLanding || legalPage) && (
         <Header
           searchTerm={searchTerm}
@@ -784,12 +798,7 @@ export default function App() {
             </h1>
           )}
 
-          {/* Announcement Strip at the absolute top of the viewport */}
-          <div className="bg-white py-2 text-center border-b border-stone-100 flex items-center justify-center select-none" id="global-announcement-strip">
-            <span className="text-[10px] sm:text-xs font-medium tracking-[0.25em] uppercase text-stone-900 font-display">
-              NEW DROP EVERY WEEK
-            </span>
-          </div>
+          {announcementStrip}
 
           {/* Full-bleed Immersive Hero Canvas stretching edge-to-edge */}
           <div className="relative w-full aspect-[4/3] sm:aspect-[16/7] md:aspect-[21/9] bg-stone-950 overflow-hidden" id="homepage-hero">
@@ -807,7 +816,8 @@ export default function App() {
               className="absolute inset-0 w-full h-full object-cover object-[40%_90%]"
             />
 
-            {/* Dark elegant dual-gradients for perfect contrast overlay (top & bottom) */}
+            {/* Dark haze top and bottom, under the white logo, links and
+                NEW DROP button. */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70 pointer-events-none"></div>
 
             {/* Transparent Header overlaid elegantly at the top of the Hero image */}
@@ -1052,10 +1062,17 @@ export default function App() {
                   h1, which leaves a search engine to work out what the page is
                   about from the body text. Same size, same weight, same place —
                   only the tag differs. */}
-              <h1 className="text-sm sm:text-base font-normal tracking-widest text-stone-900 flex items-center gap-2 flex-row-reverse uppercase">
+              {/* The count is part of the heading — same face, size and
+                  spacing, only a softer grey — so "חולצות · 15 פריטים" reads
+                  as one line rather than a title with a badge beside it.
+                  Right-to-left on purpose: in brackets and left to the page's
+                  direction, "(15 פריטים)" came out as "(פריטים 15)" in one
+                  browser and the other way round in the next. */}
+              <h1 dir="rtl" className="text-sm sm:text-base font-normal tracking-widest text-stone-900 uppercase">
                 <span>{selectedCategory === 'latest' ? 'הדרופ האחרון' : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'תוצאות חיפוש'}</span>
-                <span className="text-xs text-stone-600 font-mono font-normal bg-stone-100 px-2 py-0.5 border border-stone-200/60">
-                  ({filteredProducts.length} פריטים)
+                <span className="mx-2 text-stone-300" aria-hidden="true">·</span>
+                <span className="text-stone-500">
+                  {filteredProducts.length === 1 ? 'פריט אחד' : `${filteredProducts.length} פריטים`}
                 </span>
               </h1>
 

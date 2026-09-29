@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORIES } from '../data';
-import { LATEST } from '@/shared/categories.mjs';
 
 interface CategoryBarProps {
   selected: string;
   onSelect: (id: string) => void;
+  /** "light": white words straight on the homepage photograph. */
+  tone?: 'dark' | 'light';
 }
 
-// Every category plus the latest drop.
-const ITEMS = [...CATEGORIES, LATEST].map(({ id, name }) => ({ id, name }));
+// The five categories. The latest drop is not one of them — it has the
+// NEW DROP button on the homepage — and as a sixth tab it pushed the row past
+// the width of a phone.
+const ITEMS = CATEGORIES.map(({ id, name }) => ({ id, name }));
 
 /**
  * The category menu under the header: text tabs with a rule under the active
@@ -21,13 +24,18 @@ const ITEMS = [...CATEGORIES, LATEST].map(({ id, name }) => ({ id, name }));
  * "קטגוריות" button that went back to the homepage, which the logo and the
  * "חזרה לקטגוריות" link already do.
  *
- * Where all six fit — a desktop, a tablet — they sit centred. Where they do not
- * — most phones — the row becomes a slider: it scrolls sideways under a finger,
- * settles on a tab rather than halfway through one, and the edge that has more
- * behind it fades out under an arrow, which is also a button for anyone with a
- * mouse. The arrow on an edge goes away once there is nothing left behind it.
+ * All five sit centred, on a phone as on a desktop. Should a screen ever be
+ * too narrow for them, the row becomes a slider rather than wrapping: it
+ * scrolls sideways under a finger, settles on a tab rather than halfway through
+ * one, and the edge with more behind it fades out under an arrow.
+ *
+ * The homepage draws this same bar over its photograph, in white. It used to
+ * have its own row of links — other spacing, another size — so choosing a
+ * category from the homepage moved every word and it felt like arriving on a
+ * different site. Now the words are where they were.
  */
-export default function CategoryBar({ selected, onSelect }: CategoryBarProps) {
+export default function CategoryBar({ selected, onSelect, tone = 'dark' }: CategoryBarProps) {
+  const light = tone === 'light';
   const row = useRef<HTMLDivElement>(null);
   // Which edges have more tabs behind them. "Back" is the right-hand edge —
   // where a right-to-left row starts — and "on" the left-hand one.
@@ -86,7 +94,15 @@ export default function CategoryBar({ selected, onSelect }: CategoryBarProps) {
   };
 
   return (
-    <nav aria-label="קטגוריות" className="bg-white border-b border-stone-200 animate-fade-in" id="categories-bar">
+    <nav
+      aria-label="קטגוריות"
+      className={
+        light
+          ? 'text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_0_10px_rgba(0,0,0,0.45)]'
+          : 'bg-white border-b border-stone-200'
+      }
+      id={light ? undefined : 'categories-bar'}
+    >
       <div className="relative max-w-7xl mx-auto">
         <div ref={row} dir="rtl" className="overflow-x-auto no-scrollbar snap-x snap-proximity overscroll-x-contain">
           {/* w-max with auto margins: centred while it fits, and simply wider
@@ -100,15 +116,23 @@ export default function CategoryBar({ selected, onSelect }: CategoryBarProps) {
                   type="button"
                   onClick={() => onSelect(item.id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative shrink-0 snap-center h-12 px-4 text-sm whitespace-nowrap transition-colors cursor-pointer ${
-                    active ? 'text-stone-900 font-medium' : 'text-stone-500 hover:text-stone-900'
+                  // One weight for every tab, active or not, so a word does
+                  // not widen and shove its neighbours when it is chosen.
+                  // 13px and tighter on a phone, so all five fit across even
+                  // a 360px screen and the row needs no sliding at all.
+                  className={`relative shrink-0 snap-center h-12 px-2.5 sm:px-4 text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                    light
+                      ? 'text-white hover:text-stone-200'
+                      : active
+                        ? 'text-stone-900'
+                        : 'text-stone-500 hover:text-stone-900'
                   }`}
-                  id={`cat-filter-${item.id}`}
+                  id={light ? undefined : `cat-filter-${item.id}`}
                 >
                   {item.name}
                   <span
                     aria-hidden="true"
-                    className={`absolute inset-x-4 bottom-0 h-0.5 transition-colors ${active ? 'bg-stone-900' : 'bg-transparent'}`}
+                    className={`absolute inset-x-2.5 sm:inset-x-4 bottom-0 h-0.5 transition-colors ${active ? (light ? 'bg-white' : 'bg-stone-900') : 'bg-transparent'}`}
                   />
                 </button>
               );
@@ -118,8 +142,8 @@ export default function CategoryBar({ selected, onSelect }: CategoryBarProps) {
 
         {/* The edges. Hidden from screen readers and the tab order: every tab
             is reachable directly, so these only save a mouse user a drag. */}
-        <EdgeArrow side="right" visible={more.back} onClick={() => slide('right')} />
-        <EdgeArrow side="left" visible={more.on} onClick={() => slide('left')} />
+        {!light && <EdgeArrow side="right" visible={more.back} onClick={() => slide('right')} />}
+        {!light && <EdgeArrow side="left" visible={more.on} onClick={() => slide('left')} />}
       </div>
     </nav>
   );
