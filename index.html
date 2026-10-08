@@ -15,7 +15,21 @@
       function gtag(){dataLayer.push(arguments);}
       window.gtag = gtag;
       gtag('js', new Date());
-      gtag('config', 'G-47P3TFMV9S');
+      // Measurement, and only measurement.
+      //
+      // Left to itself GA4 also calls Google's advertising side on every visit
+      // — stats.g.doubleclick.net, a ga-audiences pixel on google.co.il, a
+      // second copy of the pageview to google.com — which builds a remarketing
+      // audience out of the shop's visitors. This shop runs no ads and the
+      // privacy policy says so in as many words ("לא לפרסום ולא להתאמת
+      // מודעות"), so the calls were a promise the site was quietly breaking.
+      // Switched off here, the pageviews and events still reach GA4 exactly as
+      // before; what stops is the audience building and the Demographics
+      // report that depends on it.
+      gtag('config', 'G-47P3TFMV9S', {
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+      });
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

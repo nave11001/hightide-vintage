@@ -66,13 +66,17 @@ export default function AdminPanelModal({
   }, [isOpen]);
 
   // Listen to Google OAuth popups postMessage
+  //
+  // The sign-in popup ends up back on this same server — server.ts receives
+  // Google's callback and posts the result to this window — so the only address
+  // a message may come from is this page's own. It used to accept anything
+  // ending in .run.app, and a Cloud Run address is something anyone can have:
+  // a page on one could have opened this one and announced a successful
+  // sign-in that never happened.
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
-        return;
-      }
-      
+      if (event.origin !== window.location.origin) return;
+
       if (event.data?.type === 'GOOGLE_OAUTH_SUCCESS') {
         const token = event.data.token;
         sessionStorage.setItem('hightide_admin_token', token);

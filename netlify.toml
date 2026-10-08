@@ -25,6 +25,46 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# What the browser is allowed to do with this site.
+#
+# Netlify already sends HSTS, so the connection is encrypted and stays that way.
+# Everything here is the other half: what may run inside the page once it has
+# arrived. None of it is a reaction to a break-in — they are the locks a shop
+# site is expected to have on, and an audit reads their absence as a gap.
+#
+# The list of hosts below is the whole of what this site talks to. It is not a
+# guess: Google Tag Manager and GA4 are loaded in index.html, PostHog from
+# src/posthog.ts, and the brand faces come from Google Fonts through an @import
+# in src/index.css. Add a service to the site and it has to be added here too,
+# or the browser will refuse to load it — which is the point of the thing.
+#
+# 'unsafe-inline' is in script-src because Google's own tag is an inline
+# <script> in index.html, and in style-src because React writes style="…" on
+# elements. Both are how the site is already built; removing them is a change to
+# the site, not to this file.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://us.i.posthog.com https://us-assets.i.posthog.com; worker-src 'self' blob:; frame-src https://www.googletagmanager.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    # Nobody may draw this shop inside a frame of their own — the trick where a
+    # copy of a site is wrapped in someone else's page and the taps are
+    # harvested. frame-ancestors above says it to current browsers; this says it
+    # to the older ones that only know this header.
+    X-Frame-Options = "DENY"
+    # A file served as a picture is treated as a picture, whatever its contents
+    # look like to the browser's guesser.
+    X-Content-Type-Options = "nosniff"
+    # An outbound link carries the fact that it came from this shop, never which
+    # garment the person was reading when they tapped it.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # The site asks for none of these, so the browser may refuse all three
+    # without ever showing a prompt.
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    # Pages this one opens — WhatsApp, Instagram — are kept in their own browsing
+    # context rather than sharing this one. allow-popups, because opening them is
+    # exactly what the buy button does.
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+
 # The Instagram bot asks these what is in stock — see netlify/functions/bot.mjs
 [functions]
   directory = "netlify/functions"

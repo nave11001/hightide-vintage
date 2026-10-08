@@ -20,15 +20,22 @@ import WhatsAppMark from './components/WhatsAppMark';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
 import LegalPage, { FOOTER_LEGAL_LINKS } from './components/LegalPage';
-// Loaded only when the panel is actually opened. It is 11KB gzipped that no
-// shopper will ever reach, and on the live site it cannot even authenticate —
-// its /api/admin/* endpoints only exist under server.ts, which Netlify does not
-// run. Kept rather than deleted because it does work locally under `npm run dev`.
+// The stock editor, and why the live site does not have one.
 //
-// This is not a security measure. The control that matters is Supabase's row
-// level security: anon is refused INSERT and matches no rows on UPDATE or
-// DELETE. See supabase/schema.sql.
-const AdminPanelModal = lazy(() => import('./components/AdminPanelModal'));
+// It only ever worked under `npm run dev`: it authenticates against /api/admin/*,
+// which exist in server.ts, and Netlify does not run server.ts. On the live site
+// its login could therefore never succeed — but it was still reachable there, by
+// ?admin=true or by tapping the logo five times, and it still shipped a
+// "simulated login" button and a listener that accepted a sign-in message from
+// any address ending in .run.app. Nothing could be edited through it and no
+// customer data sits behind it, but an outside review reads a sign-in form on a
+// shop front as a way in, and the shortest answer is for it not to be there.
+//
+// import.meta.env.DEV is replaced by the literal `false` when Vite builds the
+// site, so the whole branch — the panel, its chunk, its triggers — is dropped
+// from what gets deployed, and stays exactly as it was locally.
+const ADMIN_ENABLED = import.meta.env.DEV;
+const AdminPanelModal = ADMIN_ENABLED ? lazy(() => import('./components/AdminPanelModal')) : null;
 import HightideLogo from './components/HightideLogo';
 import heroImageUrl from '@/assets/homepage_photo.webp';
 import catBoardiesImg from '@/assets/photos/boardshorts.webp';
@@ -222,6 +229,7 @@ export default function App() {
 
   // Secret admin trigger listeners (Query param & Keyboard shortcut)
   useEffect(() => {
+    if (!ADMIN_ENABLED) return;
     // 1. Check for URL parameters (?admin=true or ?manage=true or ?owner=true)
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true' || params.get('manage') === 'true' || params.get('owner') === 'true') {
@@ -246,6 +254,7 @@ export default function App() {
   }, []);
 
   const handleBrandClick = () => {
+    if (!ADMIN_ENABLED) return;
     const now = Date.now();
     if (now - lastBrandClickTime < 2000) {
       const newCount = brandClickCount + 1;
@@ -1334,22 +1343,29 @@ export default function App() {
       </footer>
 
       {/* Product detailed popup view. Suppressed when the garment is already
-          the page above, or it would render twice. */}
-      <ProductDetailModal
-        product={productAsPage ? null : selectedProductForDetails}
-        catalogue={products}
-        onClose={closeProduct}
-        onEditProduct={isAdminSession ? (prod) => {
-          setPreselectedEditProduct(prod);
-          closeProduct();
-          setIsAdminOpen(true);
-        } : undefined}
-      />
+          the page above, or it would render twice.
+          Left out of the tree entirely rather than handed product={null}: the
+          component returns early when it has no garment, and an early return
+          above its hooks means React keeps the old ones — so closing the layer
+          never ran the clean-up that puts the keyboard's focus back on the
+          card it was opened from. */}
+      {modalIsOpen && selectedProductForDetails && (
+        <ProductDetailModal
+          product={selectedProductForDetails}
+          catalogue={products}
+          onClose={closeProduct}
+          onEditProduct={ADMIN_ENABLED && isAdminSession ? (prod) => {
+            setPreselectedEditProduct(prod);
+            closeProduct();
+            setIsAdminOpen(true);
+          } : undefined}
+        />
+      )}
 
       {/* Admin Panel Inventory Control Overlay. Mounted only once opened —
           rendering it closed would download the chunk for every shopper, which
           is the whole thing lazy() is here to avoid. */}
-      {isAdminOpen && (
+      {ADMIN_ENABLED && AdminPanelModal && isAdminOpen && (
         <Suspense fallback={null}>
           <AdminPanelModal
             isOpen={isAdminOpen}
