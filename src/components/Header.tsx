@@ -328,7 +328,7 @@ export default function Header({
 
             {/* Footer */}
             <div className="mt-auto text-xs text-stone-500 font-mono text-center pt-5 border-t border-stone-100">
-              © 2026 HIGHTIDE VINTAGE LTD.
+              © 2026 HIGHTIDE VINTAGE.
             </div>
           </div>
         </div>,

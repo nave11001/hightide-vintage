@@ -1338,7 +1338,7 @@ export default function App() {
         </nav>
 
         <div className="max-w-7xl mx-auto mt-2 text-center text-xs text-gray-400 font-mono">
-          © 2026 HIGHTIDE VINTAGE LTD. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
+          © 2026 HIGHTIDE VINTAGE. ALL RIGHTS RESERVED. CRAFTED FOR VINTAGE LOVERS.
         </div>
       </footer>
 

@@ -586,17 +586,6 @@ export default function ProductDetailModal({
                 <p>משלוחים מהירים עד הבית בפריסה ארצית (2-7 ימי עסקים).</p>
                 <p>איסוף עצמי בחינם: הגבעה 28 כפר האורנים - להגעה יש לתאם מראש.</p>
                 <p>מאחר ומדובר בפריטי וינטג׳ ייחודיים (One of One), לא ניתן לבצע החלפה של אותו הפריט במידה אחרת.</p>
-                {/* The cancellation window, where the person is actually
-                    deciding. It was only in the terms, and the terms are a
-                    page nobody opens on the way to a buy button — a distance
-                    selling right that is disclosed only elsewhere is disclosed
-                    badly. The wording is the statutory one, so it holds
-                    whatever the shop's own return practice turns out to be. */}
-                <p className="pt-1 border-t border-stone-100 text-stone-500">
-                  זכות ביטול: ניתן לבטל את הרכישה בתוך 14 ימים מקבלת הפריט, בהתאם לחוק הגנת הצרכן. ביטול
-                  שאינו עקב פגם — ההחזרה על חשבון הרוכש וייתכנו דמי ביטול בשיעור הקבוע בחוק. פריט שהתגלה בו
-                  פגם או שאינו תואם את מה שהוצג — נחזיר על חשבוננו וללא דמי ביטול.
-                </p>
               </div>
             )}
           </div>
