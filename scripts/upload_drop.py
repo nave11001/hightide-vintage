@@ -108,7 +108,7 @@ def photographs():
     return {key: [path for _, path in sorted(angles)] for key, angles in found.items()}
 
 
-def from_photos(dry_run):
+def from_photos(dry_run, only=None):
     """Bare rows for every photographed garment the database does not know.
 
     A number, its photographs, and nothing else. The category is left empty on
@@ -135,6 +135,11 @@ def from_photos(dry_run):
 
     todo, already = [], 0
     for (category, num), paths in sorted(photos.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        # --only 140-147: nothing outside the range is looked at. Without it a
+        # garment whose row was deleted on purpose — a duplicate, say — but
+        # whose photographs are still in the folder would be put straight back.
+        if only and not (only[0] <= num <= only[1]):
+            continue
         if (category, num) in shop or any(path in known_paths for path in paths):
             already += 1
             continue
@@ -204,12 +209,21 @@ def main(argv):
                         help="print what would be written and change nothing")
     parser.add_argument("--from-photos", action="store_true",
                         help="add every photographed garment as a hidden, bare row")
+    parser.add_argument("--only", metavar="A-B",
+                        help="with --from-photos: only the garments numbered A to B")
     parser.add_argument("--publish", action="store_true",
                         help="put every hidden garment in the shop, by its photograph's folder")
     args = parser.parse_args(argv)
 
+    only = None
+    if args.only:
+        match = re.match(r"^(\d+)-(\d+)$", args.only.strip())
+        if not match:
+            sys.exit("--only wants a range like 140-147")
+        only = (int(match.group(1)), int(match.group(2)))
+
     if args.from_photos:
-        return from_photos(args.dry_run)
+        return from_photos(args.dry_run, only)
     if args.publish:
         return publish(args.dry_run)
 
