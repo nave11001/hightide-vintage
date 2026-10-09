@@ -229,7 +229,6 @@ def cmd_verify():
         ("  of them sold", "SELECT COUNT(*) AS n FROM items WHERE sold = 1"),
         ("  with a sale price", "SELECT COUNT(*) AS n FROM items WHERE original_price IS NOT NULL"),
         ("photos", "SELECT COUNT(*) AS n FROM item_photos"),
-        ("reservations", "SELECT COUNT(*) AS n FROM reservations"),
         ("distinct categories", "SELECT COUNT(DISTINCT category) AS n FROM items"),
     ]
     for label, sql in checks:

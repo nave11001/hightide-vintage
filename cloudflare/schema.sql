@@ -72,35 +72,35 @@ BEGIN
 END;
 
 -- ─────────────────────────────────────────────────────────────
--- Hold requests from the Instagram bot ("שריון").
+-- Hold requests from the Instagram bot ("שריון") — RETIRED, 9 October 2026.
 --
--- In Supabase this table was protected by row level security: anon could
--- INSERT and nothing else, because the anon key ships inside the website and
--- anything anon can read is effectively published. These rows hold customers'
--- phone numbers.
+-- The owner removed this table from D1 because the hold flow is not in use.
+-- The statements below are kept, commented out, for two reasons: the endpoint
+-- that wrote to them still exists in netlify/functions/reserve.mjs, so this is
+-- the record of the shape it expects; and `d1_setup.py --schema` is safe to
+-- re-run, which it would not be if these were live — re-running it is exactly
+-- what put the table back by accident the morning after it was removed.
 --
--- D1 has no row level security — and does not need it in the same way, because
--- nothing in the browser holds a D1 credential. The database is reachable only
--- through code we write, holding a token that never leaves the server.
---
--- That moves the guarantee from the database to the code, so it has to be
--- stated somewhere it can be checked: NO ENDPOINT MAY SELECT FROM THIS TABLE.
--- The bot writes rows; they are read by the shop's owner, and by nothing that
--- answers a request from the internet.
+-- Retire the endpoint and this goes with it. Bring the flow back and these two
+-- statements are what to uncomment — along with the note that mattered most:
+-- these rows hold customers' phone numbers, D1 has no row level security, and
+-- so NO ENDPOINT MAY SELECT FROM THIS TABLE. The bot writes rows; they are
+-- read by the shop's owner, and by nothing that answers a request from the
+-- internet.
 -- ─────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS reservations (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at     TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
-  -- What the customer typed when asked which piece they want held.
-  description    TEXT    NOT NULL CHECK (length(description) BETWEEN 1 AND 500),
-  phone          TEXT    NOT NULL CHECK (length(phone) BETWEEN 6 AND 30),
-  -- Whoever ManyChat says is on the other end, for matching the conversation.
-  instagram_user TEXT,
-  -- Filled only when the description is plainly an item number.
-  item_num       INTEGER,
-  -- new -> contacted -> held -> done / cancelled. Yours to move.
-  status         TEXT    NOT NULL DEFAULT 'new'
-);
-
-CREATE INDEX IF NOT EXISTS reservations_created_at_idx
-  ON reservations (created_at DESC);
+-- CREATE TABLE IF NOT EXISTS reservations (
+--   id             INTEGER PRIMARY KEY AUTOINCREMENT,
+--   created_at     TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+--   -- What the customer typed when asked which piece they want held.
+--   description    TEXT    NOT NULL CHECK (length(description) BETWEEN 1 AND 500),
+--   phone          TEXT    NOT NULL CHECK (length(phone) BETWEEN 6 AND 30),
+--   -- Whoever ManyChat says is on the other end, for matching the conversation.
+--   instagram_user TEXT,
+--   -- Filled only when the description is plainly an item number.
+--   item_num       INTEGER,
+--   -- new -> contacted -> held -> done / cancelled. Yours to move.
+--   status         TEXT    NOT NULL DEFAULT 'new'
+-- );
+--
+-- CREATE INDEX IF NOT EXISTS reservations_created_at_idx
+--   ON reservations (created_at DESC);

@@ -160,14 +160,25 @@ def check_endpoint():
 
 # The tables the shop cannot do without, and what stops working without each.
 #
-# Checked by name because one went missing — `reservations`, overnight on the
-# 8th of October, with nothing in this repository able to drop a table — and
-# all the alarm managed to say was "D1 refused: no such table: reservations",
-# after which it stopped, so every other check that morning went unrun.
+# Checked by name, and the list is deliberately short. On the 8th of October
+# the owner removed `reservations` — the Instagram hold flow is not in use —
+# and the morning check answered with this, and nothing else:
+#
+#     D1 refused: no such table: reservations: SQLITE_ERROR
+#
+# One line of SQLite naming a table the reader has no reason to recognise,
+# with no hint of what it was for or whether it mattered; and because
+# d1.query raises SystemExit the run stopped there, so the catalogue, the
+# cache, the size, the usage and the fallback went unchecked that morning
+# too. An alarm that rings this way costs more than it saves — the morning
+# went on chasing a fault that was a decision.
+#
+# So: a table nobody is required to keep is not listed here, and anything
+# listed says in words what its absence costs. Add a row when something is
+# genuinely load-bearing, not merely present.
 NEEDED_TABLES = (
     ("items", "the catalogue itself — the shop would be trading entirely on its shipped copy"),
     ("item_photos", "the garment photographs"),
-    ("reservations", "the Instagram bot writes hold requests here, so every שריון is being lost"),
 )
 
 
@@ -229,6 +240,8 @@ def check_database():
     # is what turned a missing `reservations` into a single line of SQLite and
     # nothing else: SQLite answers "no such table" for the whole statement, so
     # the counts that were available went unreported along with it.
+    # reservations is counted when it is there and passed over when it is not:
+    # it is the owner's to keep or drop, and either way it is not a fault.
     wanted = [("items", "items"), ("photos", "item_photos"), ("reservations", "reservations")]
     parts = ["(SELECT COUNT(*) FROM %s) AS %s" % (table, label)
              for label, table in wanted if table in present]
