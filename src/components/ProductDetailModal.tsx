@@ -384,7 +384,10 @@ export default function ProductDetailModal({
               with anything: the layout keeps them apart. */}
           <div className="flex justify-between items-center flex-row-reverse mb-1 gap-2">
             <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest min-w-0 truncate">
-              {product.brand}
+              {/* Blank, not removed, when it would only repeat the title:
+                  the share button sits at the other end of this row and
+                  needs something to be pushed away from. */}
+              {product.brand !== product.name ? product.brand : ''}
             </span>
 
             <div className="relative shrink-0" ref={shareBox}>

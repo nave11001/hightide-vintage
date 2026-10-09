@@ -53,7 +53,10 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
   return {
     id: `${category}-${row.num}`,
     num: row.num,
-    name: `${brand} #${row.num}`,
+    // The name is whatever was typed in the database, spelled the way the
+    // brand spells it. The item number is the row's id there and is not
+    // part of what a customer reads; it still ends the garment's address.
+    name: brand,
     brand,
     price: row.price,
     // Set in the dashboard to mark a sale — renders struck through beside the price.
@@ -64,7 +67,7 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
     sizes: [displaySize(row.size)],
     condition: 'וינטג׳ במצב מעולה',
     category: category as Product['category'],
-    description: `${labels.description} — פריט מס׳ ${row.num}`,
+    description: labels.description,
     colors: [],
     // Sold items stay listed (marked נמכר, ordering blocked) until the
     // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
@@ -132,7 +135,7 @@ export function snapshotProducts(): Product[] {
       num: row.n,
       // Same spelling rules as the live catalogue, or the shop would rename
       // every garment the moment Supabase stopped answering.
-      name: `${brandName(row.b)} #${row.n}`,
+      name: brandName(row.b),
       brand: brandName(row.b),
       price: row.p,
       originalPrice: row.o,
@@ -142,7 +145,7 @@ export function snapshotProducts(): Product[] {
       sizes: [displaySize(row.s)],
       condition: 'וינטג׳ במצב מעולה',
       category: row.c as Product['category'],
-      description: `${CATEGORY_LABELS[row.c].description} — פריט מס׳ ${row.n}`,
+      description: CATEGORY_LABELS[row.c].description,
       colors: [],
       isSold: row.sold === 1,
       isLatestDrop: row.new === 1,

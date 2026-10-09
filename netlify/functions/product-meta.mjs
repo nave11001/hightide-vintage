@@ -111,7 +111,7 @@ function buildHead(item, url) {
   // to open the link at all, so a misspelt brand does its damage here first.
   const brand = brandName(item.name);
   const size = displaySize(item.size);
-  const title = `${brand} #${item.num} — ${kind} | HIGHTIDE VINTAGE`;
+  const title = `${brand} — ${kind} | HIGHTIDE VINTAGE`;
   const status = item.sold ? 'נמכר' : `₪${item.price}`;
   const description = item.sold
     ? `${kind} של ${brand}, מידה ${size}. הפריט נמכר — כל פריט אצלנו הוא יחיד.`
@@ -127,14 +127,14 @@ function buildHead(item, url) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'HIGHTIDE VINTAGE', item: SHOP },
       { '@type': 'ListItem', position: 2, name: category.name, item: `${SHOP}/category/${category.id}` },
-      { '@type': 'ListItem', position: 3, name: `${brand} #${item.num}` },
+      { '@type': 'ListItem', position: 3, name: brand },
     ],
   };
 
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${brand} #${item.num}`,
+    name: brand,
     description,
     image,
     sku: String(item.num),
@@ -158,7 +158,7 @@ function buildHead(item, url) {
     <meta property="og:site_name" content="HIGHTIDE VINTAGE" />
     <meta property="og:locale" content="he_IL" />
     <meta property="og:url" content="${attr(url)}" />
-    <meta property="og:title" content="${attr(`${brand} #${item.num}`)} — ${attr(status)}" />
+    <meta property="og:title" content="${attr(brand)} — ${attr(status)}" />
     <meta property="og:description" content="${attr(description)}" />
     <meta property="og:image" content="${attr(image)}" />
     <meta property="og:image:width" content="1200" />
