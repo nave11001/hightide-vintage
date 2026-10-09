@@ -2,7 +2,14 @@
 """Put the garments from the Excel sheets into Cloudflare D1.
 
     python scripts/upload_drop.py --dry-run    # say what would happen
-    python scripts/upload_drop.py              # do it
+    python scripts/upload_drop.py              # do it, from the Excel sheets
+
+    python scripts/upload_drop.py --from-photos [--dry-run]
+        every photographed garment with no row yet goes in as a bare number,
+        hidden from the shop, to be filled in by hand in Cloudflare
+    python scripts/upload_drop.py --publish [--dry-run]
+        gives every hidden garment its category — read from the folder its
+        photograph is in — and so puts it in the shop
 
 `npm run upload-drop` runs this in the middle of the chain, after
 sync_inventory.py has rebuilt src/inventory_db.json from the sheets and before
@@ -101,11 +108,110 @@ def photographs():
     return {key: [path for _, path in sorted(angles)] for key, angles in found.items()}
 
 
+def from_photos(dry_run):
+    """Bare rows for every photographed garment the database does not know.
+
+    A number, its photographs, and nothing else. The category is left empty on
+    purpose, and that is what keeps the row off the shop: the catalogue is read
+    with WHERE category IS NOT NULL, and the fallback copy skips a row with no
+    category the same way. The name, size and price columns cannot be empty, so
+    they carry their defaults — HIGHTIDE, ONE SIZE, 150 — until they are typed
+    over. With a category set they would be on the live shop at those values
+    the moment the row was written.
+
+    Which folder a garment belongs to is not lost by leaving the category out:
+    it is the first part of the photograph's path, which is written here too,
+    and --publish reads it from there.
+
+    Re-running is safe, and it has to be checked rather than assumed: the table
+    is UNIQUE on (category, num), and SQLite counts two empty categories as
+    different, so a second run would happily add the same garment again.
+    Matching on the photograph's path is what stops that.
+    """
+    photos = photographs()
+    known_paths = {row["path"] for row in d1.query("SELECT path FROM item_photos")}
+    shop = {(row["category"], row["num"]) for row in d1.query(
+        "SELECT category, num FROM items WHERE category IS NOT NULL")}
+
+    todo, already = [], 0
+    for (category, num), paths in sorted(photos.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        if (category, num) in shop or any(path in known_paths for path in paths):
+            already += 1
+            continue
+        todo.append((category, num, paths))
+
+    for category in sorted({c for c, _, _ in todo}):
+        nums = [n for c, n, _ in todo if c == category]
+        print("  %-12s %3d garments: %s" % (category, len(nums), nums))
+    print("%s%d garments to add, hidden; %d already in the database"
+          % ("would be: " if dry_run else "", len(todo), already))
+    if dry_run:
+        return 0
+
+    for category, num, paths in todo:
+        # RETURNING, because the id is needed to attach the photographs and
+        # there is no category to look the row up by.
+        item_id = d1.query("INSERT INTO items (num) VALUES (?) RETURNING id", [num])[0]["id"]
+        for position, path in enumerate(paths):
+            d1.execute("INSERT INTO item_photos (item_id, path, position) VALUES (?,?,?)",
+                       [item_id, path, position])
+    print("added. They are not in the shop until --publish.")
+    return 0
+
+
+def publish(dry_run):
+    """File every hidden garment under the folder its photograph came from."""
+    rows = d1.query(
+        "SELECT i.id, i.num, i.name, i.size, i.price, "
+        "(SELECT path FROM item_photos p WHERE p.item_id = i.id ORDER BY position LIMIT 1) AS path "
+        "FROM items i WHERE i.category IS NULL ORDER BY i.num")
+    taken = {(row["category"], row["num"]) for row in d1.query(
+        "SELECT category, num FROM items WHERE category IS NOT NULL")}
+
+    go, stuck = [], []
+    for row in rows:
+        category = (row["path"] or "").split("/")[0]
+        if category not in FOLDER_TO_CATEGORY.values():
+            stuck.append("#%s — no photograph to read a category from" % row["num"])
+        elif (category, row["num"]) in taken:
+            stuck.append("#%s — %s #%s is already in the shop" % (row["num"], category, row["num"]))
+        else:
+            go.append((row, category))
+
+    # The defaults still on a row are the sign it has not been filled in.
+    # Not a reason to refuse — the owner may want a garment at 150 — but worth
+    # saying, because publishing it puts those values in front of customers.
+    unfilled = [r["num"] for r, _ in go
+                if r["name"] == "HIGHTIDE" or r["size"] == "ONE SIZE" or r["price"] == 150]
+    print("%s%d garments to put in the shop" % ("would be: " if dry_run else "", len(go)))
+    if unfilled:
+        print("  of them still carrying a default name, size or price of 150: %d" % len(unfilled))
+        print("   %s" % unfilled)
+    for line in stuck:
+        print("  ! skipped: %s" % line)
+    if dry_run:
+        return 0
+
+    for row, category in go:
+        d1.execute("UPDATE items SET category = ? WHERE id = ?", [category, row["id"]])
+    print("done. Run make_catalog_snapshot.py, and deploy so the photographs ship.")
+    return 0
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true",
                         help="print what would be written and change nothing")
+    parser.add_argument("--from-photos", action="store_true",
+                        help="add every photographed garment as a hidden, bare row")
+    parser.add_argument("--publish", action="store_true",
+                        help="put every hidden garment in the shop, by its photograph's folder")
     args = parser.parse_args(argv)
+
+    if args.from_photos:
+        return from_photos(args.dry_run)
+    if args.publish:
+        return publish(args.dry_run)
 
     if not os.path.exists(DB_JSON):
         sys.exit("src/inventory_db.json is missing — run scripts/sync_inventory.py first")
