@@ -14,15 +14,17 @@ import { navigate, type LegalPage as PageId } from '../router';
 // an accurate description of the system, which is the part a lawyer cannot
 // write without the source in front of them.
 //
-// Two things are deliberately left as ⟦…⟧ rather than guessed. They are facts
-// about the business that only its owner knows, and a legal document that
-// invents them is worth less than one with a hole in it.
+// Nothing here is a placeholder any more. Two things once were — the seller's
+// registered name and number, and the delivery charge — and both are now
+// settled rather than guessed: the registration lines came out at the owner's
+// instruction, and the postage is quoted in the conversation that closes the
+// order, which is what actually happens.
 
 const SHOP = 'HIGHTIDE VINTAGE';
 const EMAIL = 'hightide1622@gmail.com';
 const PHONE = '052-8879922';
 const ADDRESS = 'הגבעה 28, כפר האורנים';
-const UPDATED = 'ספטמבר 2026';
+const UPDATED = 'אוקטובר 2026';
 
 /** A run of prose, a list, or a sub-heading. */
 type Block =
@@ -106,11 +108,10 @@ const TERMS: Doc = {
   title: 'תקנון ותנאי רכישה',
   lead: `האתר מציג פריטי וינטג׳ למכירה. הרכישה עצמה אינה מתבצעת באתר אלא בשיחה ישירה בווטסאפ. תקנון זה חל על השימוש באתר ועל רכישות שנעשות בעקבותיו.`,
   blocks: [
-    { h: 'פרטי העוסק' },
+    { h: 'פרטי החנות' },
     {
       ul: [
-        `שם: ⟦שם העוסק המלא כפי שהוא רשום⟧`,
-        `מספר עוסק / ת.ז.: ⟦למילוי⟧`,
+        `שם: ${SHOP}`,
         `כתובת: ${ADDRESS}`,
         `טלפון: ${PHONE}`,
         `דוא״ל: ${EMAIL}`,
@@ -138,7 +139,7 @@ const TERMS: Doc = {
       ul: [
         'משלוח מבוצע תוך 2 עד 7 ימי עסקים ממועד אישור ההזמנה.',
         `איסוף עצמי מ${ADDRESS} — בתיאום מראש.`,
-        'עלות ואופן המשלוח: ⟦למילוי⟧',
+        'עלות המשלוח ואופן המסירה נמסרים בשיחת הווטסאפ ומאושרים על ידכם לפני סגירת ההזמנה.',
       ],
     },
     {
@@ -245,15 +246,15 @@ const DOCS: Record<PageId, Doc> = {
 };
 
 /**
- * The documents the footer offers, and the reason one of them is missing.
+ * The documents the footer offers, and the reason one of them is not among
+ * them.
  *
- * The terms still carry ⟦…⟧ where the seller's registration number and the
- * delivery charge belong, and a published document with holes in it is worse
- * than an absent one — it is a statement rather than an omission. The route
- * stays reachable so the draft can be read and sent to a lawyer; it is only
- * the link that waits.
- *
- * Add the terms row here once those two are filled in.
+ * The terms no longer have holes in them, so what kept the link away is gone.
+ * What took its place is a judgement that belongs to the owner rather than to
+ * this file: a terms page linked from a shop front is the document a customer
+ * is taken to have read, and this one no longer names the seller — the
+ * registered name and number were removed on purpose. Reachable at /terms,
+ * and linked here the day that is a decision rather than an omission.
  */
 export const FOOTER_LEGAL_LINKS: { to: string; label: string }[] = [
   { to: '/privacy', label: 'מדיניות פרטיות' },
