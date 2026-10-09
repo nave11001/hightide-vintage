@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { navigate, type LegalPage as PageId } from '../router';
+import { isEnglish, tr } from '../i18n';
 
 // The shop's three documents.
 //
@@ -245,6 +246,181 @@ const DOCS: Record<PageId, Doc> = {
   accessibility: ACCESSIBILITY,
 };
 
+// The same three documents in English, for visitors reading the shop in
+// English (see src/i18n.ts). A translation, kept line for line with the Hebrew
+// above — change one, change the other. The Hebrew is the one that binds, and
+// each page says so.
+
+const ADDRESS_EN = 'HaGiv\u2019a 28, Kfar HaOranim, Israel';
+const PHONE_EN = '+972 52-887-9922';
+const UPDATED_EN = 'October 2026';
+
+const PRIVACY_EN: Doc = {
+  title: 'Privacy Policy',
+  lead: `${SHOP} respects the privacy of the people who use this site. This page explains what information is collected, what it is for, who it is shared with, and what your rights are.`,
+  blocks: [
+    { h: 'Who collects the information' },
+    { p: `The site is run by ${SHOP}, which controls the information described here.` },
+    { ul: [`Address: ${ADDRESS_EN}`, `Phone: ${PHONE_EN}`, `Email: ${EMAIL}`] },
+    { h: 'What is collected' },
+    {
+      p: 'The site has no sign-up form, no user account and no checkout. It does not collect your name, address or payment details.',
+    },
+    { p: 'What is collected:' },
+    {
+      ul: [
+        'How the site is used — which pages and items were viewed, taps on the buy buttons, the type of device and browser, and where the visit came from.',
+        'Information kept only in your own browser — your favourites and a copy of the catalogue for faster loading. It is not sent to our servers and you can delete it at any time in your browser settings.',
+        'Messages you send us — when you contact us on WhatsApp, by email or by phone, we receive the contact details you gave and what you wrote.',
+      ],
+    },
+    { h: 'Instagram messages and phone numbers' },
+    {
+      p: 'Alongside the site there is an automatic reply service in Instagram messages. Anyone who chooses to reserve an item through it is asked for a phone number. Giving it is your choice, and an item cannot be reserved without it.',
+    },
+    {
+      p: 'The number is collected in the Instagram conversation and kept in a database we control, so that we can contact you about that reservation. It is not shown on the site, not passed to third parties and not used for marketing.',
+    },
+    { h: 'Outside services' },
+    { p: 'The site uses the following services, some of which keep information on servers outside Israel, including in the United States:' },
+    {
+      ul: [
+        'Google Analytics and Google Tag Manager — measuring how the site is used. This uses cookies.',
+        'PostHog — measuring how the site is used. It is set not to build a personal profile of anonymous visitors.',
+        'Netlify — hosting and serving the site.',
+        'Cloudflare — storing the item catalogue and the phone numbers given for reservations, in a database we control.',
+        'ManyChat — running the automatic conversation in Instagram messages, through which the reservation phone number reaches us.',
+        'Meta — WhatsApp and Instagram, where we talk with customers. Their use is also subject to Meta’s privacy policy.',
+      ],
+    },
+    { h: 'Cookies' },
+    {
+      p: 'Cookies are small files kept in your browser. On this site they are used only to measure use — not for advertising and not to target ads. You can block cookies in your browser settings; doing so will not stop you browsing or buying.',
+    },
+    { h: 'Your rights' },
+    {
+      p: 'Under Israel’s Protection of Privacy Law, 5741-1981, you may ask us to see the information held about you, to correct information that is wrong, or to delete it. We will answer within a reasonable time.',
+    },
+    { p: `For questions about personal information: ${EMAIL}` },
+    { h: 'Security' },
+    {
+      p: 'The information is kept with established hosting providers and access to it is restricted. We take reasonable steps to protect it, but we cannot guarantee complete protection against every risk.',
+    },
+    { h: 'Changes' },
+    { p: 'This policy may be updated. The date of the last update is at the bottom of the page.' },
+  ],
+};
+
+const TERMS_EN: Doc = {
+  title: 'Terms of Sale',
+  lead: 'This site shows vintage items for sale. The purchase itself does not happen on the site but in a direct WhatsApp conversation. These terms apply to using the site and to purchases made through it.',
+  blocks: [
+    { h: 'The shop' },
+    { ul: [`Name: ${SHOP}`, `Address: ${ADDRESS_EN}`, `Phone: ${PHONE_EN}`, `Email: ${EMAIL}`] },
+    { h: 'The items' },
+    {
+      p: 'Every item on the site is a used vintage item, and each one is the only one in stock. Vintage items may show light wear in keeping with their age; this is not considered a defect.',
+    },
+    { p: 'We take the photographs ourselves and they show the item itself. Colours may look slightly different on screen.' },
+    {
+      p: 'The sizes given are the sizes printed on the item. Vintage sizes are not the same as today’s, so please check the actual measurements before buying.',
+    },
+    { h: 'Ordering and payment' },
+    {
+      p: 'The buy button opens a WhatsApp conversation. The order is completed in that conversation, including how you pay and how the item reaches you. An item is not reserved until we confirm it explicitly.',
+    },
+    { p: 'Prices on the site include VAT where it applies and do not include shipping.' },
+    { h: 'Shipping and collection' },
+    {
+      ul: [
+        'Shipping within Israel takes 2 to 7 business days from when the order is confirmed.',
+        `Collection from ${ADDRESS_EN} — by appointment.`,
+        'The shipping cost and delivery method are given in the WhatsApp conversation and approved by you before the order is completed.',
+      ],
+    },
+    { p: 'Delivery times depend on the carrier and may be longer at busy times or for reasons outside our control.' },
+    { h: 'Cancellations, exchanges and returns' },
+    {
+      p: 'Under Israel’s Consumer Protection Law, 5741-1981 and its regulations, a consumer in a distance sale may cancel within 14 days of receiving the item or of receiving the document setting out the sale, whichever is later. This right is set by law and nothing in these terms takes away from it.',
+    },
+    {
+      p: 'To cancel, contact us by phone, email or WhatsApp. If the cancellation is not because of a defect or a mismatch, we may charge the cancellation fee the law allows, and returning the item is the buyer’s responsibility and at the buyer’s cost.',
+    },
+    { p: 'A returned item must come back in the condition it was sent in. Trying it on does not count as use.' },
+    {
+      p: 'If you cancel because of a defect, or because the item does not match what the site showed, we will take it back, pay for the return and charge no cancellation fee.',
+    },
+    {
+      p: 'Because these are used vintage items, we photograph each item’s condition when it is shipped, and that photograph is used for comparison when it is returned.',
+    },
+    { h: 'The return tag' },
+    {
+      p: 'Each item carries a single-use plastic tag that breaks when removed and cannot be reattached. You can and should try the item on with the tag attached — it does not get in the way — and we ask that you leave it on until you have decided.',
+    },
+    {
+      p: 'A removed tag shows the item was used beyond trying it on, and we may take that into account when considering a cancellation because you changed your mind. This does not take away from the right to cancel set by law.',
+    },
+    {
+      p: 'The tag does not matter for a cancellation because of a defect or a mismatch. An item found to be defective will be taken back even if the tag was removed — a fault in a seam or in the size cannot be found without wearing it.',
+    },
+    {
+      p: 'In addition to, and beyond, the right in law, we allow an item to be exchanged for another by arrangement, subject to stock. Since every item is one of one, there is not always an equivalent.',
+    },
+    { h: 'Availability and prices' },
+    {
+      p: 'The site shows stock as we know it when you look. An item may sell between the moment you see it and the moment you contact us. If a price or stock level is shown in error, we will tell you and you may cancel the order at no charge.',
+    },
+    { h: 'Intellectual property' },
+    {
+      p: 'The photographs, text and design of the site belong to us. They may not be copied or used commercially without written permission. Brand names on the site are the trademarks of their owners and are used only to describe the item.',
+    },
+    { h: 'Governing law' },
+    {
+      p: 'These terms are governed by the laws of the State of Israel, and the competent courts of the State of Israel have exclusive jurisdiction.',
+    },
+  ],
+};
+
+const ACCESSIBILITY_EN: Doc = {
+  title: 'Accessibility Statement',
+  lead: 'We want this site to be usable by everyone, including people with disabilities, and we keep working to improve it.',
+  blocks: [
+    { h: 'What has been done' },
+    { p: 'The site has been checked and fixed against the principles of the accessibility standard, including:' },
+    {
+      ul: [
+        'Colour contrast of at least 4.5:1 for all text on the site, with most text 14 pixels or larger.',
+        'Buttons and tap areas at least 44 pixels in size, so they are easy to use by touch.',
+        'Alternative text for every item photo, so a screen reader can describe it.',
+        'Full keyboard navigation, with a clear mark on the element in focus.',
+        'An item window that opens over the shop is announced as a separate window carrying the item’s name; focus moves into it and returns on closing to where it was opened from, the Tab key stays inside it and the Escape key closes it.',
+        'A proper heading structure and roles marked on interactive elements.',
+        'The system preference for reduced motion is respected — anyone who has set it on their device will not see continuous animation.',
+        'Support for enlarging text in the browser, and for screens of every size.',
+      ],
+    },
+    { h: 'What is not perfect yet' },
+    {
+      p: 'The site has a scrolling display of top items, used by dragging or with arrows. We are still testing how it behaves with assistive technology. Some item descriptions are also short, and we are expanding them.',
+    },
+    { h: 'Collection in person' },
+    {
+      p: `Collection from ${ADDRESS_EN} is by appointment. We will gladly arrange it to suit your needs — contact us by phone or email.`,
+    },
+    { h: 'Found a problem? How to reach us' },
+    {
+      p: 'If something on the site was hard to use, please tell us what happened, on which page and on which device. We will look into it and reply within a reasonable time.',
+    },
+    { ul: [`Email: ${EMAIL}`, `Phone: ${PHONE_EN}`] },
+  ],
+};
+
+const DOCS_EN: Record<PageId, Doc> = {
+  privacy: PRIVACY_EN,
+  terms: TERMS_EN,
+  accessibility: ACCESSIBILITY_EN,
+};
+
 /**
  * The documents the footer offers, and the reason one of them is not among
  * them.
@@ -256,13 +432,13 @@ const DOCS: Record<PageId, Doc> = {
  * registered name and number were removed on purpose. Reachable at /terms,
  * and linked here the day that is a decision rather than an omission.
  */
-export const FOOTER_LEGAL_LINKS: { to: string; label: string }[] = [
-  { to: '/privacy', label: 'מדיניות פרטיות' },
-  { to: '/accessibility', label: 'הצהרת נגישות' },
+export const FOOTER_LEGAL_LINKS: { to: string; label: string; labelEn: string }[] = [
+  { to: '/privacy', label: 'מדיניות פרטיות', labelEn: 'Privacy policy' },
+  { to: '/accessibility', label: 'הצהרת נגישות', labelEn: 'Accessibility' },
 ];
 
 export default function LegalPage({ page }: { page: PageId }) {
-  const doc = DOCS[page];
+  const doc = isEnglish() ? DOCS_EN[page] : DOCS[page];
 
   const back = (event: React.MouseEvent) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
@@ -271,20 +447,29 @@ export default function LegalPage({ page }: { page: PageId }) {
   };
 
   return (
-    <article dir="rtl" className="max-w-3xl mx-auto text-right" id={`legal-${page}`}>
+    <article
+      dir={tr('rtl', 'ltr')}
+      className={`max-w-3xl mx-auto ${isEnglish() ? 'text-left' : 'text-right'}`}
+      id={`legal-${page}`}
+    >
       <a
         href="/"
         onClick={back}
         className="inline-flex items-center gap-1.5 min-h-[44px] text-sm text-stone-600 hover:text-stone-900 transition-colors no-underline"
       >
-        <ArrowRight className="w-4 h-4" />
-        <span>חזרה לחנות</span>
+        {isEnglish() ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+        <span>{tr('חזרה לחנות', 'Back to the shop')}</span>
       </a>
 
       <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-stone-900 leading-tight">
         {doc.title}
       </h1>
       <p className="mt-3 text-base text-stone-700 leading-relaxed">{doc.lead}</p>
+      {isEnglish() && (
+        <p className="mt-3 text-sm text-stone-500 leading-relaxed">
+          This is an English translation for your convenience. The Hebrew version is the binding one.
+        </p>
+      )}
 
       <div className="mt-8 space-y-5">
         {doc.blocks.map((block, i) => {
@@ -297,7 +482,7 @@ export default function LegalPage({ page }: { page: PageId }) {
           }
           if ('ul' in block) {
             return (
-              <ul key={i} className="list-disc pr-5 space-y-2 text-base text-stone-700 leading-relaxed">
+              <ul key={i} className={`list-disc ${isEnglish() ? 'pl-5' : 'pr-5'} space-y-2 text-base text-stone-700 leading-relaxed`}>
                 {block.ul.map((line, j) => (
                   <li key={j}>{line}</li>
                 ))}
@@ -323,7 +508,7 @@ export default function LegalPage({ page }: { page: PageId }) {
       </div>
 
       <p className="mt-10 pt-5 border-t border-stone-200 text-sm text-stone-500">
-        עודכן לאחרונה: {UPDATED}
+        {tr(`עודכן לאחרונה: ${UPDATED}`, `Last updated: ${UPDATED_EN}`)}
       </p>
     </article>
   );

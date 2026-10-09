@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
+import { tr } from '../i18n';
 
 const LIST_WIDTH = 200; // w-[200px] on the list below
 
@@ -67,7 +68,7 @@ export default function CatalogFilters({ filters }: { filters: FilterDef[] }) {
   };
 
   return (
-    <div ref={area} dir="rtl" className="flex items-center gap-x-5 sm:gap-x-6 gap-y-0 flex-wrap" id="catalog-filters">
+    <div ref={area} dir={tr('rtl', 'ltr')} className="flex items-center gap-x-5 sm:gap-x-6 gap-y-0 flex-wrap" id="catalog-filters">
       {filters.map((f) => {
         const isOpen = openId === f.id;
         const active = f.value !== '';

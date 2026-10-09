@@ -7,7 +7,8 @@ import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
 import { navigate } from '../router';
 import { productPath } from '@/shared/slug.mjs';
-import { buyOnWhatsApp, productUrl } from '../whatsapp';
+import { buyOnWhatsApp, englishOrder, productUrl } from '../whatsapp';
+import { isEnglish, money, tr } from '../i18n';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -261,7 +262,7 @@ export default function ProductDetailModal({
       // No clipboard permission — an insecure origin, or a browser that refuses
       // outside a user gesture it recognises. Put the address somewhere it can
       // be copied by hand rather than let the tap do nothing at all.
-      window.prompt('העתיקו את הקישור לפריט:', url);
+      window.prompt(tr('העתיקו את הקישור לפריט:', 'Copy the link to this item:'), url);
       return false;
     }
   };
@@ -285,7 +286,7 @@ export default function ProductDetailModal({
     // "send this garment to someone" rather than "message the shop" — which is
     // what the buy button below already does.
     window.open(
-      `https://wa.me/?text=${encodeURIComponent(`${product.name} — ₪${product.price}\n\n${url}`)}`,
+      `https://wa.me/?text=${encodeURIComponent(`${product.name} — ${money(product.price)}\n\n${url}`)}`,
       '_blank',
       'noopener,noreferrer',
     );
@@ -313,10 +314,10 @@ export default function ProductDetailModal({
           onClick={onClose}
           className="absolute top-4 left-4 z-20 min-w-[44px] min-h-[44px] px-3 bg-white text-stone-700 hover:text-blue-600 border border-stone-200 rounded-none hover:bg-stone-50 transition-colors flex items-center justify-center gap-1.5"
           id="close-detail-modal-btn"
-          aria-label={isPage ? 'חזרה לחנות' : 'סגירה'}
+          aria-label={isPage ? tr('חזרה לחנות', 'Back to the shop') : tr('סגירה', 'Close')}
         >
           <X className="w-4 h-4" />
-          {isPage && <span className="text-xs font-medium pl-1">לחנות</span>}
+          {isPage && <span className="text-xs font-medium pl-1">{tr('לחנות', 'Shop')}</span>}
         </button>
 
         {/* Product Visual Container */}
@@ -367,7 +368,7 @@ export default function ProductDetailModal({
                     i === activeImage ? 'border-stone-900' : 'border-stone-200 hover:border-stone-400'
                   }`}
                 >
-                  <img src={img} alt={`זווית ${i + 1}`} className="w-full h-full object-contain bg-white" />
+                  <img src={img} alt={tr(`זווית ${i + 1}`, `Angle ${i + 1}`)} className="w-full h-full object-contain bg-white" />
                 </button>
               ))}
             </div>
@@ -398,16 +399,16 @@ export default function ProductDetailModal({
                 id="share-product-btn"
                 aria-haspopup="menu"
                 aria-expanded={shareOpen}
-                aria-label="שיתוף הפריט"
+                aria-label={tr('שיתוף הפריט', 'Share this item')}
               >
                 <Share2 className="w-4 h-4" />
-                <span className="text-xs font-medium">שיתוף</span>
+                <span className="text-xs font-medium">{tr('שיתוף', 'Share')}</span>
               </button>
 
               {shareOpen && (
                 <div
                   role="menu"
-                  dir="rtl"
+                  dir={tr('rtl', 'ltr')}
                   className="absolute top-full left-0 z-30 mt-1 w-52 bg-white border border-stone-200 shadow-lg py-1 animate-fade-in"
                   id="share-menu"
                 >
@@ -423,7 +424,7 @@ export default function ProductDetailModal({
                       <Link2 className="w-4 h-4 shrink-0 text-stone-500" />
                     )}
                     <span className={copied ? 'text-green-700 font-medium' : undefined}>
-                      {copied ? 'הקישור הועתק' : 'העתקת קישור'}
+                      {copied ? tr('הקישור הועתק', 'Link copied') : tr('העתקת קישור', 'Copy link')}
                     </span>
                   </button>
 
@@ -434,7 +435,7 @@ export default function ProductDetailModal({
                     className="w-full min-h-[44px] px-3 flex items-center gap-2.5 text-right text-sm text-stone-800 hover:bg-stone-50 transition-colors cursor-pointer"
                   >
                     <WhatsAppBadge className="w-5 h-5" />
-                    <span>שיתוף בווטסאפ</span>
+                    <span>{tr('שיתוף בווטסאפ', 'Share on WhatsApp')}</span>
                   </button>
                 </div>
               )}
@@ -488,16 +489,16 @@ export default function ProductDetailModal({
                     : 'text-xl font-normal font-mono text-stone-900'
                 }
               >
-                ₪{product.price}
+                {money(product.price)}
               </span>
               {product.originalPrice && (
                 <>
                   <span className="text-base text-stone-500 line-through font-mono">
-                    ₪{product.originalPrice}
+                    {money(product.originalPrice)}
                   </span>
                   <img
                     src={saleStampUrl}
-                    alt="מבצע"
+                    alt={tr('מבצע', 'Sale')}
                     className="h-8 w-auto select-none"
                     draggable={false}
                   />
@@ -506,7 +507,7 @@ export default function ProductDetailModal({
             </div>
 
             <div className="flex items-center gap-2 flex-row-reverse">
-              <span className="text-xs text-stone-500 uppercase tracking-wide">מידה</span>
+              <span className="text-xs text-stone-500 uppercase tracking-wide">{tr('מידה', 'Size')}</span>
               {product.sizes.map((size) => (
                 <button
                   key={size}
@@ -528,7 +529,7 @@ export default function ProductDetailModal({
           {/* Condition banner */}
           <div className="mt-4 bg-[#fbfaf6] border border-stone-200/50 p-2.5 text-xs text-stone-700 font-normal flex items-center gap-2 justify-start flex-row-reverse">
             <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            <span>מצב הפריט: {product.condition}</span>
+            <span>{tr('מצב הפריט', 'Condition')}: {product.condition}</span>
           </div>
 
 
@@ -541,7 +542,7 @@ export default function ProductDetailModal({
                 activeTab === 'details' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
-              פרטים נוספים
+              {tr('פרטים נוספים', 'Details')}
             </button>
             <button
               type="button"
@@ -550,7 +551,7 @@ export default function ProductDetailModal({
                 activeTab === 'sizing' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
-              מדריך מידות
+              {tr('מדריך מידות', 'Size guide')}
             </button>
             <button
               type="button"
@@ -559,7 +560,7 @@ export default function ProductDetailModal({
                 activeTab === 'shipping' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
-              משלוחים והחזרות
+              {tr('משלוחים והחזרות', 'Shipping')}
             </button>
           </div>
 
@@ -570,25 +571,35 @@ export default function ProductDetailModal({
             )}
             {activeTab === 'sizing' && (
               <div className="space-y-2 text-right font-normal">
-                <p>פריטי וינטג׳ משנות ה-90 וה-2000 יכולים להשתנות במידותיהם מהרשום בתווית.</p>
+                <p>{tr('פריטי וינטג׳ משנות ה-90 וה-2000 יכולים להשתנות במידותיהם מהרשום בתווית.', 'Vintage pieces from the 90s and 2000s can differ from the size on the label.')}</p>
                 {(() => {
                   const sizeNum = parseInt(product.sizes[0], 10);
                   if (isNaN(sizeNum)) return null;
                   const waistCm = Math.round(sizeNum * 2.54 / 2);
                   return (
                     <p className="font-normal text-stone-900">
-                      מידה: {sizeNum} | רוחב מותן (שטוח): כ-{waistCm} ס״מ
+                      {tr(`מידה: ${sizeNum} | רוחב מותן (שטוח): כ-${waistCm} ס״מ`, `Size: ${sizeNum} | Waist (laid flat): about ${waistCm} cm`)}
                     </p>
                   );
                 })()}
-                <p className="text-stone-500 text-xs">מומלץ למדוד מכנס קיים שלכם לפני ביצוע הרכישה לקבלת התאמה מקסימלית.</p>
+                <p className="text-stone-500 text-xs">{tr('מומלץ למדוד מכנס קיים שלכם לפני ביצוע הרכישה לקבלת התאמה מקסימלית.', 'For the best fit, measure a pair you already own before you buy.')}</p>
               </div>
             )}
             {activeTab === 'shipping' && (
               <div className="space-y-2 text-right font-normal">
-                <p>משלוחים מהירים עד הבית בפריסה ארצית (2-7 ימי עסקים).</p>
-                <p>איסוף עצמי בחינם: הגבעה 28 כפר האורנים - להגעה יש לתאם מראש.</p>
-                <p>מאחר ומדובר בפריטי וינטג׳ ייחודיים (One of One), לא ניתן לבצע החלפה של אותו הפריט במידה אחרת.</p>
+                {isEnglish() ? (
+                  <>
+                    <p>We ship worldwide. Shipping is priced by destination — we&apos;ll quote it on WhatsApp.</p>
+                    <p>Payment by bank transfer through Wise.</p>
+                    <p>Every piece is one of one, so it can&apos;t be exchanged for another size.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>משלוחים מהירים עד הבית בפריסה ארצית (2-7 ימי עסקים).</p>
+                    <p>איסוף עצמי בחינם: הגבעה 28 כפר האורנים - להגעה יש לתאם מראש.</p>
+                    <p>מאחר ומדובר בפריטי וינטג׳ ייחודיים (One of One), לא ניתן לבצע החלפה של אותו הפריט במידה אחרת.</p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -599,10 +610,10 @@ export default function ProductDetailModal({
           {product.isSold ? (
             <div className="mt-6" id="detail-sold-notice">
               <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
-                הפריט נמכר ואינו זמין להזמנה
+                {tr('הפריט נמכר ואינו זמין להזמנה', 'This piece has been sold')}
               </div>
               <p className="mt-2 text-xs text-stone-500 text-center">
-                פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.
+                {tr('פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.', 'Every vintage piece is one of one. Follow us so you don’t miss the next drop.')}
               </p>
             </div>
           ) : (
@@ -611,7 +622,10 @@ export default function ProductDetailModal({
             <a
               href={buyOnWhatsApp(
                 product,
-                `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+                tr(
+                  `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+                  englishOrder(product.name, money(product.price), selectedSize),
+                ),
               )}
               target="_blank"
               rel="noopener noreferrer"
@@ -627,7 +641,7 @@ export default function ProductDetailModal({
               id="detail-add-btn"
             >
               <WhatsAppBadge className="w-6 h-6" />
-              <span>רכישה בווטסאפ</span>
+              <span>{tr('רכישה בווטסאפ', 'Buy on WhatsApp')}</span>
             </a>
           </div>
           )}
@@ -642,11 +656,11 @@ export default function ProductDetailModal({
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               {/* dir="auto" and not the stylesheet rule: this is a bare span in
                   a flex row, and the rule deliberately stops at block text. */}
-              <span dir="auto">100% מקורי ומאומת</span>
+              <span dir="auto">{tr('100% מקורי ומאומת', '100% authentic')}</span>
             </div>
             <div className="flex items-center gap-1 justify-center">
               <RefreshCw className="w-3.5 h-3.5 text-stone-600" />
-              <span>ניקוי יבש וחיטוי יסודי</span>
+              <span>{tr('ניקוי יבש וחיטוי יסודי', 'Dry-cleaned and sanitised')}</span>
             </div>
           </div>
         </div>
@@ -664,7 +678,7 @@ export default function ProductDetailModal({
         id="also-like-heading"
         className="text-sm font-medium text-stone-900 mb-4 text-right tracking-wide"
       >
-        אולי יעניין אותך גם
+        {tr('אולי יעניין אותך גם', 'You might also like')}
       </h2>
       <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {suggestions.map((item) => (
@@ -691,7 +705,7 @@ export default function ProductDetailModal({
                 {item.name}
               </p>
               <p className="mt-0.5 text-xs font-mono font-medium text-stone-900 text-right">
-                ₪{item.price}
+                {money(item.price)}
                 <span className="font-sans font-normal text-stone-500"> · {item.sizes[0]}</span>
               </p>
             </a>

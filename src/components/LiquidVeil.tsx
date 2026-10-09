@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { FRAGMENT_SHADER, VERTEX_SHADER } from './liquidShader';
 import { dismissSplash } from '../splash';
+import { tr } from '../i18n';
 
 // The same URL index.html preloads for its splash, so the texture is already in
 // cache by the time this mounts. It sits in public/ for that reason: a bundled
@@ -193,16 +194,16 @@ export default function LiquidVeil({ progress, failed = false, onRetry }: Liquid
           it for glyphs the string does not actually carry. */}
       {failed ? (
         <div className="text-center max-w-sm">
-          <p className="text-base font-medium text-stone-900">לא הצלחנו לטעון את המלאי</p>
+          <p className="text-base font-medium text-stone-900">{tr('לא הצלחנו לטעון את המלאי', 'We couldn’t load the shop')}</p>
           <p className="text-sm text-stone-500 mt-1">
-            כנראה תקלה זמנית בחיבור. אפשר לנסות שוב.
+            {tr('כנראה תקלה זמנית בחיבור. אפשר לנסות שוב.', 'Probably a passing connection problem. Please try again.')}
           </p>
           <button
             type="button"
             onClick={onRetry}
             className="mt-5 px-6 py-2 bg-stone-900 text-white border border-stone-900 cursor-pointer"
           >
-            נסו שוב
+            {tr('נסו שוב', 'Try again')}
           </button>
         </div>
       ) : (

@@ -48,6 +48,26 @@ p, h1, h2, h3, h4, h5, h6, li, dt, dd, figcaption, blockquote, label, th, td {
   unicode-bidi: plaintext;
 }
 
+/*
+ * English (see src/i18n.ts). The Hebrew layout is a left-to-right document
+ * turned around by hand — flex-row-reverse on the rows, text-right on the text
+ * — so reading English it is turned back the same way, in one place, rather
+ * than in every component. Unlayered, so it outranks the utilities themselves.
+ * Containers that set dir="rtl" outright switch with the language in the
+ * component instead.
+ */
+html[lang='en'] .flex-row-reverse {
+  flex-direction: row;
+}
+html[lang='en'] .text-right {
+  text-align: left;
+}
+/* The footer's columns hang from the right edge with items-end. Not undone
+   everywhere: elsewhere items-end means "at the bottom" (the homepage tiles). */
+html[lang='en'] #store-footer .items-end {
+  align-items: flex-start;
+}
+
 @theme {
   --font-sans: "Rubik", "Heebo", system-ui, sans-serif;
   /* Still called mono because ~40 `font-mono` classes name it, and it is still

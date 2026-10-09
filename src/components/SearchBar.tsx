@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
+import { tr } from '../i18n';
 
 interface SearchBarProps {
   value: string;
@@ -51,7 +52,7 @@ export default function SearchBar({ value, onChange, onClose }: SearchBarProps) 
           input.current?.blur();
         }}
         className="max-w-2xl mx-auto flex items-center gap-2 px-4 h-16"
-        dir="rtl"
+        dir={tr('rtl', 'ltr')}
       >
         <div className="relative flex-grow">
           <Search
@@ -70,8 +71,8 @@ export default function SearchBar({ value, onChange, onClose }: SearchBarProps) 
             autoFocus
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="חיפוש לפי מותג, סוג או מידה"
-            aria-label="חיפוש בחנות"
+            placeholder={tr('חיפוש לפי מותג, סוג או מידה', 'Search by brand, type or size')}
+            aria-label={tr('חיפוש בחנות', 'Search the shop')}
             className="w-full h-11 bg-stone-50 border border-stone-200 pr-10 pl-10 text-base text-stone-900 placeholder:text-stone-500 focus:outline-none focus:border-stone-900 focus:bg-white rounded-none"
             id="search-input"
           />
@@ -83,7 +84,7 @@ export default function SearchBar({ value, onChange, onClose }: SearchBarProps) 
                 input.current?.focus();
               }}
               className="absolute left-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-stone-500 hover:text-stone-900"
-              aria-label="ניקוי החיפוש"
+              aria-label={tr('ניקוי החיפוש', 'Clear search')}
               id="clear-search-btn"
             >
               <X className="w-4 h-4" />
@@ -96,7 +97,7 @@ export default function SearchBar({ value, onChange, onClose }: SearchBarProps) 
           className="h-11 px-3 text-sm font-medium text-stone-900 hover:text-stone-600 cursor-pointer shrink-0"
           id="close-search-btn"
         >
-          ביטול
+          {tr('ביטול', 'Cancel')}
         </button>
       </form>
     </div>

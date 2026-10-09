@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORIES } from '../data';
+import { CATEGORY_EN, tr } from '../i18n';
 
 interface CategoryBarProps {
   selected: string;
@@ -95,7 +96,7 @@ export default function CategoryBar({ selected, onSelect, tone = 'dark' }: Categ
 
   return (
     <nav
-      aria-label="קטגוריות"
+      aria-label={tr('קטגוריות', 'Categories')}
       className={
         light
           ? 'text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.75),0_0_10px_rgba(0,0,0,0.45)]'
@@ -104,7 +105,7 @@ export default function CategoryBar({ selected, onSelect, tone = 'dark' }: Categ
       id={light ? undefined : 'categories-bar'}
     >
       <div className="relative max-w-7xl mx-auto">
-        <div ref={row} dir="rtl" className="overflow-x-auto no-scrollbar snap-x snap-proximity overscroll-x-contain">
+        <div ref={row} dir={tr('rtl', 'ltr')} className="overflow-x-auto no-scrollbar snap-x snap-proximity overscroll-x-contain">
           {/* w-max with auto margins: centred while it fits, and simply wider
               than the row — so scrollable — once it does not. */}
           <div className="flex w-max mx-auto px-2">
@@ -129,7 +130,7 @@ export default function CategoryBar({ selected, onSelect, tone = 'dark' }: Categ
                   }`}
                   id={light ? undefined : `cat-filter-${item.id}`}
                 >
-                  {item.name}
+                  {tr(item.name, CATEGORY_EN[item.id] ?? item.name)}
                   <span
                     aria-hidden="true"
                     className={`absolute inset-x-2.5 sm:inset-x-4 bottom-0 h-0.5 transition-colors ${active ? (light ? 'bg-white' : 'bg-stone-900') : 'bg-transparent'}`}

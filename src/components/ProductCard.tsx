@@ -9,6 +9,7 @@ import { onPhotoError, srcSetFor } from '../photos';
 import { productPath } from '@/shared/slug.mjs';
 import { buyOnWhatsApp } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
+import { money, tr } from '../i18n';
 
 interface ProductCardProps {
   product: Product;
@@ -92,7 +93,7 @@ export default function ProductCard({
             src={product.images![1]}
             srcSet={srcSetFor(product.images![1])}
             sizes="(min-width: 1024px) 23vw, (min-width: 768px) 31vw, 47vw"
-            alt={`${product.name} - זווית נוספת`}
+            alt={tr(`${product.name} - זווית נוספת`, `${product.name} - another angle`)}
             referrerPolicy="no-referrer"
             decoding="async"
             onError={onPhotoError}
@@ -113,7 +114,7 @@ export default function ProductCard({
               onToggleFavorite(product);
             }}
             className="p-1.5 text-gray-400 hover:text-stone-900 hover:scale-110 active:scale-95 transition-all cursor-pointer rounded-full hover:bg-stone-50"
-            title={isFavorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
+            title={isFavorite ? tr('הסר מהמועדפים', 'Remove from favourites') : tr('הוסף למועדפים', 'Add to favourites')}
             id={`fav-btn-${product.id}`}
           >
             <Heart
@@ -149,7 +150,7 @@ export default function ProductCard({
                 : 'text-base font-medium text-stone-900'
             }
           >
-            ₪{product.price}
+            {money(product.price)}
           </span>
           {product.originalPrice && (
             <>
@@ -158,11 +159,11 @@ export default function ProductCard({
                   readable minimum. A shopper could see the red price had a
                   companion and not make out what it said. */}
               <span className="text-sm text-stone-500 line-through">
-                ₪{product.originalPrice}
+                {money(product.originalPrice)}
               </span>
               <img
                 src={saleStampUrl}
-                alt="מבצע"
+                alt={tr('מבצע', 'Sale')}
                 className="h-7 w-auto shrink-0 select-none"
                 draggable={false}
               />
@@ -172,7 +173,7 @@ export default function ProductCard({
           {product.isSold && (
             <img
               src={soldStampUrl}
-              alt="נמכר"
+              alt={tr('נמכר', 'Sold')}
               className="h-9 w-auto shrink-0 mr-auto select-none"
               draggable={false}
             />
@@ -197,7 +198,7 @@ export default function ProductCard({
             for twice. */}
         {product.isSold ? (
           <span className="mt-3.5 w-full bg-stone-100 text-stone-600 border border-stone-200 font-medium py-2 px-4 flex items-center justify-center text-xs text-center cursor-not-allowed select-none">
-            נמכר
+            {tr('נמכר', 'Sold')}
           </span>
         ) : (
         <a
@@ -212,7 +213,7 @@ export default function ProductCard({
           id={`quick-buy-btn-${product.id}`}
         >
           <WhatsAppBadge className="w-5 h-5" />
-          <span>רכישה בווטסאפ</span>
+          <span>{tr('רכישה בווטסאפ', 'Buy on WhatsApp')}</span>
         </a>
         )}
       </div>

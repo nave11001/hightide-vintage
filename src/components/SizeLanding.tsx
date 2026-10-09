@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { track } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
 import Logo from './Logo';
+import { money, tr } from '../i18n';
 import {
   splitByWaist,
   shirtsByLetter,
@@ -71,16 +72,16 @@ function Card({ product, badge, onViewDetails }: CardProps) {
                 : 'text-sm font-medium text-stone-900'
             }
           >
-            ₪{product.price}
+            {money(product.price)}
           </span>
           {/* This is the page the Instagram bot sends people to — the warmest
               traffic the shop gets — and the discount on it was the one thing
               too faint to read. */}
           {product.originalPrice && (
-            <span className="text-sm text-stone-500 line-through">₪{product.originalPrice}</span>
+            <span className="text-sm text-stone-500 line-through">{money(product.originalPrice)}</span>
           )}
         </span>
-        <span className="text-xs text-stone-500">מידה {product.sizes[0]}</span>
+        <span className="text-xs text-stone-500">{tr('מידה', 'Size')} {product.sizes[0]}</span>
       </div>
     </button>
   );
@@ -112,11 +113,11 @@ function Suggestions({
   onPick: (size: string) => void;
 }) {
   if (options.length === 0) {
-    return <p className="text-center text-[15px] text-stone-600 mt-4">דרופ חדש נכנס כל שבוע — שווה לעקוב.</p>;
+    return <p className="text-center text-[15px] text-stone-600 mt-4">{tr('דרופ חדש נכנס כל שבוע — שווה לעקוב.', 'A new drop lands every week — worth following.')}</p>;
   }
   return (
     <>
-      <p className="text-center text-[15px] text-stone-800 mt-4">אבל יש לנו במידות האלה:</p>
+      <p className="text-center text-[15px] text-stone-800 mt-4">{tr('אבל יש לנו במידות האלה:', 'But we do have these sizes:')}</p>
       <div className="flex flex-wrap justify-center gap-3 mt-4">
         {options.map((o) => (
           <button
@@ -125,7 +126,7 @@ function Suggestions({
             onClick={() => onPick(o.size)}
             className="px-5 py-3 border border-stone-300 hover:border-stone-900 text-stone-900 text-sm cursor-pointer"
           >
-            <span className="font-medium">מידה {o.size}</span>
+            <span className="font-medium">{tr('מידה', 'Size')} {o.size}</span>
             <span className="text-stone-500"> · {o.count}</span>
           </button>
         ))}
@@ -160,7 +161,8 @@ export default function SizeLanding({
   onPickSize,
 }: SizeLandingProps) {
   const bottomsCategory = categoryForGender(gender);
-  const trouserWord = gender === 'women' ? 'מכנסי נשים' : 'מכנסיים';
+  const trouserWord = gender === 'women' ? tr('מכנסי נשים', 'women’s shorts') : tr('מכנסיים', 'shorts');
+  const shirtWord = tr('חולצות', 'tees');
 
   const { exact: pants, maybe: alsoPants } = (
     waist !== undefined
@@ -185,7 +187,7 @@ export default function SizeLanding({
   const both = waist !== undefined && shirt !== undefined;
   const totals = [
     pants.length > 0 ? `${pants.length} ${trouserWord}` : '',
-    shirts.length > 0 ? `${shirts.length} חולצות` : '',
+    shirts.length > 0 ? `${shirts.length} ${shirtWord}` : '',
   ].filter(Boolean);
 
   const showAll = (list: Product[], category: string, label: string, noun: string) =>
@@ -199,14 +201,14 @@ export default function SizeLanding({
         className="block w-full mt-5 py-4 bg-stone-900 hover:bg-black text-white text-[15px] cursor-pointer"
         id={`size-landing-show-all-${category}`}
       >
-        {`לכל ${list.length} ה${noun} במידה ${label} ←`}
+        {tr(`לכל ${list.length} ה${noun} במידה ${label} ←`, `All ${list.length} ${noun} in size ${label} →`)}
       </button>
     ) : null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-16" id="size-landing" dir="rtl">
+    <div className="max-w-6xl mx-auto px-4 pb-16" id="size-landing" dir={tr('rtl', 'ltr')}>
       <header className="text-center pt-8 pb-6 border-b border-stone-200">
-        <button type="button" onClick={onBrowseAll} className="cursor-pointer" aria-label="לדף הבית">
+        <button type="button" onClick={onBrowseAll} className="cursor-pointer" aria-label={tr('לדף הבית', 'Home')}>
           <Logo className="w-14 h-14 mx-auto" />
         </button>
         <p className="mt-3 text-[15px] tracking-[0.16em] uppercase text-stone-500 font-groovy">
@@ -222,7 +224,7 @@ export default function SizeLanding({
             <div className="w-[1px] self-stretch bg-stone-200"></div>
             <div>
               <p className="text-4xl sm:text-5xl font-light leading-none text-stone-900">{shirt}</p>
-              <p className="mt-1.5 text-[13px] text-stone-500">חולצות</p>
+              <p className="mt-1.5 text-[13px] text-stone-500">{shirtWord}</p>
             </div>
           </div>
         ) : (
@@ -231,14 +233,16 @@ export default function SizeLanding({
               {waist !== undefined ? waist : shirt}
             </p>
             <p className="mt-1.5 text-[13px] text-stone-500">
-              {waist !== undefined ? trouserWord : 'חולצות'}
+              {waist !== undefined ? trouserWord : shirtWord}
             </p>
           </>
         )}
 
         <div className="w-12 h-[1px] bg-stone-800 mx-auto my-4"></div>
         <p className="text-[15px] text-stone-800">
-          {totals.length > 0 ? `${totals.join(' ו-')} במידות שלך` : 'אין כרגע פריטים במידות שלך'}
+          {totals.length > 0
+            ? tr(`${totals.join(' ו-')} במידות שלך`, `${totals.join(' and ')} in your sizes`)
+            : tr('אין כרגע פריטים במידות שלך', 'Nothing in your sizes right now')}
         </p>
       </header>
 
@@ -249,7 +253,7 @@ export default function SizeLanding({
             <section className="mt-8" id="size-landing-exact">
               <Heading
                 en="Most Wanted In Your Size"
-                he={`${trouserWord} — המבוקשים ביותר במידה ${waist}`}
+                he={tr(`${trouserWord} — המבוקשים ביותר במידה ${waist}`, `${trouserWord} — most wanted in size ${waist}`)}
               />
               <Rail>
                 {pants
@@ -271,7 +275,7 @@ export default function SizeLanding({
 
           {alsoPants.length > 0 && (
             <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-maybe">
-              <Heading en="Might Also Fit" he={`מסומנים באות שמכסה מותן ${waist}`} />
+              <Heading en="Might Also Fit" he={tr(`מסומנים באות שמכסה מותן ${waist}`, `Labelled with a letter that covers a ${waist} waist`)} />
               <Rail>
                 {alsoPants
                   .slice()
@@ -291,7 +295,7 @@ export default function SizeLanding({
 
           {pants.length === 0 && alsoPants.length === 0 && (
             <section className="mt-8" id="size-landing-empty-pants">
-              <Heading en="Nothing In That Waist" he={`אין כרגע ${trouserWord} במידה ${waist}`} />
+              <Heading en="Nothing In That Waist" he={tr(`אין כרגע ${trouserWord} במידה ${waist}`, `No ${trouserWord} in size ${waist} right now`)} />
               <Suggestions
                 options={nearerWaists.map((s) => ({ size: String(s.size), count: s.count }))}
                 onPick={(size) => {
@@ -309,7 +313,7 @@ export default function SizeLanding({
         <>
           {shirts.length > 0 ? (
             <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-shirts">
-              <Heading en="Shirts In Your Size" he={`חולצות — המבוקשות ביותר במידה ${shirt}`} />
+              <Heading en="Shirts In Your Size" he={tr(`חולצות — המבוקשות ביותר במידה ${shirt}`, `Tees — most wanted in size ${shirt}`)} />
               <Rail>
                 {shirts
                   .slice()
@@ -324,11 +328,11 @@ export default function SizeLanding({
                     />
                   ))}
               </Rail>
-              {showAll(shirts, 'shirts', shirt, 'חולצות')}
+              {showAll(shirts, 'shirts', shirt, shirtWord)}
             </section>
           ) : (
             <section className="mt-10 pt-7 border-t border-stone-200" id="size-landing-empty-shirts">
-              <Heading en="Nothing In That Size" he={`אין כרגע חולצות במידה ${shirt}`} />
+              <Heading en="Nothing In That Size" he={tr(`אין כרגע חולצות במידה ${shirt}`, `No tees in size ${shirt} right now`)} />
               <Suggestions
                 options={nearerShirts.map((s) => ({ size: s.letter, count: s.count }))}
                 onPick={(size) => {
@@ -346,7 +350,7 @@ export default function SizeLanding({
         onClick={onBrowseAll}
         className="block mx-auto mt-10 text-[13px] text-stone-500 underline hover:text-stone-900 cursor-pointer"
       >
-        לחנות המלאה
+        {tr('לחנות המלאה', 'Browse the whole shop')}
       </button>
     </div>
   );

@@ -46,6 +46,7 @@ import catAllImg from '@/assets/photos/all products.webp';
 import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag, Instagram } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
+import { CATEGORY_EN, tr } from './i18n';
 // The size finder — MySizePanel and SizeFinder — was built, never switched on,
 // and is now removed. shared/sizing.mjs stays: SizeLanding and the Instagram bot
 // both read it to answer "what have you got in 32?".
@@ -618,11 +619,11 @@ export default function App() {
     let updated: Product[];
     if (isFav) {
       updated = favoriteItems.filter((item) => item.id !== product.id);
-      showToast(`הוסר מהמועדפים: ${product.name}`);
+      showToast(tr(`הוסר מהמועדפים: ${product.name}`, `Removed from favourites: ${product.name}`));
     } else {
       updated = [...favoriteItems, product];
       trackProduct('favorite_add', product);
-      showToast(`נוסף למועדפים: ${product.name}`);
+      showToast(tr(`נוסף למועדפים: ${product.name}`, `Added to favourites: ${product.name}`));
     }
     setFavoriteItems(updated);
     localStorage.setItem('higetide_favorites', JSON.stringify(updated));
@@ -803,7 +804,7 @@ export default function App() {
               and the garment's name is the heading there. */}
           {!routeSlug && (
             <h1 className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 [clip:rect(0,0,0,0)]">
-              HIGHTIDE VINTAGE — מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים
+              {tr('HIGHTIDE VINTAGE — מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים', 'HIGHTIDE VINTAGE — original vintage boardshorts, tees and accessories')}
             </h1>
           )}
 
@@ -1030,7 +1031,7 @@ export default function App() {
                       // browser being told it may send a smaller file than the
                       // box needs, which is what a blurry tile is.
                       sizes={category.sizes}
-                      alt={category.name}
+                      alt={tr(category.name, category.subText)}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
@@ -1077,11 +1078,17 @@ export default function App() {
                   Right-to-left on purpose: in brackets and left to the page's
                   direction, "(15 פריטים)" came out as "(פריטים 15)" in one
                   browser and the other way round in the next. */}
-              <h1 dir="rtl" className="text-sm sm:text-base font-normal tracking-widest text-stone-900 uppercase">
-                <span>{selectedCategory === 'latest' ? 'הדרופ האחרון' : CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'תוצאות חיפוש'}</span>
+              <h1 dir={tr('rtl', 'ltr')} className="text-sm sm:text-base font-normal tracking-widest text-stone-900 uppercase">
+                <span>
+                  {selectedCategory === 'latest'
+                    ? tr('הדרופ האחרון', CATEGORY_EN.latest)
+                    : CATEGORIES.some((c) => c.id === selectedCategory)
+                      ? tr(CATEGORIES.find((c) => c.id === selectedCategory)!.name, CATEGORY_EN[selectedCategory] ?? '')
+                      : tr('תוצאות חיפוש', 'Search results')}
+                </span>
                 <span className="mx-2 text-stone-300" aria-hidden="true">·</span>
                 <span className="text-stone-500">
-                  {filteredProducts.length === 1 ? 'פריט אחד' : `${filteredProducts.length} פריטים`}
+                  {filteredProducts.length === 1 ? tr('פריט אחד', '1 item') : tr(`${filteredProducts.length} פריטים`, `${filteredProducts.length} items`)}
                 </span>
               </h1>
 
@@ -1094,7 +1101,7 @@ export default function App() {
                 }}
                 className="text-xs text-stone-500 hover:text-stone-900 font-normal hover:underline cursor-pointer flex items-center gap-1.5 flex-row-reverse"
               >
-                <span>חזרה לקטגוריות ←</span>
+                <span>{tr('חזרה לקטגוריות ←', '← Back to categories')}</span>
               </button>
             </div>
 
@@ -1107,30 +1114,30 @@ export default function App() {
                         {
                           id: 'size-select',
                           wrapperId: 'size-filter',
-                          label: 'מידה',
+                          label: tr('מידה', 'Size'),
                           mono: true,
                           value: selectedSizes[0] || '',
                           onChange: (v: string) => {
                             setSelectedSizes(v ? [v] : []);
                             if (v) track('size_filter', { size: v, category: selectedCategory });
                           },
-                          options: [{ value: '', label: 'כל המידות' }, ...availableSizes.map((size) => ({ value: size, label: size }))],
+                          options: [{ value: '', label: tr('כל המידות', 'All sizes') }, ...availableSizes.map((size) => ({ value: size, label: size }))],
                         },
                       ]
                     : []),
                   {
                     id: 'availability-select',
                     wrapperId: 'availability-filter',
-                    label: 'זמינות',
+                    label: tr('זמינות', 'Availability'),
                     value: availabilityFilter,
                     onChange: (v: string) => {
                       setAvailabilityFilter(v as '' | 'available' | 'sold');
                       if (v) track('availability_filter', { value: v, category: selectedCategory });
                     },
                     options: [
-                      { value: '', label: 'הכל' },
-                      { value: 'available', label: 'זמין במלאי' },
-                      { value: 'sold', label: 'נמכר' },
+                      { value: '', label: tr('הכל', 'All') },
+                      { value: 'available', label: tr('זמין במלאי', 'In stock') },
+                      { value: 'sold', label: tr('נמכר', 'Sold') },
                     ],
                   },
                   // Only worth offering once something is actually discounted
@@ -1139,15 +1146,15 @@ export default function App() {
                         {
                           id: 'sale-select',
                           wrapperId: 'sale-filter',
-                          label: 'מבצעים',
+                          label: tr('מבצעים', 'Sale'),
                           value: saleFilter,
                           onChange: (v: string) => {
                             setSaleFilter(v as '' | 'sale');
                             if (v) track('sale_filter', { value: v, category: selectedCategory });
                           },
                           options: [
-                            { value: '', label: 'הכל' },
-                            { value: 'sale', label: 'במבצע בלבד' },
+                            { value: '', label: tr('הכל', 'All') },
+                            { value: 'sale', label: tr('במבצע בלבד', 'On sale only') },
                           ],
                         },
                       ]
@@ -1160,12 +1167,12 @@ export default function App() {
             {isLoadingProducts ? (
               <div className="text-center py-24" id="catalog-loading">
                 <div className="inline-block w-8 h-8 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin"></div>
-                <p className="text-sm text-stone-500 mt-4 tracking-widest uppercase font-mono">טוען מלאי…</p>
+                <p className="text-sm text-stone-500 mt-4 tracking-widest uppercase font-mono">{tr('טוען מלאי…', 'Loading…')}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-24 bg-white border border-dashed border-gray-200 p-8 rounded-none">
-                <p className="text-lg font-normal text-gray-700">לא נמצאו פריטים העונים לחיפוש שלך</p>
-                <p className="text-sm text-stone-500 mt-1">נסו לשנות את מילות החיפוש או לבחור קטגוריה אחרת</p>
+                <p className="text-lg font-normal text-gray-700">{tr('לא נמצאו פריטים העונים לחיפוש שלך', 'Nothing matches your search')}</p>
+                <p className="text-sm text-stone-500 mt-1">{tr('נסו לשנות את מילות החיפוש או לבחור קטגוריה אחרת', 'Try other words, or pick a category')}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -1174,7 +1181,7 @@ export default function App() {
                   }}
                   className="mt-6 px-6 py-2 bg-stone-900 text-white font-normal border border-stone-900 cursor-pointer"
                 >
-                  חזור לכל המוצרים
+                  {tr('חזור לכל המוצרים', 'Back to all items')}
                 </button>
               </div>
             ) : (
@@ -1207,10 +1214,10 @@ export default function App() {
             The heading steps down to 20px below `sm` to make room for it. */}
         <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-row-reverse gap-4 items-center text-right" id="care-tips">
           <SpinningLogo className="w-14 h-14 sm:w-20 sm:h-20" />
-          <div dir="rtl" className="min-w-0">
-            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight" style={{ fontFamily: 'Rubik, sans-serif' }} dir="rtl">אהבתם מה שראיתם?</h4>
-            <p className="text-xs text-stone-700 mt-1 leading-relaxed" dir="rtl">
-              תשלחו לנו הודעה בקישור למטה , באינסטגרם ובווצאפ
+          <div dir={tr('rtl', 'ltr')} className="min-w-0">
+            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight" style={{ fontFamily: 'Rubik, sans-serif' }}>{tr('אהבתם מה שראיתם?', 'Like what you see?')}</h4>
+            <p className="text-xs text-stone-700 mt-1 leading-relaxed">
+              {tr('תשלחו לנו הודעה בקישור למטה , באינסטגרם ובווצאפ', 'Send us a message on Instagram or WhatsApp — the links are below.')}
             </p>
           </div>
         </div>
@@ -1237,7 +1244,10 @@ export default function App() {
               />
             </div>
             <p className="text-xs leading-relaxed max-w-xs text-gray-300">
-              חנות הוינטג׳ הבלעדית למכנסי גלישה, חולצות, סווטשרטים ואקססוריז של תור הזהב של מותגי הגלישה והספורט משנות ה-2000.
+              {tr(
+                'חנות הוינטג׳ הבלעדית למכנסי גלישה, חולצות, סווטשרטים ואקססוריז של תור הזהב של מותגי הגלישה והספורט משנות ה-2000.',
+                'Vintage boardshorts, tees, sweatshirts and accessories from the golden age of surf and sports brands in the 2000s.',
+              )}
             </p>
             {/* Icons rather than two words in grey boxes. The brand marks are
                 what people scan a footer for, and read faster than the names.
@@ -1249,8 +1259,8 @@ export default function App() {
                 href="https://www.instagram.com/_hightide_vintage?igsh=M2xrYTI0eHZ0YjY0&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="HIGHTIDE VINTAGE באינסטגרם"
-                title="אינסטגרם"
+                aria-label={tr('HIGHTIDE VINTAGE באינסטגרם', 'HIGHTIDE VINTAGE on Instagram')}
+                title={tr('אינסטגרם', 'Instagram')}
                 className="w-11 h-11 rounded-full border border-gray-700 flex items-center justify-center text-white hover:bg-white hover:text-black hover:border-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <Instagram className="w-5 h-5" aria-hidden="true" />
@@ -1259,8 +1269,8 @@ export default function App() {
                 href="https://wa.me/972528879922"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="שיחה איתנו בווטסאפ"
-                title="ווטסאפ"
+                aria-label={tr('שיחה איתנו בווטסאפ', 'Chat with us on WhatsApp')}
+                title={tr('ווטסאפ', 'WhatsApp')}
                 className="w-11 h-11 rounded-full border border-gray-700 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <WhatsAppMark className="w-5 h-5" />
@@ -1270,7 +1280,7 @@ export default function App() {
 
           {/* Quick links */}
           <div className="flex flex-col items-end">
-            <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">תפריט מהיר</span>
+            <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">{tr('תפריט מהיר', 'Shop')}</span>
             {/* Real addresses, not href="#".
                 They worked — the click handler switched category — but only
                 for a plain left click. Middle-click, ⌘-click, long-press and
@@ -1280,9 +1290,9 @@ export default function App() {
                 the truth about where the link goes. */}
             <ul className="space-y-2 text-xs">
               {[
-                { id: 'all', label: 'כל קטלוג המוצרים' },
-                { id: 'boardies', label: 'מכנסי גלישה (Boardshorts)' },
-                { id: 'shirts', label: 'חולצות וינטג׳' },
+                { id: 'all', label: tr('כל קטלוג המוצרים', 'All items') },
+                { id: 'boardies', label: tr('מכנסי גלישה (Boardshorts)', 'Boardshorts') },
+                { id: 'shirts', label: tr('חולצות וינטג׳', 'Vintage tees') },
               ].map(({ id, label }) => (
                 <li key={id}>
                   <a
@@ -1304,11 +1314,11 @@ export default function App() {
 
           {/* Physical Address / Contact */}
           <div className="flex flex-col items-end">
-            <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">צור קשר ואיסוף</span>
-            <div dir="rtl" className="text-xs leading-relaxed text-gray-300 space-y-1 text-right">
-              <div>טלפון: <a href="tel:0528879922" className="hover:text-white transition-colors font-mono font-bold">052-8879922</a></div>
-              <div>מייל: <a href="mailto:hightide1622@gmail.com" dir="ltr" className="hover:text-white transition-colors font-mono font-bold">hightide1622@gmail.com</a></div>
-              <div className="mt-1 text-stone-300">הגבעה 28 כפר האורנים (בתיאום מראש)</div>
+            <span className="font-extrabold text-sm text-white uppercase tracking-wider mb-3 font-mono">{tr('צור קשר ואיסוף', 'Contact')}</span>
+            <div dir={tr('rtl', 'ltr')} className="text-xs leading-relaxed text-gray-300 space-y-1 text-right">
+              <div>{tr('טלפון', 'Phone')}: <a href={tr('tel:0528879922', 'tel:+972528879922')} className="hover:text-white transition-colors font-mono font-bold">{tr('052-8879922', '+972 52-887-9922')}</a></div>
+              <div>{tr('מייל', 'Email')}: <a href="mailto:hightide1622@gmail.com" dir="ltr" className="hover:text-white transition-colors font-mono font-bold">hightide1622@gmail.com</a></div>
+              <div className="mt-1 text-stone-300">{tr('הגבעה 28 כפר האורנים (בתיאום מראש)', 'Shipping worldwide from Israel')}</div>
             </div>
           </div>
         </div>
@@ -1317,8 +1327,8 @@ export default function App() {
             nobody browsing garments has to see. Real addresses, so each can be
             handed to a customer, a lawyer or a crawler on its own. */}
         <nav
-          dir="rtl"
-          aria-label="מסמכים משפטיים"
+          dir={tr('rtl', 'ltr')}
+          aria-label={tr('מסמכים משפטיים', 'Legal')}
           className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-800 flex flex-wrap items-center justify-center gap-x-6 gap-y-1"
         >
           {FOOTER_LEGAL_LINKS.map((link) => (
@@ -1332,7 +1342,7 @@ export default function App() {
               }}
               className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center"
             >
-              {link.label}
+              {tr(link.label, link.labelEn)}
             </a>
           ))}
         </nav>

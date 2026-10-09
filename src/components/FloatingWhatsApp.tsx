@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { WhatsAppDisc } from './WhatsAppMark';
+import { tr } from '../i18n';
 
 /**
  * The floating "talk to us" button.
@@ -41,8 +42,8 @@ export default function FloatingWhatsApp({ suppressed = false }: { suppressed?: 
       href="https://wa.me/972528879922"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="שיחה איתנו בווטסאפ"
-      title="דברו איתנו בווטסאפ"
+      aria-label={tr('שיחה איתנו בווטסאפ', 'Chat with us on WhatsApp')}
+      title={tr('דברו איתנו בווטסאפ', 'Chat with us on WhatsApp')}
       // Out of the tab order and the accessibility tree while it is off
       // screen, so nobody tabs onto a control they cannot see.
       tabIndex={hidden ? -1 : undefined}

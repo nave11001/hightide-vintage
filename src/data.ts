@@ -4,17 +4,24 @@ import { storageUrl } from './photos';
 import snapshot from './catalog-snapshot.json';
 import { brandName } from '@/shared/brands.mjs';
 import { displaySize } from '@/shared/sizing.mjs';
+import { tr } from './i18n';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
 // Nothing here is baked in at build time, so marking an item sold in the
 // dashboard shows up on the site as soon as a visitor reloads.
 
-const CATEGORY_LABELS: Record<string, { name: string; description: string }> = {
-  boardies: { name: 'HIGHTIDE Boardies', description: 'מכנסי גלישה וינטג׳' },
-  shirts: { name: 'HIGHTIDE Tee', description: 'חולצת וינטג׳' },
-  accessories: { name: 'HIGHTIDE Accessory', description: 'אקססורי וינטג׳' },
-  women: { name: 'HIGHTIDE Women', description: 'פריט נשים וינטג׳' },
+const CATEGORY_LABELS: Record<string, { name: string; description: string; descriptionEn: string }> = {
+  boardies: { name: 'HIGHTIDE Boardies', description: 'מכנסי גלישה וינטג׳', descriptionEn: 'Vintage boardshorts' },
+  shirts: { name: 'HIGHTIDE Tee', description: 'חולצת וינטג׳', descriptionEn: 'Vintage tee' },
+  accessories: { name: 'HIGHTIDE Accessory', description: 'אקססורי וינטג׳', descriptionEn: 'Vintage accessory' },
+  women: { name: 'HIGHTIDE Women', description: 'פריט נשים וינטג׳', descriptionEn: 'Vintage womenswear' },
 };
+
+// Read when a row is turned into a product, never at import: the language is
+// settled after this module loads (see i18n.ts).
+const CONDITION = () => tr('וינטג׳ במצב מעולה', 'Vintage, excellent condition');
+const describe = (labels: { description: string; descriptionEn: string }) =>
+  tr(labels.description, labels.descriptionEn);
 
 interface PhotoRow {
   path: string;
@@ -65,9 +72,9 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
     images,
     borderType: 'retro-wave',
     sizes: [displaySize(row.size)],
-    condition: 'וינטג׳ במצב מעולה',
+    condition: CONDITION(),
     category: category as Product['category'],
-    description: labels.description,
+    description: describe(labels),
     colors: [],
     // Sold items stay listed (marked נמכר, ordering blocked) until the
     // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
@@ -143,9 +150,9 @@ export function snapshotProducts(): Product[] {
       images: row.ph.map(storageUrl),
       borderType: 'retro-wave' as const,
       sizes: [displaySize(row.s)],
-      condition: 'וינטג׳ במצב מעולה',
+      condition: CONDITION(),
       category: row.c as Product['category'],
-      description: CATEGORY_LABELS[row.c].description,
+      description: describe(CATEGORY_LABELS[row.c]),
       colors: [],
       isSold: row.sold === 1,
       isLatestDrop: row.new === 1,
@@ -222,7 +229,12 @@ export function readCachedProducts(): Product[] | null {
   // All or nothing: a catalogue half of whose garments cannot open is worse to
   // browse than one that is a deploy behind.
   if (box.items.length === 0 || !box.items.every(isUsable)) return null;
-  return box.items as Product[];
+  // The words were saved in whatever language the last visit was in.
+  return (box.items as Product[]).map((p) => ({
+    ...p,
+    condition: CONDITION(),
+    description: describe(CATEGORY_LABELS[p.category]),
+  }));
 }
 
 // Re-exported rather than defined here: the same list has to reach the Netlify

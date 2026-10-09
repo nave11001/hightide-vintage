@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {initPostHog} from './posthog';
 import {dismissSplash} from './splash';
+import {initLocale} from './i18n';
 import './index.css';
 
 // A deadline on the splash in index.html, armed before anything that could
@@ -13,8 +14,13 @@ window.setTimeout(dismissSplash, 8000);
 
 initPostHog();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// The language is settled before the first render — Hebrew, or English with
+// dollar prices for a visitor from abroad. See i18n.ts. It never throws, and
+// gives up on the country after a moment, so this waits at most that long.
+initLocale().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+});

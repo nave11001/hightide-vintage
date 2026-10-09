@@ -1,5 +1,6 @@
 import { Product } from './types';
 import { productPath } from '@/shared/slug.mjs';
+import { money, tr } from './i18n';
 
 // The message a customer sends when they want a garment.
 //
@@ -35,6 +36,18 @@ export function productUrl(product: Product): string {
 }
 
 /**
+ * The opening of an order from abroad. It asks about shipping up front, because
+ * that is the one thing the shop has to answer before the buyer can pay.
+ */
+export function englishOrder(name: string, price: string, size?: string): string {
+  const what = size ? `"${name}" in size ${size}` : `"${name}"`;
+  return (
+    `Hi! I'd like to buy ${what} for ${price}. Is it still available? ` +
+    `I'm ordering from abroad — how much would shipping to my country be?`
+  );
+}
+
+/**
  * A wa.me link that opens WhatsApp with the message already written.
  *
  * `opening` replaces the first line for the places that word it differently —
@@ -43,7 +56,10 @@ export function productUrl(product: Product): string {
 export function buyOnWhatsApp(product: Product, opening?: string): string {
   const text = [
     opening ??
-      `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+      tr(
+        `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+        englishOrder(product.name, money(product.price)),
+      ),
     productUrl(product),
   ].join('\n\n');
 

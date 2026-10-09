@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Menu, X, Heart, Trash2 } from 'lucide-react';
+import { Search, Menu, X, Heart, Trash2, ChevronDown } from 'lucide-react';
 import { Product } from '../types';
 import Logo from './Logo';
 import HightideLogo from './HightideLogo';
 import CategoryBar from './CategoryBar';
 import { onPhotoError, srcSetFor } from '../photos';
-import { buyOnWhatsApp } from '../whatsapp';
+import { buyOnWhatsApp, englishOrder } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
 import { useScrollLock } from '../useScrollLock';
+import { CATEGORY_EN, currentLang, money, setLang, tr } from '../i18n';
 
 interface HeaderProps {
   searchTerm: string;
@@ -41,6 +42,8 @@ export default function Header({
   isTransparent = false,
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Folded by default so the drawer stays short; the count shows either way.
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
   useScrollLock(isMobileMenuOpen);
 
   // Escape closes the drawer, the way it closes every other layer in the shop.
@@ -102,7 +105,7 @@ export default function Header({
             type="button"
             onClick={onOpenSearch}
             className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${iconColorClass}`}
-            aria-label="חיפוש"
+            aria-label={tr('חיפוש', 'Search')}
             aria-expanded={isSearchOpen}
             id="search-toggle-btn"
           >
@@ -172,7 +175,7 @@ export default function Header({
           <div className="absolute inset-0 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsMobileMenuOpen(false)}></div>
           
           {/* Drawer Content */}
-          <div role="dialog" aria-modal="true" aria-label="תפריט" className="absolute inset-y-0 left-0 bg-[#fdfcf9] w-80 max-w-[85vw] h-dvh p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain text-right animate-drawer-in">
+          <div role="dialog" aria-modal="true" aria-label={tr('תפריט', 'Menu')} className="absolute inset-y-0 left-0 bg-[#fdfcf9] w-80 max-w-[85vw] h-dvh p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain text-right animate-drawer-in">
             
             {/* Header of Drawer */}
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
@@ -180,7 +183,7 @@ export default function Header({
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-1.5 hover:bg-stone-100 rounded-full text-stone-800 transition-colors"
-                aria-label="סגירת התפריט"
+                aria-label={tr('סגירת התפריט', 'Close menu')}
                 id="close-menu-btn"
               >
                 <X className="w-6 h-6" />
@@ -191,7 +194,7 @@ export default function Header({
 
             {/* Section 1: Categories */}
             <div className="mt-5">
-              <h3 className="font-medium text-xs text-stone-500 uppercase tracking-widest mb-2">קטגוריות</h3>
+              <h3 className="font-medium text-xs text-stone-500 uppercase tracking-widest mb-2">{tr('קטגוריות', 'Categories')}</h3>
               <div className="flex flex-col gap-1">
                 {categories.map((cat) => (
                   <button
@@ -207,7 +210,7 @@ export default function Header({
                         : 'hover:bg-stone-100 text-stone-800'
                     }`}
                   >
-                    {cat.name}
+                    {tr(cat.name, CATEGORY_EN[cat.id] ?? cat.name)}
                   </button>
                 ))}
               </div>
@@ -215,18 +218,33 @@ export default function Header({
 
             {/* Section 2: FAVORITES SECTION (יצירת סל מועדפים ישירות מתחת לשלושת הפסים) */}
             <div className="mt-6 pt-5 border-t border-stone-200">
-              <div className="flex items-center justify-between flex-row-reverse mb-3">
-                <span className="font-mono text-xs text-stone-500">({favoriteItems.length})</span>
-                <h3 className="font-medium text-xs text-stone-500 uppercase tracking-widest flex items-center gap-1 flex-row-reverse">
-                  <Heart className="w-3.5 h-3.5 text-black stroke-[2px]" />
-                  <span>המועדפים שלי</span>
-                </h3>
-              </div>
+              <h3>
+                <button
+                  type="button"
+                  onClick={() => setFavoritesOpen((open) => !open)}
+                  aria-expanded={favoritesOpen}
+                  aria-controls="drawer-favorites"
+                  className="w-full py-1 flex items-center justify-between flex-row-reverse cursor-pointer text-stone-500 hover:text-stone-800 transition-colors"
+                >
+                  <span className="flex items-center gap-1.5 flex-row-reverse">
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${favoritesOpen ? 'rotate-180' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span className="font-mono text-xs">({favoriteItems.length})</span>
+                  </span>
+                  <span className="font-medium text-xs uppercase tracking-widest flex items-center gap-1 flex-row-reverse">
+                    <Heart className="w-3.5 h-3.5 text-black stroke-[2px]" aria-hidden="true" />
+                    <span>{tr('המועדפים שלי', 'My favourites')}</span>
+                  </span>
+                </button>
+              </h3>
 
+              <div id="drawer-favorites" hidden={!favoritesOpen} className="mt-3">
               {favoriteItems.length === 0 ? (
                 <div className="text-center py-6 px-4 bg-stone-50 border border-stone-100 rounded-sm">
-                  <p className="text-sm text-stone-600 leading-relaxed">אין עדיין פריטים במועדפים.</p>
-                  <p className="text-xs text-stone-500 mt-1">לחצו על הלב במוצרים שאהבתם כדי לראות אותם כאן!</p>
+                  <p className="text-sm text-stone-600 leading-relaxed">{tr('אין עדיין פריטים במועדפים.', 'No favourites yet.')}</p>
+                  <p className="text-xs text-stone-500 mt-1">{tr('לחצו על הלב במוצרים שאהבתם כדי לראות אותם כאן!', 'Tap the heart on anything you like to keep it here.')}</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
@@ -251,9 +269,9 @@ export default function Header({
                           {item.name}
                         </h4>
                         <p className="text-xs font-normal text-stone-900 mt-0.5">
-                          ₪{item.price}
+                          {money(item.price)}
                           {item.isSold && (
-                            <span className="mr-2 text-xs text-stone-600 font-medium">נמכר</span>
+                            <span className="mr-2 text-xs text-stone-600 font-medium">{tr('נמכר', 'Sold')}</span>
                           )}
                         </p>
                       </div>
@@ -265,13 +283,16 @@ export default function Header({
                         <a
                           href={buyOnWhatsApp(
                             item,
-                            `שלום! ראיתי במועדפים באתר את הפריט "${item.name}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`,
+                            tr(
+                              `שלום! ראיתי במועדפים באתר את הפריט "${item.name}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`,
+                              englishOrder(item.name, money(item.price)),
+                            ),
                           )}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setIsMobileMenuOpen(false)}
                           className="p-1.5 text-stone-700 hover:text-stone-900 hover:bg-stone-100 rounded-full transition-colors flex items-center justify-center"
-                          title="רכישה בווטסאפ"
+                          title={tr('רכישה בווטסאפ', 'Buy on WhatsApp')}
                         >
                           <WhatsAppBadge className="w-5 h-5" />
                         </a>
@@ -282,7 +303,7 @@ export default function Header({
                           type="button"
                           onClick={() => onToggleFavorite(item)}
                           className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                          title="הסר מהמועדפים"
+                          title={tr('הסר מהמועדפים', 'Remove from favourites')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -291,6 +312,7 @@ export default function Header({
                   ))}
                 </div>
               )}
+              </div>
             </div>
 
             {/* General links */}
@@ -304,7 +326,7 @@ export default function Header({
                 }}
                 className="text-right font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors cursor-pointer"
               >
-                עמוד הבית
+                {tr('עמוד הבית', 'Home')}
               </button>
               {/* Was href="#" with no handler at all — the one link in the menu
                   that did nothing whatsoever. There is no about page to send it
@@ -315,15 +337,37 @@ export default function Header({
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors text-right"
               >
-                אודות HIGHTIDE VINTAGE
+                {tr('אודות HIGHTIDE VINTAGE', 'About HIGHTIDE VINTAGE')}
               </a>
               <a 
                 href="#store-footer" 
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="font-normal text-sm text-stone-800 hover:text-stone-950 transition-colors text-right"
               >
-                צור קשר
+                {tr('צור קשר', 'Contact')}
               </a>
+            </div>
+
+            {/* The language, for anyone the country guessed wrong for — an
+                Israeli on a VPN, a tourist on Israeli wifi. Each option is
+                written in its own language, the way language switches are. */}
+            <div className="mt-6 pt-5 border-t border-stone-200 flex items-center gap-2 flex-row-reverse" role="group" aria-label={tr('שפה', 'Language')}>
+              {(['he', 'en'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  lang={option}
+                  onClick={() => option !== currentLang() && setLang(option)}
+                  aria-pressed={option === currentLang()}
+                  className={`min-h-[44px] px-4 text-sm border transition-colors cursor-pointer ${
+                    option === currentLang()
+                      ? 'bg-stone-900 text-white border-stone-900'
+                      : 'bg-white text-stone-800 border-stone-200 hover:border-stone-900'
+                  }`}
+                >
+                  {option === 'he' ? 'עברית' : 'English · $'}
+                </button>
+              ))}
             </div>
 
             {/* Footer */}

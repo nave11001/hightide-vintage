@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { track } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
 import { productPath } from '@/shared/slug.mjs';
+import { money, tr } from '../i18n';
 
 // The ten most-viewed items, straight from the view counter each item carries.
 // No editing, no curation: whatever the shop is actually looking at rises.
@@ -143,7 +144,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   };
 
   return (
-    <section className="mb-12" id="top-wanted" dir="rtl">
+    <section className="mb-12" id="top-wanted" dir={tr('rtl', 'ltr')}>
       <div className="text-center mb-5">
         <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 uppercase">
           Our Most Wanted Pieces
@@ -155,7 +156,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
         <button
           type="button"
           onClick={() => scroll('prev')}
-          aria-label="הקודם"
+          aria-label={tr('הקודם', 'Previous')}
           className="hidden sm:flex absolute -right-3 top-1/3 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center bg-white border border-stone-300 text-stone-700 hover:border-stone-900 hover:text-stone-900 cursor-pointer shadow-sm"
         >
           <ChevronRight className="w-4 h-4" />
@@ -163,7 +164,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
         <button
           type="button"
           onClick={() => scroll('next')}
-          aria-label="הבא"
+          aria-label={tr('הבא', 'Next')}
           className="hidden sm:flex absolute -left-3 top-1/3 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center bg-white border border-stone-300 text-stone-700 hover:border-stone-900 hover:text-stone-900 cursor-pointer shadow-sm"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -255,13 +256,13 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                         : 'text-sm font-medium text-stone-900'
                     }
                   >
-                    ₪{product.price}
+                    {money(product.price)}
                   </span>
                   {/* stone-500 at 14px, not gray-400 at 12px: this is the
                       saving, and on the card it measured 2.5:1. */}
                   {product.originalPrice && (
                     <span className="text-sm text-stone-500 line-through">
-                      ₪{product.originalPrice}
+                      {money(product.originalPrice)}
                     </span>
                   )}
                 </div>
