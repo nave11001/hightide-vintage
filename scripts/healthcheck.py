@@ -158,6 +158,49 @@ def check_endpoint():
     return rows
 
 
+# The tables the shop cannot do without, and what stops working without each.
+#
+# Checked by name because one went missing — `reservations`, overnight on the
+# 8th of October, with nothing in this repository able to drop a table — and
+# all the alarm managed to say was "D1 refused: no such table: reservations",
+# after which it stopped, so every other check that morning went unrun.
+NEEDED_TABLES = (
+    ("items", "the catalogue itself — the shop would be trading entirely on its shipped copy"),
+    ("item_photos", "the garment photographs"),
+    ("reservations", "the Instagram bot writes hold requests here, so every שריון is being lost"),
+)
+
+
+def ask(sql):
+    """d1.query, but a refusal is an answer rather than the end of the run.
+
+    d1.query raises SystemExit, which is the right thing for a script that
+    does one job and stops. Here it is wrong: this is the alarm, and an alarm
+    that stops at the first thing it finds reports one fault and hides the
+    rest. SystemExit does not descend from Exception, so it is named.
+    """
+    try:
+        return d1.query(sql)
+    except (SystemExit, Exception) as err:  # noqa: B014 - SystemExit is the point
+        problem(str(err) or type(err).__name__)
+        return None
+
+
+def check_tables():
+    """Is every table the shop depends on actually there?"""
+    rows = ask("SELECT name FROM sqlite_master WHERE type = 'table'")
+    if rows is None:
+        return set()
+    present = {row["name"] for row in rows}
+    for name, consequence in NEEDED_TABLES:
+        if name not in present:
+            problem("the `%s` table is MISSING from the database — %s. "
+                    "`python scripts/d1_setup.py --schema` puts it back; it only "
+                    "creates what is absent and touches nothing that is there."
+                    % (name, consequence))
+    return present
+
+
 def check_database():
     """Size and row counts, straight from D1."""
     account, database, token = d1.credentials()
@@ -178,15 +221,29 @@ def check_database():
     if share > WARN_AT:
         problem("database is at %.0f%% of its storage limit" % (share * 100))
 
-    counts = d1.query(
-        "SELECT (SELECT COUNT(*) FROM items) AS items,"
-        " (SELECT COUNT(*) FROM item_photos) AS photos,"
-        " (SELECT COUNT(*) FROM reservations) AS reservations,"
-        " (SELECT COUNT(*) FROM items WHERE sold = 1) AS sold"
-    )[0]
-    note("rows                items %(items)s | photos %(photos)s | sold %(sold)s "
-         "| reservations %(reservations)s" % counts)
-    if counts["items"] == 0:
+    present = check_tables()
+    if not present:
+        return
+
+    # Only the tables that are there. The one query asking for all four at once
+    # is what turned a missing `reservations` into a single line of SQLite and
+    # nothing else: SQLite answers "no such table" for the whole statement, so
+    # the counts that were available went unreported along with it.
+    wanted = [("items", "items"), ("photos", "item_photos"), ("reservations", "reservations")]
+    parts = ["(SELECT COUNT(*) FROM %s) AS %s" % (table, label)
+             for label, table in wanted if table in present]
+    if "items" in present:
+        parts.append("(SELECT COUNT(*) FROM items WHERE sold = 1) AS sold")
+    if not parts:
+        return
+    counts = ask("SELECT " + ", ".join(parts))
+    if counts is None:
+        problem("the row counts could not be read")
+        return
+    counts = counts[0]
+    note("rows                " + " | ".join("%s %s" % (name, value)
+                                             for name, value in counts.items()))
+    if counts.get("items") == 0:
         problem("the items table is EMPTY — the shop is running entirely on its fallback")
 
 
