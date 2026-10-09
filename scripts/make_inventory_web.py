@@ -31,6 +31,8 @@ all 116 paths in the database were resolved to local files.
 Measured over the whole library: 81.1MB becomes 8.4MB, a 90% reduction.
 """
 
+import io
+import json
 import os
 import re
 import sys
@@ -40,6 +42,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "assets", "inventory")
 DST = os.path.join(ROOT, "assets", "inventory-web")
+SNAPSHOT = os.path.join(ROOT, "src", "catalog-snapshot.json")
 
 # Repo folder -> the category the database uses. Mirrors FOLDER_TO_CATEGORY in
 # migrate_to_supabase.py; the two must agree or the lookup misses.
@@ -77,6 +80,45 @@ def item_number(stem):
     return (int(m.group(1)), m.group(2).lower()) if m else (None, None)
 
 
+def keep_orphans():
+    """Compressed photos the shop needs and this run cannot produce.
+
+    A path in the shipped catalogue, no master on the disk, and a .webp
+    already here: the three together mean the only copy of that picture is the
+    compressed one. Returns them as paths relative to assets/inventory-web,
+    every width included, so the clearing step can step around them.
+    """
+    try:
+        snapshot = json.load(io.open(SNAPSHOT, encoding="utf-8"))
+    except Exception:
+        return set()   # no snapshot to protect anything by; clear as before
+
+    masters = set()
+    for folder in os.listdir(SRC):
+        source_dir = os.path.join(SRC, folder)
+        category = FOLDER_TO_CATEGORY.get(folder.lower())
+        if not category or not os.path.isdir(source_dir):
+            continue
+        for name in os.listdir(source_dir):
+            stem, ext = os.path.splitext(name)
+            if ext.lower() not in IMAGE_EXT:
+                continue
+            num, letter = item_number(stem)
+            if num is not None:
+                masters.add("%s/%d%s" % (category, num, letter))
+
+    keep = set()
+    for item in snapshot.get("items", []):
+        for path in item.get("ph", []):
+            stem = re.sub(r"\.[^./]+$", "", path)        # boardies/104.jpg -> boardies/104
+            if stem in masters:
+                continue
+            for name in ("%s.webp" % stem,) + tuple("%s-%d.webp" % (stem, w) for w in WIDTHS):
+                if os.path.exists(os.path.join(DST, name)):
+                    keep.add(name)
+    return keep
+
+
 def main() -> None:
     before = after = full = count = 0
     skipped = []
@@ -86,11 +128,31 @@ def main() -> None:
     # not to write — because the master was already smaller — would survive as a
     # stale copy, and the site's srcset would go on offering it as a size it is
     # not. Nothing here is a source; assets/inventory/ is.
+    #
+    # With one exception, which exists because of garment #102. Its master is
+    # not on the disk any more — only the compressed copy is — while the shop
+    # goes on selling it, so clearing the folder would have taken the picture
+    # off a garment that is for sale, on the next drop, quietly. A compressed
+    # photo with no master that the shipped catalogue still asks for is kept
+    # and reported instead. It cannot be rebuilt, and deleting the only copy of
+    # something still in use is not housekeeping.
+    orphans = keep_orphans()
     if os.path.isdir(DST):
         for folder, _, names in os.walk(DST):
             for name in names:
-                if name.lower().endswith(".webp"):
-                    os.remove(os.path.join(folder, name))
+                if not name.lower().endswith(".webp"):
+                    continue
+                relative = os.path.relpath(os.path.join(folder, name), DST).replace(os.sep, "/")
+                if relative in orphans:
+                    continue
+                os.remove(os.path.join(folder, name))
+    if orphans:
+        print("kept %d compressed photo(s) whose master is gone but which the shop "
+              "still shows:" % len(orphans))
+        for relative in sorted(orphans):
+            print("   %s  — put the original back in assets/inventory/ to be able "
+                  "to rebuild it" % relative)
+        print()
 
     for folder in sorted(os.listdir(SRC)):
         source_dir = os.path.join(SRC, folder)
