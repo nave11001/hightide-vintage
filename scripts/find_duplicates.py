@@ -18,8 +18,12 @@ empty gap.
 
 Requires: pip install opencv-python-headless
 
+Names, sizes and prices come from Cloudflare D1, so the report shows what the
+shop shows. Without the database (no .env) it still compares the photos.
+
 Usage:
   python scripts/find_duplicates.py            # human-readable report
+  python scripts/find_duplicates.py --latest   # only pairs touching the newest drop
   python scripts/find_duplicates.py --json     # machine-readable
 """
 import json
@@ -106,12 +110,24 @@ for folder in PHOTO_DIRS:
         if fp:
             items.setdefault((folder, num), []).append((fn, fp))
 
-# ---- metadata for the report ----
+# ---- metadata for the report, from the database ----
+# keyed by (photo folder, num): the folder is what the photo pass knows, and a
+# number can exist in two categories (boardies 150 and women 150).
 meta = {}
-db_path = os.path.join(ROOT, "src", "inventory_db.json")
-if os.path.exists(db_path):
-    for row in json.load(open(db_path, encoding="utf-8")):
-        meta.setdefault(row["num"], row)
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import d1
+    rows = d1.query(
+        "SELECT i.num, i.name, i.size, i.price, i.sold, i.drop_date, p.path"
+        " FROM items i JOIN item_photos p ON p.item_id = i.id")
+    newest = max((r["drop_date"] for r in rows if r["drop_date"]), default=None)
+    for r in rows:
+        folder = {"boardies": "bordies", "shirts": "T-shirts"}.get(
+            r["path"].split("/")[0], r["path"].split("/")[0])
+        r["new"] = bool(newest) and r["drop_date"] == newest
+        meta.setdefault((folder, r["num"]), r)
+except (SystemExit, Exception) as exc:
+    print(f"(no database: {exc}; names and sizes left out)\n", file=sys.stderr)
 
 # ---- compare every pair of items ----
 pairs = []
@@ -120,6 +136,9 @@ for i, key_a in enumerate(keys):
     for key_b in keys[i + 1:]:
         if key_a[1] == key_b[1]:
             continue  # same number in two folders is not a duplicate listing
+        if "--latest" in sys.argv and not (meta.get(key_a, {}).get("new")
+                                           or meta.get(key_b, {}).get("new")):
+            continue
         best = None
         for name_a, fa in items[key_a]:
             for name_b, fb in items[key_b]:
@@ -133,14 +152,14 @@ for i, key_a in enumerate(keys):
                             "photo_b": f"{key_b[0]}/{name_b}",
                         }
         if best:
-            ma, mb = meta.get(key_a[1], {}), meta.get(key_b[1], {})
+            ma, mb = meta.get(key_a, {}), meta.get(key_b, {})
             pairs.append({
                 "a": {"num": key_a[1], "folder": key_a[0], "name": ma.get("name", "?"),
                       "size": ma.get("size", "?"), "price": ma.get("price", 0),
-                      "sold": ma.get("sold", False)},
+                      "sold": bool(ma.get("sold")), "listed": bool(ma)},
                 "b": {"num": key_b[1], "folder": key_b[0], "name": mb.get("name", "?"),
                       "size": mb.get("size", "?"), "price": mb.get("price", 0),
-                      "sold": mb.get("sold", False)},
+                      "sold": bool(mb.get("sold")), "listed": bool(mb)},
                 **best,
             })
 
@@ -160,6 +179,7 @@ else:
             print(f"[{level}] #{a['num']} <-> #{b['num']}  "
                   f"({p['matches']} matching features, score {p['match_ratio']})")
             for side, photo in ((a, p["photo_a"]), (b, p["photo_b"])):
+                note = " SOLD" if side["sold"] else ("" if side["listed"] else " NOT IN DB")
                 print(f"    #{side['num']:<3} {side['name']:<16} size {side['size']:<4} "
-                      f"₪{side['price']:<4}{' SOLD' if side['sold'] else '':5} {photo}")
+                      f"₪{side['price']:<4}{note:10} {photo}")
             print()
