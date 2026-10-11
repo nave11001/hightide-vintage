@@ -7,13 +7,19 @@
 //
 // How it is settled, first match wins:
 //   1. ?lang=en / ?lang=he in the address — a link that opens in a given
-//      language, and the easy way to look at the other one. It is remembered.
-//   2. A choice made earlier with the switch in the menu.
+//      language. For that visit only: a link someone was sent, or tried once,
+//      must not decide every visit after it.
+//   2. A choice made with the switch in the menu. That one is remembered.
 //   3. Search engines always get Hebrew. Google crawls from the US; left to the
 //      country rule it would index the English shop and the Hebrew one would
 //      drop out of search in Israel.
-//   4. The visitor's country, from /api/locale: outside Israel is English.
-//   5. Hebrew — including whenever the answer does not come in time.
+//   4. A device set up in Israel gets Hebrew: the clock on Israel time, or
+//      Hebrew among the browser's languages. Checked before the address
+//      because a VPN — in the browser or on the phone — moves the address
+//      abroad and moves neither of these. The owner, on an Israeli phone with
+//      a VPN on, was shown the English shop.
+//   5. The visitor's country, from /api/locale: outside Israel is English.
+//   6. Hebrew — including whenever the answer does not come in time.
 //
 // Dollar prices are the shekel price at the Bank of Israel's representative
 // rate, rounded up to a whole dollar. The shekel price in the database stays
@@ -21,7 +27,10 @@
 
 export type Lang = 'he' | 'en';
 
-const CHOICE_KEY = 'hightide_lang';
+// _v2: the first version also saved a ?lang= from a link here, so a tried
+// link stuck for good. Those are left behind rather than trusted.
+const CHOICE_KEY = 'hightide_lang_v2';
+const SESSION_KEY = 'hightide_lang_visit';
 const LOCALE_KEY = 'hightide_locale';
 /** How long a looked-up country and rate are trusted before asking again. */
 const LOCALE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -72,8 +81,13 @@ export function setLang(next: Lang): void {
   } catch {
     // Private mode: the switch still works for this load, it is just not kept.
   }
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // Nothing to clear.
+  }
   const url = new URL(window.location.href);
-  url.searchParams.set('lang', next);
+  url.searchParams.delete('lang');
   window.location.replace(url.href);
 }
 
@@ -122,19 +136,35 @@ async function lookUp(): Promise<Locale | null> {
 
 const IS_BOT = /bot|crawler|spider|crawling|facebookexternalhit|whatsapp|preview/i;
 
+/** Set up in Israel: Israel time on the clock, or Hebrew in the browser's languages. */
+function deviceIsIsraeli(): boolean {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (zone === 'Asia/Jerusalem' || zone === 'Asia/Tel_Aviv') return true;
+  } catch {
+    // No Intl time zone: fall through to the languages.
+  }
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+  return languages.some((l) => /^(he|iw)(-|$)/i.test(l ?? ''));
+}
+
 /** Settle the language (and, for English, the rate). Call once, before rendering. */
 export async function initLocale(): Promise<void> {
   let choice: string | null = null;
   try {
-    choice = new URLSearchParams(window.location.search).get('lang');
-    if (choice === 'en' || choice === 'he') localStorage.setItem(CHOICE_KEY, choice);
-    else choice = localStorage.getItem(CHOICE_KEY);
+    // A ?lang= link holds for the rest of this visit — the router drops the
+    // parameter on the first navigation — and no longer.
+    const fromLink = new URLSearchParams(window.location.search).get('lang');
+    if (fromLink === 'en' || fromLink === 'he') sessionStorage.setItem(SESSION_KEY, fromLink);
+    choice = sessionStorage.getItem(SESSION_KEY) ?? localStorage.getItem(CHOICE_KEY);
+    localStorage.removeItem('hightide_lang');
   } catch {
-    // Storage blocked: fall through to the country.
+    // Storage blocked: fall through to the device and the country.
   }
 
   if (choice === 'he' || choice === 'en') lang = choice;
   else if (IS_BOT.test(navigator.userAgent)) lang = 'he';
+  else if (deviceIsIsraeli()) lang = 'he';
   else {
     const locale = await lookUp();
     lang = locale?.country && locale.country !== 'IL' ? 'en' : 'he';
