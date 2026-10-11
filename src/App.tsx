@@ -46,7 +46,7 @@ import catAllImg from '@/assets/photos/all products.webp';
 import { Settings, Play, Pause, Video, Image as ImageIcon, Search, User, ShoppingBag, Instagram } from 'lucide-react';
 import { track, trackProduct } from './analytics';
 import { parseSizeQuery, parseGender } from '@/shared/sizing.mjs';
-import { CATEGORY_EN, tr } from './i18n';
+import { CATEGORY_EN, isEnglish, tr } from './i18n';
 // The size finder — MySizePanel and SizeFinder — was built, never switched on,
 // and is now removed. shared/sizing.mjs stays: SizeLanding and the Instagram bot
 // both read it to answer "what have you got in 32?".
@@ -539,6 +539,26 @@ export default function App() {
   // body is what stops iOS Safari scrolling the page behind a layer, and it
   // costs the offset to do it.
   const modalIsOpen = Boolean(selectedProductForDetails) && !productAsPage;
+
+  // The tab's title, in English. The Hebrew one is written into the page by
+  // the server (index.html, product-meta.mjs) for search engines and link
+  // previews, and stays as it is; a visitor reading in English gets the same
+  // shape of title in English, kept up to date as they move around the shop.
+  useEffect(() => {
+    if (!isEnglish()) return;
+    const site = 'HIGHTIDE VINTAGE';
+    const legalTitles: Record<string, string> = {
+      privacy: 'Privacy Policy',
+      terms: 'Terms of Sale',
+      accessibility: 'Accessibility Statement',
+    };
+    let title = `${site} — Original vintage boardshorts & tees`;
+    if (selectedProductForDetails) title = `${selectedProductForDetails.name} | ${site}`;
+    else if (legalPage) title = `${legalTitles[legalPage] ?? 'HIGHTIDE'} | ${site}`;
+    else if (searchTerm) title = `Search: ${searchTerm} | ${site}`;
+    else if (CATEGORY_EN[selectedCategory]) title = `${CATEGORY_EN[selectedCategory]} | ${site}`;
+    document.title = title;
+  }, [selectedProductForDetails, legalPage, searchTerm, selectedCategory]);
   useEffect(() => {
     if (!modalIsOpen) return;
     const y = window.scrollY;
