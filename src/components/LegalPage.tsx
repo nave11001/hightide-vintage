@@ -91,6 +91,9 @@ const PRIVACY: Doc = {
     {
       p: 'עוגיות הן קבצים קטנים שנשמרים בדפדפן. באתר זה הן משמשות למדידת שימוש בלבד — לא לפרסום ולא להתאמת מודעות. ניתן לחסום עוגיות בהגדרות הדפדפן; חסימתן לא תפגע ביכולת לגלוש באתר ולרכוש.',
     },
+    {
+      p: 'בכניסה הראשונה לאתר מוצגת בקשת הסכמה לעוגיות. עד שתאשרו, המדידה פועלת ללא עוגיות: הביקור נספר, אך אינו נשמר בדפדפן שלכם ואינו מזוהה בביקור הבא. ניתן לשנות את הבחירה בכל עת בקישור ״הגדרות עוגיות״ בתחתית האתר.',
+    },
     { h: 'הזכויות שלכם' },
     {
       p: 'על פי חוק הגנת הפרטיות, התשמ״א‑1981, אתם רשאים לפנות אלינו ולבקש לעיין במידע שנשמר עליכם, לתקן מידע שאינו נכון, או לבקש את מחיקתו. פנייה בנושא תיענה תוך זמן סביר.',
@@ -296,6 +299,9 @@ const PRIVACY_EN: Doc = {
     { h: 'Cookies' },
     {
       p: 'Cookies are small files kept in your browser. On this site they are used only to measure use — not for advertising and not to target ads. You can block cookies in your browser settings; doing so will not stop you browsing or buying.',
+    },
+    {
+      p: 'On your first visit the site asks whether you agree to cookies. Until you accept, measurement runs without cookies: the visit is counted, but nothing is kept in your browser and you are not recognised next time. You can change your choice at any time with the “Cookie settings” link at the foot of the site.',
     },
     { h: 'Your rights' },
     {

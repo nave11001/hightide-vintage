@@ -17,6 +17,7 @@
 // rather than a shrug.
 
 import type posthog from 'posthog-js';
+import { onConsentChange, storedConsent } from './consent';
 
 type PostHog = typeof posthog;
 
@@ -78,8 +79,16 @@ export function initPostHog() {
         disable_surveys: true,
         capture_dead_clicks: false,
         capture_performance: { web_vitals: false },
+
+        // Without consent, nothing is written to the visitor's browser: the
+        // session lives in memory and ends with the tab. Events are captured
+        // all the same. See src/consent.ts.
+        persistence: storedConsent() === 'granted' ? 'localStorage+cookie' : 'memory',
       });
       client = instance;
+      onConsentChange((consent) => {
+        instance.set_config({ persistence: consent === 'granted' ? 'localStorage+cookie' : 'memory' });
+      });
 
       // Replay in the order they happened, each stamped with its real time, so
       // a session reads the same as if the library had been here all along.

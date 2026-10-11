@@ -1,6 +1,27 @@
 <!doctype html>
 <html lang="he">
   <head>
+    <!-- Cookie consent, before anything from Google loads. Until the visitor
+         accepts in the banner (src/components/CookieBanner.tsx), GA4 and every
+         tag in the GTM container run in Google's consent mode without cookies;
+         advertising storage is refused outright, since the shop runs no ads.
+         The stored answer is read here so a returning visitor who said yes is
+         measured from the first hit. See src/consent.ts. -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      (function () {
+        var consent = null;
+        try { consent = localStorage.getItem('hightide_consent'); } catch (e) {}
+        gtag('consent', 'default', {
+          analytics_storage: consent === 'granted' ? 'granted' : 'denied',
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+        });
+      })();
+    </script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

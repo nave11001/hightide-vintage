@@ -16,6 +16,8 @@ import SearchBar from './components/SearchBar';
 import CategoryBar from './components/CategoryBar';
 import CatalogFilters from './components/CatalogFilters';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import CookieBanner from './components/CookieBanner';
+import { askConsentAgain } from './consent';
 import WhatsAppMark from './components/WhatsAppMark';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
@@ -1365,6 +1367,14 @@ export default function App() {
               {tr(link.label, link.labelEn)}
             </a>
           ))}
+          {/* Taking consent back has to be as easy as giving it. */}
+          <button
+            type="button"
+            onClick={askConsentAgain}
+            className="text-sm text-gray-300 hover:text-white transition-colors min-h-[44px] flex items-center cursor-pointer"
+          >
+            {tr('הגדרות עוגיות', 'Cookie settings')}
+          </button>
         </nav>
 
         <div className="max-w-7xl mx-auto mt-2 text-center text-xs text-gray-400 font-mono">
@@ -1414,7 +1424,9 @@ export default function App() {
 
       {/* The floating WhatsApp button. Tucks itself away while the page is
           being scrolled down, and stands aside while a garment is open. */}
-      <FloatingWhatsApp suppressed={modalIsOpen} />      {/* Interactive floating feedback Toast */}
+      <FloatingWhatsApp suppressed={modalIsOpen} />
+      <CookieBanner />
+      {/* Interactive floating feedback Toast */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 border-2 border-stone-800 shadow-[4px_4px_0px_0px_rgba(28,25,23,1)] text-right font-bold text-xs sm:text-sm max-w-xs sm:max-w-md animate-scale-up">
           {toastMessage}
