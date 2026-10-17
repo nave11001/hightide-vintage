@@ -9,15 +9,15 @@ import { tr } from '../i18n';
  * type, and a transparent button in the site's thin line — the owner chose it
  * from three.
  *
- * The link is the channel's invite link (ig.me/j/…), the one Instagram's own
- * Join button uses; the channel's page (/channel/…) only shows it. On a phone
- * it has to reach the Instagram app, not a web page: it opens in the same tab
- * (a new tab, and Instagram's in-app browser, keep it on the web), and on
- * Android it is handed to the app by name, with the web join page as the
- * fallback when the app is not installed.
+ * The link is the channel's own address, which the owner chose: the invite
+ * link (ig.me/j/…) opened Instagram's web join page in the browser inside
+ * Instagram instead of the channel. On a phone it has to reach the Instagram
+ * app, not a web page: it opens in the same tab (a new tab keeps it on the
+ * web), and on Android it is handed to the app by name, with the web page as
+ * the fallback when the app is not installed.
  */
-export const COMMUNITY_URL = 'https://ig.me/j/AbZl2_mFcdzxqA6l/';
-const ANDROID_INTENT = `intent://ig.me/j/AbZl2_mFcdzxqA6l/#Intent;scheme=https;package=com.instagram.android;S.browser_fallback_url=${encodeURIComponent(COMMUNITY_URL)};end`;
+export const COMMUNITY_URL = 'https://www.instagram.com/channel/AbZl2_mFcdzxqA6l/';
+const ANDROID_INTENT = `intent://www.instagram.com/channel/AbZl2_mFcdzxqA6l/#Intent;scheme=https;package=com.instagram.android;S.browser_fallback_url=${encodeURIComponent(COMMUNITY_URL)};end`;
 
 function openCommunity(event: MouseEvent<HTMLAnchorElement>) {
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
