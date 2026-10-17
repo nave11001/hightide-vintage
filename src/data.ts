@@ -183,10 +183,11 @@ export function snapshotProducts(): Product[] {
 // So: a shape number that must match, and a check on every row. Anything that
 // fails is dropped whole and the shipped snapshot is used instead — a catalogue
 // one deploy old is a small price against a shop whose every link is dead.
-// Raise CACHE_SHAPE whenever Product gains a field the shop relies on.
+// Raise CACHE_SHAPE whenever Product gains a field the shop relies on, or its
+// photo addresses change (5: cut-outs carry their file's fingerprint).
 
 const CACHE_KEY = 'hightide_catalogue';
-const CACHE_SHAPE = 4;
+const CACHE_SHAPE = 5;
 
 /** The fields the shop cannot render a garment without. */
 function isUsable(row: unknown): row is Product {

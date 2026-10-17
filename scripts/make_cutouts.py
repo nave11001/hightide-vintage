@@ -20,6 +20,7 @@ manifest's "rejected" and the shop shows its original instead.
     python scripts/make_cutouts.py            # every live item
     python scripts/make_cutouts.py 43 117     # just these items
 """
+import hashlib
 import json
 import os
 import sys
@@ -233,6 +234,14 @@ def framed(cut):
     return frame
 
 
+def file_version(stem):
+    digest = hashlib.md5()
+    for suffix in ('', '-800', '-480'):
+        with open(os.path.join(OUT, *stem.split('/')) + suffix + '.webp', 'rb') as f:
+            digest.update(f.read())
+    return digest.hexdigest()[:8]
+
+
 def main():
     only = {int(a) for a in sys.argv[1:]}
     rows = query("SELECT i.num, p.path FROM items i JOIN item_photos p ON p.item_id = i.id "
@@ -290,6 +299,9 @@ def main():
         rejected &= live
     manifest['cut'] = sorted(done)
     manifest['rejected'] = sorted(rejected)
+    # A fingerprint of each file, which the shop puts in the cut-out's address:
+    # the files are cached for a day, and a re-cut garment must not wait for it.
+    manifest['v'] = {stem: file_version(stem) for stem in manifest['cut']}
     json.dump(manifest, open(MANIFEST, 'w', encoding='utf-8'), indent=1)
 
 
