@@ -67,17 +67,27 @@ def session():
     return _session
 
 
-def matte(rgb):
-    """The model's garment mask, 0..1, at the photo's size."""
+def matte(rgb, backdrop):
+    """The model's garment mask, 0..1, at the photo's size.
+
+    The model looks at a 1024px square. The photo is set in the middle of one,
+    on its own backdrop colour with a margin round it, not squashed into it:
+    squashed, a plaid leg near the frame's edge (#145) read as backdrop."""
     h, w = rgb.shape[:2]
-    im = np.asarray(Image.fromarray(rgb).resize((1024, 1024), Image.LANCZOS)).astype(np.float32)
+    side = int(max(h, w) * 1.12)
+    y0, x0 = (side - h) // 2, (side - w) // 2
+    square = np.empty((side, side, 3), np.uint8)
+    square[:] = np.clip(backdrop, 0, 255).astype(np.uint8)
+    square[y0:y0 + h, x0:x0 + w] = rgb
+    im = np.asarray(Image.fromarray(square).resize((1024, 1024), Image.LANCZOS)).astype(np.float32)
     im /= max(float(im.max()), 1e-6)
     im = (im - np.array([0.485, 0.456, 0.406], np.float32)) / np.array([0.229, 0.224, 0.225], np.float32)
     s = session()
     out = s.run(None, {s.get_inputs()[0].name: im.transpose(2, 0, 1)[None].astype(np.float32)})[0][0, 0]
     p = 1 / (1 + np.exp(-out))
     p = (p - p.min()) / max(float(p.max() - p.min()), 1e-6)
-    return cv2.resize(p.astype(np.float32), (w, h), interpolation=cv2.INTER_CUBIC).clip(0, 1)
+    p = cv2.resize(p.astype(np.float32), (side, side), interpolation=cv2.INTER_CUBIC)
+    return p[y0:y0 + h, x0:x0 + w].clip(0, 1)
 
 
 def edge_connected(near):
@@ -128,13 +138,49 @@ def fill_enclosed_white(rgb, alpha, path):
             print(f'  kept enclosed white at ({x},{y}), {area} px: {os.path.basename(path)}')
 
 
+def trim_shadow_rim(rgb, alpha, backdrop):
+    """The model sometimes keeps the edge of the photo's soft shadow as a few
+    pixels of light grey along a dark garment's outline: under #111's sleeves
+    and hem, under #101's hem. On the sea that reads as a white rim. Light
+    neutral pixels at the outline, open to the outside, next to dark fabric,
+    are unmixed against that fabric's colour, which leaves them a faint shadow.
+    White fabric is never next to dark fabric only, so it is left alone."""
+    C = rgb.astype(np.float32)
+    h, w = alpha.shape
+    s = w / 1100
+    solid = alpha > 0.5
+    dist = cv2.distanceTransform(solid.astype(np.uint8), cv2.DIST_L2, 5)
+    band = solid & (dist <= 7 * s)
+    inner = solid & (dist > 9 * s) & (dist <= 20 * s)
+    mn = C.min(axis=2)
+    light = band & (C.max(axis=2) - mn < 25) & (mn >= 120)
+    # Only light that reaches the outside, not a stitch line inside the edge.
+    outside = cv2.dilate((~solid).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+    n, labels = cv2.connectedComponents(light.astype(np.uint8), connectivity=8)
+    hit = np.unique(labels[outside & light])
+    light &= np.isin(labels, hit[hit != 0])
+    sig = 8 * s
+    wgt = cv2.GaussianBlur(inner.astype(np.float32), (0, 0), sig)
+    F = cv2.GaussianBlur(C * inner[..., None], (0, 0), sig) / np.maximum(wgt, 1e-6)[..., None]
+    light &= (wgt > 0.05) & (F.max(axis=2) < 110)
+    if not light.any():
+        return rgb, alpha
+    FB = F - backdrop
+    a = np.clip(((C - backdrop) * FB).sum(axis=2) / np.maximum((FB ** 2).sum(axis=2), 1), 0, 1)
+    alpha = alpha.copy()
+    alpha[light] = np.minimum(alpha[light], a[light])
+    rgb = rgb.copy()
+    rgb[light] = np.clip(F[light], 0, 255).astype(np.uint8)
+    return rgb, alpha
+
+
 def cutout(path):
     rgb = np.array(Image.open(path).convert('RGB'))
     C = rgb.astype(np.float32)
     rim = np.concatenate([C[:3].reshape(-1, 3), C[-3:].reshape(-1, 3),
                           C[:, :3].reshape(-1, 3), C[:, -3:].reshape(-1, 3)])
     backdrop = np.median(rim, axis=0)
-    alpha = matte(rgb)
+    alpha = matte(rgb, backdrop)
 
     white = np.percentile(rim.min(axis=1), 5) >= 245
     if white:
@@ -164,6 +210,7 @@ def cutout(path):
         a = np.maximum(alpha, 1e-3)[..., None]
         fg = np.clip((C - (1 - a) * backdrop) / a, 0, 255)
         rgb = np.where((alpha > 0.98)[..., None], C, fg).astype(np.uint8)
+        rgb, alpha = trim_shadow_rim(rgb, alpha, backdrop)
     rgba = np.dstack([rgb, (alpha * 255).round().astype(np.uint8)])
     return Image.fromarray(rgba, 'RGBA'), float(solid.mean())
 
