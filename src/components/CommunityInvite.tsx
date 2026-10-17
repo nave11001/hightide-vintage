@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { tr } from '../i18n';
 
 /**
@@ -8,10 +9,23 @@ import { tr } from '../i18n';
  * type, and a transparent button in the site's thin line — the owner chose it
  * from three.
  *
- * The link is the channel's invite link (ig.me/j/…), which opens Instagram
- * on the join screen; the channel's own page (/channel/…) only shows it.
+ * The link is the channel's invite link (ig.me/j/…), the one Instagram's own
+ * Join button uses; the channel's page (/channel/…) only shows it. On a phone
+ * it has to reach the Instagram app, not a web page: it opens in the same tab
+ * (a new tab, and Instagram's in-app browser, keep it on the web), and on
+ * Android it is handed to the app by name, with the web join page as the
+ * fallback when the app is not installed.
  */
 export const COMMUNITY_URL = 'https://ig.me/j/AbZl2_mFcdzxqA6l/';
+const ANDROID_INTENT = `intent://ig.me/j/AbZl2_mFcdzxqA6l/#Intent;scheme=https;package=com.instagram.android;S.browser_fallback_url=${encodeURIComponent(COMMUNITY_URL)};end`;
+
+function openCommunity(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+  const phone = window.matchMedia('(pointer: coarse)').matches;
+  if (!phone) return;
+  event.preventDefault();
+  window.location.href = /Android/i.test(navigator.userAgent) ? ANDROID_INTENT : COMMUNITY_URL;
+}
 
 function InstagramGlyph({ className = 'w-4 h-4' }: { className?: string }) {
   return (
@@ -34,7 +48,7 @@ export default function CommunityInvite() {
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(8,26,30,0.8)] to-[rgba(8,26,30,0.12)]" aria-hidden="true" />
       <h2 className="relative text-[25px] sm:text-[32px] font-normal leading-tight">{heading()}</h2>
       <p className="relative text-[15px] sm:text-base font-light opacity-95">{line()}</p>
-      <a {...linkProps} className="relative mt-2 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-[10px] border border-white/90 text-sm tracking-wide hover:bg-white/10 transition-colors no-underline">
+      <a {...linkProps} onClick={openCommunity} className="relative mt-2 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-[10px] border border-white/90 text-sm tracking-wide hover:bg-white/10 transition-colors no-underline">
         <InstagramGlyph />
         {tr('להצטרף לקהילה', 'Join the community')}
       </a>
