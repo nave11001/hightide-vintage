@@ -7,8 +7,11 @@ import { tr } from '../i18n';
  * A card on the shop's backdrop (the same wave the garments stand on), white
  * type, and a transparent button in the site's thin line — the owner chose it
  * from three.
+ *
+ * The link is the channel's invite link (ig.me/j/…), which opens Instagram
+ * on the join screen; the channel's own page (/channel/…) only shows it.
  */
-export const COMMUNITY_URL = 'https://www.instagram.com/channel/AbZl2_mFcdzxqA6l/';
+export const COMMUNITY_URL = 'https://ig.me/j/AbZl2_mFcdzxqA6l/';
 
 function InstagramGlyph({ className = 'w-4 h-4' }: { className?: string }) {
   return (
