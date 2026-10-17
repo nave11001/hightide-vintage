@@ -56,7 +56,7 @@ export default function ProductCard({
 
   return (
     <div
-      className="flex flex-col group h-full bg-[#fdfcf9] border border-gray-100 rounded-none overflow-hidden transition-all duration-300 hover:shadow-sm"
+      className="vintage-product-card flex flex-col group h-full bg-[#fdfcf9] border border-gray-100 rounded-none overflow-hidden transition-all duration-300 hover:shadow-sm"
       id={`product-card-${product.id}`}
     >
       {/* Product Image - Completely clean container with NO vintage frame, just like the jewelry screenshot */}
@@ -180,6 +180,10 @@ export default function ProductCard({
           )}
         </div>
 
+        {product.sizes.length > 0 && (
+          <p className="vintage-card-size">{tr('מידה', 'Size')} <bdi>{product.sizes.join(' / ')}</bdi></p>
+        )}
+
         {/* Row 3: Product Description snippet */}
         <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed font-light flex-grow">
           {product.description}
@@ -209,7 +213,7 @@ export default function ProductCard({
             e.stopPropagation();
             trackProduct('whatsapp_purchase_click', product, { source: 'card' });
           }}
-          className="mt-3.5 w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 hover:border-stone-800 font-medium py-3.5 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center no-underline"
+          className="vintage-purchase mt-3.5 w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 hover:border-stone-800 font-medium py-3.5 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center no-underline"
           id={`quick-buy-btn-${product.id}`}
         >
           <WhatsAppBadge className="w-5 h-5" />

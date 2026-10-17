@@ -305,7 +305,7 @@ export default function ProductDetailModal({
   // scrolls inside its own box against a darkened shop, a page scrolls with
   // the document like any other page.
   const card = (
-      <div className="bg-[#fdfcf9] border border-stone-200/60 w-full relative rounded-none flex flex-col md:flex-row">
+      <div className="vintage-detail-card bg-[#fdfcf9] border border-stone-200/60 w-full relative rounded-none flex flex-col md:flex-row">
 
         {/* Left close button — on a page it is the way back to the shop, which
             is a different promise from dismissing a layer, so it says so. */}
@@ -376,7 +376,7 @@ export default function ProductDetailModal({
         </div>
 
         {/* Product Meta & Configuration (Right Side) */}
-        <div className="w-full md:w-1/2 p-6 flex flex-col text-right">
+        <div className="vintage-detail-meta w-full md:w-1/2 p-6 flex flex-col text-right">
           {/* Share sits in this row, not floating in the card's corner.
               Absolutely positioned at top-right it landed on top of the brand
               name — OCEAN PACIFIC reading "OC" behind a button — because on a
@@ -385,10 +385,8 @@ export default function ProductDetailModal({
               with anything: the layout keeps them apart. */}
           <div className="flex justify-between items-center flex-row-reverse mb-1 gap-2">
             <span className="text-xs font-mono font-medium text-stone-500 uppercase tracking-widest min-w-0 truncate">
-              {/* Blank, not removed, when it would only repeat the title:
-                  the share button sits at the other end of this row and
-                  needs something to be pushed away from. */}
-              {product.brand !== product.name ? product.brand : ''}
+              {/* Explain the one-of-one collection instead of repeating the title. */}
+              {product.brand !== product.name ? product.brand : 'ONE OF ONE'}
             </span>
 
             <div className="relative shrink-0" ref={shareBox}>
@@ -533,11 +531,60 @@ export default function ProductDetailModal({
           </div>
 
 
+          {/* Action buttons — a sold item cannot be ordered.
+              There is no quantity picker: every garment here is a single
+              vintage piece, so the only number it could ever hold is 1. */}
+          {product.isSold ? (
+            <div className="mt-6" id="detail-sold-notice">
+              <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
+                {tr('הפריט נמכר ואינו זמין להזמנה', 'This piece has been sold')}
+              </div>
+              <p className="mt-2 text-xs text-stone-500 text-center">
+                {tr('פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.', 'Every vintage piece is one of one. Follow us so you don’t miss the next drop.')}
+              </p>
+            </div>
+          ) : (
+          <div className="vintage-order-action mt-5 flex flex-row-reverse gap-3 items-center">
+            {/* WhatsApp Purchase button */}
+            <a
+              href={buyOnWhatsApp(
+                product,
+                tr(
+                  `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+                  englishOrder(product.name, money(product.price), selectedSize),
+                ),
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackProduct('whatsapp_purchase_click', product, { source: 'detail' });
+              }}
+              // h-14, not h-10. This is the whole checkout — every sale the
+              // shop makes leaves through this one control — and it measured
+              // 38px tall on a phone against the 44 a thumb needs. The card
+              // behind it was already fixed; this was the one that mattered.
+              className="vintage-purchase flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
+              id="detail-add-btn"
+            >
+              <WhatsAppBadge className="w-6 h-6" />
+              <span>{tr('להזמנת הפריט בווטסאפ', 'Order this piece on WhatsApp')}</span>
+            </a>
+          </div>
+          )}
+
+          {!product.isSold && (
+            <div className="vintage-order-note" dir={tr('rtl', 'ltr')}>
+              <p>{tr('הכפתור פותח הודעה עם פרטי הפריט. זמינות, משלוח ותשלום נסגור יחד בשיחה.', 'The button opens a message with this piece’s details. We’ll confirm availability, shipping and payment in the chat.')}</p>
+              <p className="vintage-delivery-note">{tr('משלוח בארץ: 2–7 ימי עסקים · איסוף חינם בכפר האורנים בתיאום', 'Worldwide shipping · Ask us for a delivery quote')}</p>
+            </div>
+          )}
+
           {/* Navigation tabs inside detail card */}
           <div className="mt-6 border-b border-stone-200 flex gap-1 justify-start">
             <button
               type="button"
               onClick={() => setActiveTab('details')}
+              aria-pressed={activeTab === 'details'}
               className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
                 activeTab === 'details' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
@@ -547,6 +594,7 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setActiveTab('sizing')}
+              aria-pressed={activeTab === 'sizing'}
               className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
                 activeTab === 'sizing' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
@@ -556,6 +604,7 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setActiveTab('shipping')}
+              aria-pressed={activeTab === 'shipping'}
               className={`min-h-[44px] pb-2.5 pt-2 px-3 text-xs font-normal border-b transition-colors ${
                 activeTab === 'shipping' ? 'border-stone-900 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
@@ -572,16 +621,24 @@ export default function ProductDetailModal({
             {activeTab === 'sizing' && (
               <div className="space-y-2 text-right font-normal">
                 <p>{tr('פריטי וינטג׳ משנות ה-90 וה-2000 יכולים להשתנות במידותיהם מהרשום בתווית.', 'Vintage pieces from the 90s and 2000s can differ from the size on the label.')}</p>
-                {(() => {
-                  const sizeNum = parseInt(product.sizes[0], 10);
-                  if (isNaN(sizeNum)) return null;
-                  const waistCm = Math.round(sizeNum * 2.54 / 2);
-                  return (
-                    <p className="font-normal text-stone-900">
-                      {tr(`מידה: ${sizeNum} | רוחב מותן (שטוח): כ-${waistCm} ס״מ`, `Size: ${sizeNum} | Waist (laid flat): about ${waistCm} cm`)}
-                    </p>
-                  );
-                })()}
+                {product.waistCm != null && product.waistCm > 0 && (
+                  <p className="font-medium text-stone-900">{tr(`רוחב מותן במדידה שטוחה: ${product.waistCm} ס״מ`, `Measured waist, laid flat: ${product.waistCm} cm`)}</p>
+                )}
+                {product.lengthCm != null && product.lengthCm > 0 && (
+                  <p className="font-medium text-stone-900">{tr(`אורך הפריט: ${product.lengthCm} ס״מ`, `Measured length: ${product.lengthCm} cm`)}</p>
+                )}
+                {!(product.waistCm != null && product.waistCm > 0) && !(product.lengthCm != null && product.lengthCm > 0) && (
+                  <p>{tr('עדיין אין מדידות מדויקות לפריט הזה. שלחו לנו הודעה לפני ההזמנה ונעזור לבדוק את ההתאמה.', 'Exact measurements aren’t listed for this piece yet. Message us before ordering for help checking the fit.')}</p>
+                )}
+                <a
+                  className="vintage-help-link"
+                  href={buyOnWhatsApp(product, tr(`היי! אשמח לעזרה במידות ובמדידות של ${product.name}, מידה ${selectedSize}.`, `Hi! Could you help me with the fit and measurements of ${product.name}, size ${selectedSize}?`))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackProduct('sizing_help_click', product, { source: 'size_guide' })}
+                >
+                  {tr('עזרה במידה בווטסאפ ←', 'Ask about the fit on WhatsApp →')}
+                </a>
                 <p className="text-stone-500 text-xs">{tr('מומלץ למדוד מכנס קיים שלכם לפני ביצוע הרכישה לקבלת התאמה מקסימלית.', 'For the best fit, measure a pair you already own before you buy.')}</p>
               </div>
             )}
@@ -603,48 +660,6 @@ export default function ProductDetailModal({
               </div>
             )}
           </div>
-
-          {/* Action buttons — a sold item cannot be ordered.
-              There is no quantity picker: every garment here is a single
-              vintage piece, so the only number it could ever hold is 1. */}
-          {product.isSold ? (
-            <div className="mt-6" id="detail-sold-notice">
-              <div className="h-10 bg-stone-100 border border-stone-200 text-stone-500 font-medium flex items-center justify-center text-sm select-none cursor-not-allowed">
-                {tr('הפריט נמכר ואינו זמין להזמנה', 'This piece has been sold')}
-              </div>
-              <p className="mt-2 text-xs text-stone-500 text-center">
-                {tr('פריטי וינטג׳ הם יחידים במלאי. עקבו אחרינו כדי לא לפספס את הדרופ הבא.', 'Every vintage piece is one of one. Follow us so you don’t miss the next drop.')}
-              </p>
-            </div>
-          ) : (
-          <div className="mt-6 flex flex-row-reverse gap-3 items-center">
-            {/* WhatsApp Purchase button */}
-            <a
-              href={buyOnWhatsApp(
-                product,
-                tr(
-                  `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
-                  englishOrder(product.name, money(product.price), selectedSize),
-                ),
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                trackProduct('whatsapp_purchase_click', product, { source: 'detail' });
-                onClose();
-              }}
-              // h-14, not h-10. This is the whole checkout — every sale the
-              // shop makes leaves through this one control — and it measured
-              // 38px tall on a phone against the 44 a thumb needs. The card
-              // behind it was already fixed; this was the one that mattered.
-              className="flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
-              id="detail-add-btn"
-            >
-              <WhatsAppBadge className="w-6 h-6" />
-              <span>{tr('רכישה בווטסאפ', 'Buy on WhatsApp')}</span>
-            </a>
-          </div>
-          )}
 
           {/* Guarantee / trust statements.
               These two lines are the entire argument for paying ₪250 for a

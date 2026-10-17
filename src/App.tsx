@@ -8,6 +8,7 @@ import { repairPhotos, srcSetFor } from './photos';
 
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted, RAIL_SIZES } from './components/TopWanted';
+import VintageIntro from './components/VintageIntro';
 import SizeLanding from './components/SizeLanding';
 import SpinningLogo from './components/SpinningLogo';
 import LiquidVeil from './components/LiquidVeil';
@@ -817,19 +818,6 @@ export default function App() {
       {/* Homepage Landing View Hero & Navigation (Seamlessly integrated with NO gaps) */}
       {selectedCategory === 'none' && searchTerm === '' && !sizeLanding && !legalPage && (
         <div className="w-full flex flex-col" id="landing-page-hero-wrapper">
-          {/* The homepage's h1. Nothing here is a text heading — the shop's
-              name is artwork inside a photograph — so a search engine and a
-              screen reader both had nothing to read the page by. Off-screen
-              rather than hidden: display:none would be read by neither.
-              The wording is the meta description's, so the two agree.
-              Not on a garment's own page: this hero renders above that too,
-              and the garment's name is the heading there. */}
-          {!routeSlug && (
-            <h1 className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 [clip:rect(0,0,0,0)]">
-              {tr('HIGHTIDE VINTAGE — מכנסי גלישה, חולצות ואקססוריז וינטג׳ מקוריים', 'HIGHTIDE VINTAGE — original vintage boardshorts, tees and accessories')}
-            </h1>
-          )}
-
           {announcementStrip}
 
           {/* Full-bleed Immersive Hero Canvas stretching edge-to-edge */}
@@ -873,14 +861,20 @@ export default function App() {
                 garment in the picture, on a shop that sells them. */}
             <div className="absolute bottom-3 sm:bottom-6 inset-x-0 flex justify-center z-20">
               <button
-                onClick={() => setSelectedCategory('latest')}
-                className="px-8 py-2 sm:px-10 sm:py-3 border border-white text-white text-xs sm:text-sm font-light uppercase tracking-[0.25em] bg-black/10 backdrop-blur-xs hover:bg-white hover:text-stone-950 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                type="button"
+                onClick={() => {
+                  track('homepage_drop_click', { source: 'hero' });
+                  setSelectedCategory('latest');
+                }}
+                className="vintage-primary hero-shop-button"
               >
-                NEW DROP
+                {tr('לגלות את הדרופ האחרון', 'Shop the latest drop')}
+                <span aria-hidden="true">{tr('←', '→')}</span>
               </button>
             </div>
             
           </div>
+          {!routeSlug && <VintageIntro />}
         </div>
       )}
 
@@ -960,7 +954,8 @@ export default function App() {
           <section className="space-y-6 sm:space-y-8 animate-fade-in" id="homepage-categories">
             <TopWanted products={products} onViewDetails={openProduct} />
 
-            <div className="text-center mb-8 max-w-lg mx-auto">
+            <div className="text-center mb-8 max-w-lg mx-auto vintage-section-heading">
+              <p className="vintage-eyebrow">{tr('לכל יום יש את הווייב שלו', 'FIND YOUR EVERYDAY FAVOURITE')}</p>
               <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 mt-1 uppercase">Choose Your Vintage</h2>
               <div className="w-12 h-[1px] bg-stone-800 mx-auto mt-3"></div>
             </div>
@@ -1067,7 +1062,7 @@ export default function App() {
                       same as having room. Narrower padding and a step down in
                       type on small screens only; the desktop label is
                       unchanged. */}
-                  <div className="relative z-10 bg-white/95 backdrop-blur-xs px-5 py-3 sm:px-12 sm:py-5 min-w-[180px] sm:min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
+                  <div className="vintage-category-label relative z-10 bg-white/95 backdrop-blur-xs px-5 py-3 sm:px-12 sm:py-5 min-w-[180px] sm:min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
                     {/* No nudge here. The text sat off-centre because Flowers
                         Kingdom declared three different, all wrong, vertical
                         metrics, so Chrome and iOS placed the baseline in
@@ -1237,10 +1232,13 @@ export default function App() {
         <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-row-reverse gap-4 items-center text-right" id="care-tips">
           <SpinningLogo className="w-14 h-14 sm:w-20 sm:h-20" />
           <div dir={tr('rtl', 'ltr')} className="min-w-0">
-            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight" style={{ fontFamily: 'Rubik, sans-serif' }}>{tr('אהבתם מה שראיתם?', 'Like what you see?')}</h4>
+            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight">{tr('מצאתם את הווייב. מתלבטים על המידה?', 'Found your vibe. Need help with the fit?')}</h4>
             <p className="text-xs text-stone-700 mt-1 leading-relaxed">
-              {tr('תשלחו לנו הודעה בקישור למטה , באינסטגרם ובווצאפ', 'Send us a message on Instagram or WhatsApp — the links are below.')}
+              {tr('שלחו לנו את הפריט בווטסאפ ונעזור עם המידה, המשלוח וההזמנה.', 'Send us the piece on WhatsApp for help with sizing, delivery and your order.')}
             </p>
+            <a className="vintage-help-link" href="https://wa.me/972528879922" target="_blank" rel="noopener noreferrer" onClick={() => track('whatsapp_help_click', { source: 'care_tips' })}>
+              {tr('בואו נמצא את הפריט שלכם ←', 'Let’s find your piece →')}
+            </a>
           </div>
         </div>
           </>
