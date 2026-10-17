@@ -1,16 +1,10 @@
-/* Pacifico, Yellowtail, Kaushan Script, Satisfy, Dancing Script and Allura were
-   requested here and set on nothing — six script faces the shop never used.
-   Space Grotesk, Inter and JetBrains Mono followed them out: three more Latin
-   families downloaded on a Hebrew shop, and JetBrains Mono — a face drawn for
-   reading code — was carrying the prices, the brand line and the whole footer.
-   Three families left, and every one of them has Hebrew. */
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@300;400;500;700;800;900&family=Rubik+Bubbles&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
 @import "tailwindcss";
 
 /* Subset to printable ASCII and converted to WOFF2 by
    scripts/make_font_subset.py: 141KB of TrueType down to 28KB. The face has no
    Hebrew glyphs, so nothing Hebrew ever rendered in it — those headings fall to
-   Rubik Bubbles below, exactly as they did before. The full TTF stays in
+   Frank Ruhl Libre below. The full TTF stays in
    assets/fonts/ as the master. */
 @font-face {
   font-family: 'Flowers Kingdom';
@@ -20,9 +14,9 @@
   font-display: swap;
 }
 
-/* Groovy brand font: Flowers Kingdom for Latin, Rubik Bubbles covers Hebrew */
+/* Groovy brand font: Flowers Kingdom for Latin, Frank Ruhl Libre covers Hebrew */
 .font-groovy {
-  font-family: 'Flowers Kingdom', 'Rubik Bubbles', cursive;
+  font-family: 'Flowers Kingdom', 'Frank Ruhl Libre', serif;
 }
 
 /* Let each run of text find its own direction.
@@ -69,13 +63,13 @@ html[lang='en'] #store-footer .items-end {
 }
 
 @theme {
-  --font-sans: "Rubik", "Heebo", system-ui, sans-serif;
+  --font-sans: "Heebo", system-ui, sans-serif;
   /* Still called mono because ~40 `font-mono` classes name it, and it is still
      used for the same job — prices, sizes, item numbers, anything that should
      line up in a column. Heebo just does that job without looking like a
      terminal, and unlike JetBrains Mono it can set the Hebrew beside it. */
-  --font-mono: "Heebo", "Rubik", system-ui, sans-serif;
-  --font-display: "Rubik", "Heebo", sans-serif;
+  --font-mono: "Heebo", system-ui, sans-serif;
+  --font-display: "Frank Ruhl Libre", Georgia, serif;
 }
 
 /* What the column alignment actually needed. Every digit the same width, so a

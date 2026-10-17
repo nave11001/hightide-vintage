@@ -5,6 +5,7 @@ import {initPostHog} from './posthog';
 import {dismissSplash} from './splash';
 import {initLocale} from './i18n';
 import './index.css';
+import './vintage.css';
 
 // A deadline on the splash in index.html, armed before anything that could
 // throw. Everything that normally takes the splash down runs inside the app, so

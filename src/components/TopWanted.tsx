@@ -146,6 +146,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   return (
     <section className="mb-12" id="top-wanted" dir={tr('rtl', 'ltr')}>
       <div className="text-center mb-5">
+        <p className="vintage-eyebrow">{tr('הכי נצפים עכשיו · עדיין זמינים', 'MOST VIEWED · STILL AVAILABLE')}</p>
         <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 uppercase">
           Our Most Wanted Pieces
         </h2>
@@ -209,7 +210,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                     ? () => setWantsAngle((seen) => ({ ...seen, [product.id]: true }))
                     : undefined
                 }
-                className="snap-start shrink-0 w-[46%] sm:w-[31%] lg:w-[23%] text-right group cursor-pointer no-underline"
+                className="vintage-wanted-card snap-start shrink-0 w-[46%] sm:w-[31%] lg:w-[23%] text-right group cursor-pointer no-underline"
                 id={isClone ? undefined : `top-wanted-${product.id}`}
               >
                 <div className="relative aspect-[4/5] bg-stone-50 border border-gray-100 overflow-hidden">
@@ -241,7 +242,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                       className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     />
                   )}
-                  <span className="absolute top-2 right-2 bg-stone-900 text-white text-xs font-bold w-6 h-6 flex items-center justify-center select-none">
+                  <span className="vintage-rank absolute top-2 right-2 bg-stone-900 text-white text-xs font-bold w-6 h-6 flex items-center justify-center select-none">
                     {rank}
                   </span>
                 </div>
@@ -266,6 +267,10 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                     </span>
                   )}
                 </div>
+                {product.sizes.length > 0 && (
+                  <p className="vintage-card-size">{tr('מידה', 'Size')} <bdi>{product.sizes.join(' / ')}</bdi></p>
+                )}
+                <span className="vintage-card-link">{tr('לפרטי הפריט ←', 'View the piece →')}</span>
               </a>
             );
           })}
