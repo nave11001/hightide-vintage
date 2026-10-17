@@ -25,6 +25,24 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# The garment cut-outs, the backdrop behind them and the homepage film keep
+# fixed names (scripts/make_cutouts.py rewrites a cut-out in place when a drop
+# changes it), so not immutable — but a day without asking, and a week of
+# serving the copy on hand while checking in the background, spares a
+# returning visitor a round trip per photograph.
+[[headers]]
+  for = "/cut/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+[[headers]]
+  for = "/video/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+[[headers]]
+  for = "/backdrop.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
 # What the browser is allowed to do with this site.
 #
 # Netlify already sends HSTS, so the connection is encrypted and stays that way.

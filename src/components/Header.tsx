@@ -6,7 +6,7 @@ import Logo from './Logo';
 import HightideLogo from './HightideLogo';
 import CategoryBar from './CategoryBar';
 import { onPhotoError, srcSetFor } from '../photos';
-import { buyOnWhatsApp, englishOrder } from '../whatsapp';
+import { buyOnWhatsApp, englishOrder, fullName } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
 import { useScrollLock } from '../useScrollLock';
 import { CATEGORY_EN, currentLang, money, setLang, tr } from '../i18n';
@@ -258,7 +258,7 @@ export default function Header({
                         src={item.image}
                         srcSet={srcSetFor(item.image)}
                         sizes="48px"
-                        alt={item.name}
+                        alt={fullName(item)}
                         onError={onPhotoError}
                         className="w-12 h-12 object-cover object-center flex-shrink-0 border border-stone-100"
                       />
@@ -284,8 +284,8 @@ export default function Header({
                           href={buyOnWhatsApp(
                             item,
                             tr(
-                              `שלום! ראיתי במועדפים באתר את הפריט "${item.name}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`,
-                              englishOrder(item.name, money(item.price)),
+                              `שלום! ראיתי במועדפים באתר את הפריט "${fullName(item)}" במחיר ₪${item.price} ואני מעוניין לרכוש אותו. האם הוא זמין?`,
+                              englishOrder(fullName(item), money(item.price)),
                             ),
                           )}
                           target="_blank"

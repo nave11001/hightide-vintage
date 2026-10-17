@@ -1,17 +1,13 @@
-/* Pacifico, Yellowtail, Kaushan Script, Satisfy, Dancing Script and Allura were
-   requested here and set on nothing — six script faces the shop never used.
-   Space Grotesk, Inter and JetBrains Mono followed them out: three more Latin
-   families downloaded on a Hebrew shop, and JetBrains Mono — a face drawn for
-   reading code — was carrying the prices, the brand line and the whole footer.
-   Three families left, and every one of them has Hebrew. */
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@300;400;500;700;800;900&family=Rubik+Bubbles&display=swap');
+/* One family for the whole shop: Assistant, Hebrew and Latin, chosen by the
+   owner in the October 2026 redesign for a lighter, finer line than Rubik and
+   Heebo, which it replaced. Flowers Kingdom stays for the loading screen. */
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* Subset to printable ASCII and converted to WOFF2 by
    scripts/make_font_subset.py: 141KB of TrueType down to 28KB. The face has no
-   Hebrew glyphs, so nothing Hebrew ever rendered in it — those headings fall to
-   Rubik Bubbles below, exactly as they did before. The full TTF stays in
-   assets/fonts/ as the master. */
+   Hebrew glyphs; it sets only the Latin JUST CHILL on the loading screen. The
+   full TTF stays in assets/fonts/ as the master. */
 @font-face {
   font-family: 'Flowers Kingdom';
   src: url('@/assets/fonts/FlowersKingdom.woff2') format('woff2');
@@ -20,9 +16,26 @@
   font-display: swap;
 }
 
-/* Groovy brand font: Flowers Kingdom for Latin, Rubik Bubbles covers Hebrew */
+/* Groovy brand font: Flowers Kingdom. Now only the loading screen's JUST
+   CHILL, beside the logo; every heading moved to Assistant (.font-heading). */
 .font-groovy {
-  font-family: 'Flowers Kingdom', 'Rubik Bubbles', cursive;
+  font-family: 'Flowers Kingdom', 'Assistant', cursive;
+}
+
+/* The shop's backdrop (see src/backdrop.ts): every garment photo is a cut-out
+   on transparency, and the chosen background sits behind it wherever it is
+   shown — card, rail, item page, thumbnail, favourites. One rule, one file,
+   loaded once. Unlayered, so it outranks a bg-white utility on the same image. */
+img[src^='/cut/'] {
+  background: url('/backdrop.webp') center / cover;
+}
+
+/* The headings: Assistant, light and widely spaced. Unlayered, so it outranks
+   the font-normal / tracking utilities still on those elements. */
+.font-heading {
+  font-family: 'Assistant', system-ui, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.2em;
 }
 
 /* Let each run of text find its own direction.
@@ -69,13 +82,12 @@ html[lang='en'] #store-footer .items-end {
 }
 
 @theme {
-  --font-sans: "Rubik", "Heebo", system-ui, sans-serif;
+  --font-sans: "Assistant", system-ui, sans-serif;
   /* Still called mono because ~40 `font-mono` classes name it, and it is still
      used for the same job — prices, sizes, item numbers, anything that should
-     line up in a column. Heebo just does that job without looking like a
-     terminal, and unlike JetBrains Mono it can set the Hebrew beside it. */
-  --font-mono: "Heebo", "Rubik", system-ui, sans-serif;
-  --font-display: "Rubik", "Heebo", sans-serif;
+     line up in a column. The .font-mono rule below makes the digits even. */
+  --font-mono: "Assistant", system-ui, sans-serif;
+  --font-display: "Assistant", system-ui, sans-serif;
 }
 
 /* What the column alignment actually needed. Every digit the same width, so a

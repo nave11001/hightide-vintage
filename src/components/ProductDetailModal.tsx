@@ -3,11 +3,12 @@ import { Product } from '../types';
 import { X, ShieldCheck, RefreshCw, Star, Share2, Check, Link2 } from 'lucide-react';
 import { WhatsAppBadge } from './WhatsAppMark';
 import { trackProduct } from '../analytics';
+import SwipeGallery from './SwipeGallery';
 import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { onPhotoError, srcSetFor } from '../photos';
 import { navigate } from '../router';
 import { productPath } from '@/shared/slug.mjs';
-import { buyOnWhatsApp, englishOrder, productUrl } from '../whatsapp';
+import { buyOnWhatsApp, englishOrder, fullName, productUrl } from '../whatsapp';
 import { isEnglish, money, tr } from '../i18n';
 
 interface ProductDetailModalProps {
@@ -286,7 +287,7 @@ export default function ProductDetailModal({
     // "send this garment to someone" rather than "message the shop" — which is
     // what the buy button below already does.
     window.open(
-      `https://wa.me/?text=${encodeURIComponent(`${product.name} — ${money(product.price)}\n\n${url}`)}`,
+      `https://wa.me/?text=${encodeURIComponent(`${fullName(product)} — ${money(product.price)}\n\n${url}`)}`,
       '_blank',
       'noopener,noreferrer',
     );
@@ -335,16 +336,18 @@ export default function ProductDetailModal({
             {/* The detail view is where the buyer decides, so nothing is cropped
                 here: a square frame with object-cover took 20% off a 4:5 photo,
                 usually the waistband. Contain fits whatever shape came in. */}
-            <img
-              src={gallery[activeImage] || product.image}
-              srcSet={srcSetFor(gallery[activeImage] || product.image)}
+            {/* Swiped through on a phone; the thumbnails below follow, and
+                steer it when tapped. */}
+            <SwipeGallery
+              key={product.id}
+              images={gallery.length ? gallery : [product.image]}
               // The page a buyer decides on. Half the window with room to spare,
               // full width on a phone — so a sharp phone still reaches 1200px.
               sizes="(min-width: 768px) 50vw, 100vw"
               alt={product.name}
-              referrerPolicy="no-referrer"
-              onError={onPhotoError}
-              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-103"
+              fit="contain"
+              active={activeImage}
+              onActiveChange={setActiveImage}
             />
             {onEditProduct && (
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1.5 p-4 text-center">
@@ -388,7 +391,7 @@ export default function ProductDetailModal({
               {/* Blank, not removed, when it would only repeat the title:
                   the share button sits at the other end of this row and
                   needs something to be pushed away from. */}
-              {product.brand !== product.name ? product.brand : ''}
+              {product.maker ?? (product.brand !== product.name ? product.brand : '')}
             </span>
 
             <div className="relative shrink-0" ref={shareBox}>
@@ -623,8 +626,8 @@ export default function ProductDetailModal({
               href={buyOnWhatsApp(
                 product,
                 tr(
-                  `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
-                  englishOrder(product.name, money(product.price), selectedSize),
+                  `שלום! אני מעוניין לרכוש את הפריט "${fullName(product)}" במידה ${selectedSize} במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+                  englishOrder(fullName(product), money(product.price), selectedSize),
                 ),
               )}
               target="_blank"
@@ -637,7 +640,7 @@ export default function ProductDetailModal({
               // shop makes leaves through this one control — and it measured
               // 38px tall on a phone against the 44 a thumb needs. The card
               // behind it was already fixed; this was the one that mattered.
-              className="flex-grow h-14 bg-stone-900 hover:bg-stone-800 text-white font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer text-center"
+              className="flex-grow h-14 rounded-[12px] bg-stone-900 hover:bg-stone-800 text-white font-normal tracking-wide transition-colors duration-200 flex items-center justify-center gap-2 text-[15px] cursor-pointer text-center"
               id="detail-add-btn"
             >
               <WhatsAppBadge className="w-6 h-6" />
@@ -702,7 +705,7 @@ export default function ProductDetailModal({
                 />
               </div>
               <p className="mt-2 text-xs text-stone-700 line-clamp-1 text-right group-hover:text-stone-950 transition-colors">
-                {item.name}
+                {fullName(item)}
               </p>
               <p className="mt-0.5 text-xs font-mono font-medium text-stone-900 text-right">
                 {money(item.price)}

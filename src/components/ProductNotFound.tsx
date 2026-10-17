@@ -20,7 +20,7 @@ export default function ProductNotFound({ onBack }: ProductNotFoundProps) {
       dir={tr('rtl', 'ltr')}
       id="product-not-found"
     >
-      <h1 className="text-2xl font-groovy font-normal text-stone-900">{tr('הפריט הזה כבר לא כאן', 'This piece is gone')}</h1>
+      <h1 className="text-2xl font-heading font-normal text-stone-900">{tr('הפריט הזה כבר לא כאן', 'This piece is gone')}</h1>
       <p className="text-sm text-stone-600 mt-4 leading-relaxed">
         {tr(
           'כל פריט אצלנו הוא יחיד, וכשהוא נמכר הוא יורד מהחנות. אם הגעתם מקישור ישן, רוב הסיכויים שמישהו הקדים אתכם.',

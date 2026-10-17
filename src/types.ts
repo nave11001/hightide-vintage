@@ -17,6 +17,10 @@ export interface Product {
   colors: string[];
   isRare?: boolean;
   isLatestDrop?: boolean;
+  /** The brand printed above a model name, when the garment has one. See modelNames.ts. */
+  maker?: string;
+  /** The day the item went up, YYYY-MM-DD. Orders each category newest first. */
+  dropDate?: string;
   isSold?: boolean;
   // Measured on the garment laid flat, in cm. Vintage is one-of-a-kind, so the
   // label size means little — these are what actually answer "will it fit me".

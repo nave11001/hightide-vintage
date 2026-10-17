@@ -40,6 +40,20 @@ def load_env():
                 os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+def canonical_brands() -> dict:
+    """The CANONICAL table of shared/brands.mjs, read from the file itself so
+    the two cannot drift."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "shared", "brands.mjs")
+    text = open(path, encoding="utf-8").read()
+    return dict(re.findall(r"""^\s*['"]([^'"]+)['"]\s*:\s*['"]([^'"]+)['"],""", text, re.M))
+
+
+def brand_name(typed: str, table: dict) -> str:
+    """Mirror of brandName() in shared/brands.mjs."""
+    clean = re.sub(r"\s+", " ", str(typed or "")).strip()
+    return table.get(clean.lower(), clean)
+
+
 def slugify(text: str) -> str:
     """Mirror of slugify() in shared/slug.mjs."""
     return re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9]+", "-", str(text).lower()))
@@ -81,8 +95,9 @@ def main() -> None:
             "  </url>",
         ]
 
+    brands = canonical_brands()
     for item in items:
-        name = slugify(item.get("name") or "")
+        name = slugify(brand_name(item.get("name") or "", brands))
         num = item["num"]
         slug = f"{name}-{num}" if name else str(num)
         lines += [
