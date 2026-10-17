@@ -2,3 +2,4 @@ openpyxl
 opencv-python-headless
 numpy
 Pillow
+onnxruntime

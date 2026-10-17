@@ -86,6 +86,19 @@ app.post("/api/admin/verify-token", (req, res) => {
 // PRODUCTS STORAGE ENDPOINTS
 const PRODUCTS_FILE = path.join(process.cwd(), "products_db.json");
 
+// The catalogue and the visitor's country are Netlify functions, which this
+// local server does not run. Without them the shop on localhost fell back to
+// the snapshot shipped with the last build. Ask the live site instead, so the
+// local shop shows today's stock.
+app.get(["/api/catalogue", "/api/locale"], async (req, res) => {
+  try {
+    const live = await fetch(`https://hightide-vintage.netlify.app${req.path}`);
+    res.status(live.status).type(live.headers.get("content-type") || "application/json").send(await live.text());
+  } catch (e) {
+    res.status(502).json({ error: "live site unreachable" });
+  }
+});
+
 app.get("/api/products", (req, res) => {
   try {
     if (fs.existsSync(PRODUCTS_FILE)) {

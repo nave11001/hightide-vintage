@@ -7,9 +7,10 @@ import saleStampUrl from '@/assets/photos/sale_stamp.webp';
 import { trackProduct } from '../analytics';
 import { onPhotoError, srcSetFor } from '../photos';
 import { productPath } from '@/shared/slug.mjs';
-import { buyOnWhatsApp } from '../whatsapp';
+import { buyOnWhatsApp, fullName } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
 import { money, tr } from '../i18n';
+import SwipeGallery from './SwipeGallery';
 
 interface ProductCardProps {
   product: Product;
@@ -74,20 +75,21 @@ export default function ProductCard({
             to the browser, and on iOS Safari it left cards blank in front of
             customers. A shop that shows its garments beats a shop that saves
             two megabytes. */}
-        <img
-          src={product.image}
-          srcSet={srcSetFor(product.image)}
+        {/* A swipe moves to the garment's next photo (the dots say how many);
+            the first is the card's own photo, the rest load on the first
+            touch. */}
+        <SwipeGallery
+          images={product.images && product.images.length ? product.images : [product.image]}
           // Two per row on a phone, three on a tablet, four on a desktop — the
           // same breakpoints as the grid this card sits in.
           sizes="(min-width: 1024px) 23vw, (min-width: 768px) 31vw, 47vw"
-          alt={product.name}
-          referrerPolicy="no-referrer"
-          decoding="async"
-          onError={onPhotoError}
-          className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-103"
-          id={`product-img-${product.id}`}
+          alt={fullName(product)}
+          fit="cover"
+          lazy
+          firstImgId={`product-img-${product.id}`}
+          imgClassName="transform transition-transform duration-500 group-hover:scale-103"
         />
-        {/* Second angle revealed on hover */}
+        {/* Second angle revealed on hover — a mouse; a finger swipes */}
         {hasAngle && angleWanted && (
           <img
             src={product.images![1]}
@@ -124,16 +126,27 @@ export default function ProductCard({
             />
           </button>
 
-          {/* Name / Title */}
-          <h3 className="line-clamp-1 flex-grow">
-            <a
-              href={href}
-              onClick={open}
-              className="text-sm sm:text-base font-normal text-gray-800 leading-snug hover:text-stone-950 transition-colors cursor-pointer no-underline"
-            >
-              {product.name}
-            </a>
-          </h3>
+          {/* Name / Title: the brand small above the model, when the garment
+              has a model name; otherwise the brand alone, as before. The
+              brand keeps to one line and the name gets two of its own: in
+              one clamp together, a 138px card on a 320px phone cut "Red Navy
+              Block" to "Red Nav." */}
+          <div className="flex-grow min-w-0">
+            {product.maker && (
+              <span className="block line-clamp-2 break-words text-[11px] tracking-[0.06em] min-[360px]:tracking-[0.1em] uppercase text-stone-500 leading-tight mb-0.5">
+                {product.maker}
+              </span>
+            )}
+            <h3 className="line-clamp-2">
+              <a
+                href={href}
+                onClick={open}
+                className="text-[13px] min-[360px]:text-sm sm:text-base font-normal text-gray-800 leading-snug hover:text-stone-950 transition-colors cursor-pointer no-underline"
+              >
+                {product.name}
+              </a>
+            </h3>
+          </div>
         </div>
 
         {/* Row 2: Price (Formatted clean)
@@ -189,13 +202,13 @@ export default function ProductCard({
             It was white with a pale border and teal text at 4.1:1 — under the
             readable minimum, and quieter than the price above it and the heart
             beside it, on a shop whose entire checkout is this message.
-            Filled, and filled in the same stone-900 the item page already uses
-            for the identical action, with WhatsApp's green kept on the mark.
-            Not a green fill: forty-five of those down a category page would be
-            louder than the clothes, and the clothes are the product.
-            py-3.5 rather than py-2 because it measured 38px tall and a thumb
-            wants 44 — the one control on the card nobody should have to aim
-            for twice. */}
+            Then it was a filled stone-900 slab, which the owner found coarse:
+            forty-five black blocks down a category page. Now a thin dark
+            outline with soft corners, the owner's "Make an appointment" line,
+            dark enough to read at a glance (stone-900 text, a 70% border), and
+            filled on hover. WhatsApp's green stays on the mark.
+            At least 44px tall: the one control on the card nobody should have
+            to aim for twice. */}
         {product.isSold ? (
           <span className="mt-3.5 w-full bg-stone-100 text-stone-600 border border-stone-200 font-medium py-2 px-4 flex items-center justify-center text-xs text-center cursor-not-allowed select-none">
             {tr('נמכר', 'Sold')}
@@ -209,10 +222,10 @@ export default function ProductCard({
             e.stopPropagation();
             trackProduct('whatsapp_purchase_click', product, { source: 'card' });
           }}
-          className="mt-3.5 w-full bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 hover:border-stone-800 font-medium py-3.5 px-4 rounded-none transition-colors duration-200 flex items-center justify-center gap-2 text-xs cursor-pointer text-center no-underline"
+          className="mt-3.5 w-full min-h-[44px] bg-transparent hover:bg-stone-900 text-stone-900 hover:text-white border border-stone-900/70 font-normal py-2.5 px-2 rounded-[10px] transition-colors duration-200 flex items-center justify-center gap-1.5 text-[12px] min-[360px]:text-[13px] whitespace-nowrap cursor-pointer text-center no-underline"
           id={`quick-buy-btn-${product.id}`}
         >
-          <WhatsAppBadge className="w-5 h-5" />
+          <WhatsAppBadge className="max-[359px]:hidden w-5 h-5 shrink-0" />
           <span>{tr('רכישה בווטסאפ', 'Buy on WhatsApp')}</span>
         </a>
         )}

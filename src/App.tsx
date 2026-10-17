@@ -1,3 +1,4 @@
+import { fullName } from './whatsapp';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { Product } from './types';
 import { usePath, navigate, productSlugFromPath, categoryFromPath, categoryPath, legalFromPath } from './router';
@@ -9,7 +10,6 @@ import { repairPhotos, srcSetFor } from './photos';
 import { dismissSplash } from './splash';
 import TopWanted, { pickTopWanted, RAIL_SIZES } from './components/TopWanted';
 import SizeLanding from './components/SizeLanding';
-import SpinningLogo from './components/SpinningLogo';
 import LiquidVeil from './components/LiquidVeil';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -17,6 +17,7 @@ import CategoryBar from './components/CategoryBar';
 import CatalogFilters from './components/CatalogFilters';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import CookieBanner from './components/CookieBanner';
+import CommunityInvite from './components/CommunityInvite';
 import { askConsentAgain } from './consent';
 import WhatsAppMark from './components/WhatsAppMark';
 import ProductCard from './components/ProductCard';
@@ -39,7 +40,7 @@ import LegalPage, { FOOTER_LEGAL_LINKS } from './components/LegalPage';
 const ADMIN_ENABLED = import.meta.env.DEV;
 const AdminPanelModal = ADMIN_ENABLED ? lazy(() => import('./components/AdminPanelModal')) : null;
 import HightideLogo from './components/HightideLogo';
-import heroImageUrl from '@/assets/homepage_photo.webp';
+import HeroFilm, { HERO_POSTER } from './components/HeroFilm';
 import catBoardiesImg from '@/assets/photos/boardshorts.webp';
 import catShirtsImg from '@/assets/photos/T-shirts.webp';
 import catAccessoriesImg from '@/assets/photos/accessories.webp';
@@ -381,7 +382,7 @@ export default function App() {
       // 203KB fetched and discarded on every arrival straight into a category
       // or a garment — which is how a link shared on Instagram is opened.
       const onHomepage = window.location.pathname === '/';
-      const urls = onHomepage ? [heroImageUrl, ...rail] : rail;
+      const urls = onHomepage ? [HERO_POSTER, ...rail] : rail;
 
       const ready = urls.filter(Boolean).map(
         (src) =>
@@ -391,7 +392,7 @@ export default function App() {
             img.onload = () => (img.decode ? img.decode().then(resolve, () => resolve()) : resolve());
             const set = srcSetFor(src);
             if (set) {
-              img.sizes = src === heroImageUrl ? '100vw' : RAIL_SIZES;
+              img.sizes = RAIL_SIZES;
               img.srcset = set;
             }
             img.src = src;
@@ -555,7 +556,7 @@ export default function App() {
       accessibility: 'Accessibility Statement',
     };
     let title = `${site} — Original vintage boardshorts & tees`;
-    if (selectedProductForDetails) title = `${selectedProductForDetails.name} | ${site}`;
+    if (selectedProductForDetails) title = `${fullName(selectedProductForDetails)} | ${site}`;
     else if (legalPage) title = `${legalTitles[legalPage] ?? 'HIGHTIDE'} | ${site}`;
     else if (searchTerm) title = `Search: ${searchTerm} | ${site}`;
     else if (CATEGORY_EN[selectedCategory]) title = `${CATEGORY_EN[selectedCategory]} | ${site}`;
@@ -768,8 +769,18 @@ export default function App() {
     // Boardies opened on a sold item: nine of its forty-five were gone, and one
     // of them held the first square on the page.
     //
-    // sort() is stable, so within each group the catalogue order is untouched.
-    .sort((a, b) => Number(a.isSold) - Number(b.isSold));
+    // Within each group, newest first: the latest drop at the top of the
+    // category, then by item number, which rises with every upload. The
+    // catalogue arrives oldest first, so a new drop used to land at the end.
+    // A catalogue without drop dates (the shipped snapshot) still has the
+    // latest-drop mark and the numbers.
+    .sort(
+      (a, b) =>
+        Number(a.isSold) - Number(b.isSold) ||
+        (b.dropDate ?? '').localeCompare(a.dropDate ?? '') ||
+        Number(Boolean(b.isLatestDrop)) - Number(Boolean(a.isLatestDrop)) ||
+        b.num - a.num,
+    );
 
 
   // The line over the top of every page. Scrolls away; the header under it
@@ -835,22 +846,10 @@ export default function App() {
           {/* Full-bleed Immersive Hero Canvas stretching edge-to-edge */}
           <div className="relative w-full aspect-[4/3] sm:aspect-[16/7] md:aspect-[21/9] bg-stone-950 overflow-hidden" id="homepage-hero">
             
-            {/* Background Editorial Image - Warm-toned sun-soaked fashion group */}
-            <img
-              src={heroImageUrl}
-              srcSet={srcSetFor(heroImageUrl)}
-              // Edge to edge at every width, so the slot is the window.
-              sizes="100vw"
-              alt="HighTide Vintage New Drop Editorial"
-              // 90% down: on the wider frames the photo is cut top and bottom,
-              // and this keeps the whole of the boardshorts above the button.
-              // A phone shows the full height, so it only matters from sm up.
-              className="absolute inset-0 w-full h-full object-cover object-[40%_90%]"
-            />
 
             {/* Dark haze top and bottom, under the white logo, links and
                 NEW DROP button. */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70 pointer-events-none"></div>
+            <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-transparent to-black/70 pointer-events-none"></div>
 
             {/* Transparent Header overlaid elegantly at the top of the Hero image */}
             <div className="absolute inset-x-0 top-0 z-30">
@@ -871,14 +870,18 @@ export default function App() {
             {/* NEW DROP, sitting low in the frame. Higher up it stood across
                 the boardshorts the man in the photo is wearing — the one
                 garment in the picture, on a shop that sells them. */}
-            <div className="absolute bottom-3 sm:bottom-6 inset-x-0 flex justify-center z-20">
+            <div className="absolute bottom-3 sm:bottom-6 inset-x-0 flex justify-center z-20 pointer-events-none">
               <button
                 onClick={() => setSelectedCategory('latest')}
-                className="px-8 py-2 sm:px-10 sm:py-3 border border-white text-white text-xs sm:text-sm font-light uppercase tracking-[0.25em] bg-black/10 backdrop-blur-xs hover:bg-white hover:text-stone-950 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                className="pointer-events-auto px-8 py-2 sm:px-10 sm:py-3 border border-white text-white text-xs sm:text-sm font-light uppercase tracking-[0.25em] bg-black/10 backdrop-blur-xs hover:bg-white hover:text-stone-950 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]"
               >
                 NEW DROP
               </button>
             </div>
+
+            {/* The film, last in the hero so the keyboard reaches the menu
+                first; it paints under the haze (z-10) and the header. */}
+            <HeroFilm still={Boolean(routeSlug) && !cameFromShop.current} />
             
           </div>
         </div>
@@ -961,7 +964,7 @@ export default function App() {
             <TopWanted products={products} onViewDetails={openProduct} />
 
             <div className="text-center mb-8 max-w-lg mx-auto">
-              <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 mt-1 uppercase">Choose Your Vintage</h2>
+              <h2 className="text-xl sm:text-2xl font-heading font-normal text-stone-900 mt-1 uppercase">Choose Your Vintage</h2>
               <div className="w-12 h-[1px] bg-stone-800 mx-auto mt-3"></div>
             </div>
 
@@ -1053,33 +1056,37 @@ export default function App() {
                       // browser being told it may send a smaller file than the
                       // box needs, which is what a blurry tile is.
                       sizes={category.sizes}
-                      alt={tr(category.name, category.subText)}
+                      alt=""
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
                   </div>
 
-                  {/* Centered White Card overlay (Exactly like the Malboshim style!) */}
-                  {/* On a phone this was 300px of label inside a 343px tile —
-                      VINTAGE TEES & HOODIES ran from 6% to 94% of the card,
-                      leaving 21px of photograph either side. Dead centre, and
-                      it still read as crowded, because being centred is not the
-                      same as having room. Narrower padding and a step down in
-                      type on small screens only; the desktop label is
-                      unchanged. */}
-                  <div className="relative z-10 bg-white/95 backdrop-blur-xs px-5 py-3 sm:px-12 sm:py-5 min-w-[180px] sm:min-w-[200px] text-center border border-stone-200/50 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white select-none">
-                    {/* No nudge here. The text sat off-centre because Flowers
-                        Kingdom declared three different, all wrong, vertical
-                        metrics, so Chrome and iOS placed the baseline in
-                        different places — a correction tuned on one was wrong
-                        on the other. That is fixed in the font itself now; see
-                        normalise_vertical_metrics in scripts/make_font_subset.py. */}
-                    <h3 className="text-sm sm:text-lg font-groovy font-normal tracking-wide text-stone-900 leading-tight uppercase">
-                      {category.subText}
-                    </h3>
-                    <span className="hidden">
-                      {category.subText}
-                    </span>
+                  {/* The name in a transparent box: a thin light border, soft
+                      corners, regular white type, like the owner's "Make an
+                      appointment" reference. It replaced a solid white card
+                      that covered a third of the photograph. A short fade at
+                      the foot of the tile keeps the white text readable on a
+                      bright photo without darkening the rest of it. */}
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent pointer-events-none" aria-hidden="true"></div>
+                  <div className="relative z-10 flex flex-row-reverse items-center gap-3 px-5 py-2.5 sm:px-7 sm:py-3 rounded-[10px] border border-white/85 bg-black/30 text-white select-none transition-colors duration-300 group-hover:bg-black/45">
+                    {/* Hebrew name and English line; in English the English
+                        line alone, which is the name there. */}
+                    {isEnglish() ? (
+                      <h3 className="text-[13px] sm:text-sm font-normal tracking-[0.2em] uppercase leading-none">
+                        {category.subText}
+                      </h3>
+                    ) : (
+                      <>
+                        <h3 className="text-[17px] sm:text-xl font-normal leading-none">
+                          {category.name}
+                        </h3>
+                        <span className="w-px h-4 bg-white/60" aria-hidden="true"></span>
+                        <span className="text-[11px] sm:text-xs font-normal tracking-[0.2em] uppercase leading-none">
+                          {category.subText}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </button>
               ))}
@@ -1226,22 +1233,9 @@ export default function App() {
           </section>
         )}
 
-        {/* Vintage Care Tip section */}
-        {/* A row on every width, not only from `md` up.
-            Stacked, the logo sat alone in the top-left corner of the panel —
-            left, because the column's cross-axis start is the left edge of an
-            LTR document, which is the wrong side of a Hebrew line and not
-            beside the words it belongs to. Reversed, the row packs to the
-            right, so the coin leads the sentence it introduces.
-            The heading steps down to 20px below `sm` to make room for it. */}
-        <div className="mt-12 bg-stone-50 border-2 border-stone-200 p-5 rounded-none flex flex-row-reverse gap-4 items-center text-right" id="care-tips">
-          <SpinningLogo className="w-14 h-14 sm:w-20 sm:h-20" />
-          <div dir={tr('rtl', 'ltr')} className="min-w-0">
-            <h4 className="font-extrabold text-stone-900 text-xl sm:text-[26px] leading-tight" style={{ fontFamily: 'Rubik, sans-serif' }}>{tr('אהבתם מה שראיתם?', 'Like what you see?')}</h4>
-            <p className="text-xs text-stone-700 mt-1 leading-relaxed">
-              {tr('תשלחו לנו הודעה בקישור למטה , באינסטגרם ובווצאפ', 'Send us a message on Instagram or WhatsApp — the links are below.')}
-            </p>
-          </div>
+        {/* The invitation to the Instagram community. */}
+        <div className="mt-12" id="community-invite">
+          <CommunityInvite />
         </div>
           </>
         )}

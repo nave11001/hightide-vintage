@@ -1,3 +1,4 @@
+import { fullName } from '../whatsapp';
 import React, { type ReactNode } from 'react';
 import { Product } from '../types';
 import { track } from '../analytics';
@@ -62,7 +63,7 @@ function Card({ product, badge, onViewDetails }: CardProps) {
           {badge}
         </span>
       </div>
-      <h3 className="mt-2 text-sm font-normal text-gray-800 line-clamp-1">{product.name}</h3>
+      <h3 className="mt-2 text-sm font-normal text-gray-800 line-clamp-2">{fullName(product)}</h3>
       <div className="flex items-center justify-between gap-2 mt-0.5">
         <span className="flex items-center gap-1.5 flex-row-reverse">
           <span
@@ -98,7 +99,7 @@ function Rail({ children }: { children: ReactNode }) {
 function Heading({ en, he }: { en: string; he: string }) {
   return (
     <div className="text-center">
-      <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 uppercase">{en}</h2>
+      <h2 className="text-xl sm:text-2xl font-heading font-normal text-stone-900 uppercase">{en}</h2>
       <p className="mt-1 text-[13px] text-stone-500">{he}</p>
     </div>
   );
@@ -211,7 +212,7 @@ export default function SizeLanding({
         <button type="button" onClick={onBrowseAll} className="cursor-pointer" aria-label={tr('לדף הבית', 'Home')}>
           <Logo className="w-14 h-14 mx-auto" />
         </button>
-        <p className="mt-3 text-[15px] tracking-[0.16em] uppercase text-stone-500 font-groovy">
+        <p className="mt-3 text-[15px] tracking-[0.16em] uppercase text-stone-500 font-heading">
           {both ? 'Your Sizes' : 'Your Size'}
         </p>
 

@@ -53,12 +53,17 @@ export function englishOrder(name: string, price: string, size?: string): string
  * `opening` replaces the first line for the places that word it differently —
  * the favourites drawer says where the shopper saw the garment.
  */
+/** Brand and model together, as the shop says it in a message: "Quiksilver Blue Ripple". */
+export function fullName(product: Pick<Product, 'name' | 'maker'>): string {
+  return product.maker ? `${product.maker} ${product.name}` : product.name;
+}
+
 export function buyOnWhatsApp(product: Product, opening?: string): string {
   const text = [
     opening ??
       tr(
-        `שלום! אני מעוניין לרכוש את הפריט "${product.name}" במחיר ₪${product.price}. האם הוא זמין במלאי?`,
-        englishOrder(product.name, money(product.price)),
+        `שלום! אני מעוניין לרכוש את הפריט "${fullName(product)}" במחיר ₪${product.price}. האם הוא זמין במלאי?`,
+        englishOrder(fullName(product), money(product.price)),
       ),
     productUrl(product),
   ].join('\n\n');

@@ -49,6 +49,8 @@ const CANONICAL = {
   'billabong x bob marley': 'Billabong × Bob Marley',
   'billabong x andy irons': 'Billabong × Andy Irons',
   'billabong x taj burrow': 'Billabong × Taj Burrow',
+  // Typed "Billabong X Pako"; it is Joel Parkinson's line (the owner, 2026-10-17).
+  'billabong x pako': 'Billabong × Joel Parkinson',
 
   // Not brands at all — a print, a colour, a note to self. Tidied so they do
   // not read as sloppy, but left in place: renaming a garment is the owner's

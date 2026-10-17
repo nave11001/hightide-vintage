@@ -5,6 +5,8 @@ import snapshot from './catalog-snapshot.json';
 import { brandName } from '@/shared/brands.mjs';
 import { displaySize } from '@/shared/sizing.mjs';
 import { tr } from './i18n';
+import { cutoutFor } from './backdrop';
+import { brandAndModel } from './modelNames';
 
 // Inventory lives in Supabase — see supabase/schema.sql and docs/inventory-guide.md.
 // Nothing here is baked in at build time, so marking an item sold in the
@@ -50,21 +52,24 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
 
   const images = [...row.item_photos]
     .sort((a, b) => a.position - b.position || a.path.localeCompare(b.path))
-    .map((p) => storageUrl(p.path));
+    .map((p) => cutoutFor(p.path) ?? storageUrl(p.path));
   if (images.length === 0) return null;
 
   const labels = CATEGORY_LABELS[category];
   // Spelled the way the brand spells it, not the way the sheet was typed —
   // see shared/brands.mjs. Links survive it: they end in the item number.
-  const brand = brandName(row.name);
+  // A model name, when the garment has one, becomes the name and the brand
+  // moves above it. See modelNames.ts.
+  const { brand, name, maker } = brandAndModel(brandName(row.name), row.num);
   return {
     id: `${category}-${row.num}`,
     num: row.num,
     // The name is whatever was typed in the database, spelled the way the
     // brand spells it. The item number is the row's id there and is not
     // part of what a customer reads; it still ends the garment's address.
-    name: brand,
+    name,
     brand,
+    maker,
     price: row.price,
     // Set in the dashboard to mark a sale — renders struck through beside the price.
     originalPrice: row.original_price ?? undefined,
@@ -80,6 +85,7 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
     // scheduled reset on the 1st/15th clears them — see scripts/reset_inventory.py
     isSold: row.sold,
     isLatestDrop: Boolean(row.drop_date) && row.drop_date === latestDropDate,
+    dropDate: row.drop_date ?? undefined,
     // Left out until measured — the size block hides itself rather than guess.
     waistCm: row.waist_cm ?? undefined,
     lengthCm: row.length_cm ?? undefined,
@@ -142,12 +148,11 @@ export function snapshotProducts(): Product[] {
       num: row.n,
       // Same spelling rules as the live catalogue, or the shop would rename
       // every garment the moment Supabase stopped answering.
-      name: brandName(row.b),
-      brand: brandName(row.b),
+      ...brandAndModel(brandName(row.b), row.n),
       price: row.p,
       originalPrice: row.o,
-      image: storageUrl(row.ph[0]),
-      images: row.ph.map(storageUrl),
+      image: cutoutFor(row.ph[0]) ?? storageUrl(row.ph[0]),
+      images: row.ph.map((ph) => cutoutFor(ph) ?? storageUrl(ph)),
       borderType: 'retro-wave' as const,
       sizes: [displaySize(row.s)],
       condition: CONDITION(),
@@ -181,7 +186,7 @@ export function snapshotProducts(): Product[] {
 // Raise CACHE_SHAPE whenever Product gains a field the shop relies on.
 
 const CACHE_KEY = 'hightide_catalogue';
-const CACHE_SHAPE = 3;
+const CACHE_SHAPE = 4;
 
 /** The fields the shop cannot render a garment without. */
 function isUsable(row: unknown): row is Product {

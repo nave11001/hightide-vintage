@@ -35,6 +35,10 @@ assets/_originals/
 assets/inventory/*
 !assets/inventory/excel/
 
+# The homepage film as it came off the phone: 145MB of HEVC at 1440x2560.
+# public/video/ holds what ships — cropped, 24fps, H.264, 3 and 5MB. Kept on disk.
+assets/video-front.MP4
+
 # Python bytecode from scripts/
 __pycache__/
 *.pyc

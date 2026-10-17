@@ -146,7 +146,7 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
   return (
     <section className="mb-12" id="top-wanted" dir={tr('rtl', 'ltr')}>
       <div className="text-center mb-5">
-        <h2 className="text-xl sm:text-2xl font-groovy font-normal text-stone-900 uppercase">
+        <h2 className="text-xl sm:text-2xl font-heading font-normal text-stone-900 uppercase">
           Our Most Wanted Pieces
         </h2>
         <div className="w-12 h-[1px] bg-stone-800 mx-auto mt-3"></div>
@@ -245,7 +245,12 @@ export default function TopWanted({ products, onViewDetails }: TopWantedProps) {
                     {rank}
                   </span>
                 </div>
-                <h3 className="mt-2 text-sm font-normal text-gray-800 line-clamp-1">
+                <h3 className="mt-2 text-sm font-normal text-gray-800 line-clamp-2">
+                  {product.maker && (
+                    <span className="block text-[11px] tracking-[0.1em] uppercase text-stone-500 leading-tight truncate">
+                      {product.maker}
+                    </span>
+                  )}
                   {product.name}
                 </h3>
                 <div className="flex items-center gap-2 justify-start flex-row-reverse">

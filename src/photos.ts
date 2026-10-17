@@ -1,3 +1,4 @@
+import { cutoutSrcSet, pathOfCutout } from './backdrop';
 // Where a garment's photograph comes from: this site, and nowhere else.
 //
 // It used to be Supabase Storage first with the shipped copy behind it. In
@@ -87,7 +88,7 @@ const SRCSET_BY_URL: Record<string, string> = {};
  * uses its src.
  */
 export function srcSetFor(url: string): string | undefined {
-  return SRCSET_BY_URL[url];
+  return SRCSET_BY_URL[url] ?? cutoutSrcSet(url);
 }
 
 // Shown only when a garment has no photograph anywhere. Drawn rather than
@@ -184,7 +185,10 @@ export function onPhotoError(event: { currentTarget: HTMLImageElement }): void {
     return;
   }
 
-  const twin = localTwin(img.src);
+  // A cut-out that failed falls back to the photo it was cut from, on white,
+  // rather than to the placeholder.
+  const cutFrom = pathOfCutout(img.src);
+  const twin = cutFrom ? localPhotoUrl(`${cutFrom}.webp`) : localTwin(img.src);
   img.dataset.photoFallback = twin ? 'local' : 'placeholder';
   // Before src, and unconditionally: a srcset outranks src, so leaving one in
   // place would send the browser straight back to the URL that just failed.
