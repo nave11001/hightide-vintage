@@ -285,9 +285,13 @@ def main():
         base = os.path.join(OUT, *stem.split('/'))
         os.makedirs(os.path.dirname(base), exist_ok=True)
         frame = framed(cut)
-        frame.save(base + '.webp', 'WEBP', quality=78, method=4)
-        frame.resize((800, 1000), Image.LANCZOS).save(base + '-800.webp', 'WEBP', quality=80, method=4)
-        frame.resize((480, 600), Image.LANCZOS).save(base + '-480.webp', 'WEBP', quality=80, method=4)
+        # The slowest WebP method, and the transparency stored at 70: its soft
+        # edge and shadow differ by under half a level on average, and every
+        # file is about a third lighter. The colour keeps its quality.
+        webp = dict(format='WEBP', method=6, alpha_quality=70)
+        frame.save(base + '.webp', quality=78, **webp)
+        frame.resize((800, 1000), Image.LANCZOS).save(base + '-800.webp', quality=80, **webp)
+        frame.resize((480, 600), Image.LANCZOS).save(base + '-480.webp', quality=80, **webp)
         done.add(stem)
         print('cut', stem, flush=True)
 
