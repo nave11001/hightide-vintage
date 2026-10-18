@@ -28,9 +28,16 @@ name: בדיקת תקינות שרת
 # and on 13 September did not run at all. An odd minute is the documented way
 # to stay out of that queue. It still is not a promise of punctuality — GitHub
 # makes none — which is why it sits a little before seven rather than on it.
+#
+# And every three hours, the flood check alone (scripts/healthcheck.py
+# --flood): whether the database is reading many times more than on a usual
+# day. The rate limits in netlify/functions turn a single hammering address
+# away silently; this is what tells you a flood is happening, by the same
+# GitHub email, within a few hours rather than the next morning.
 on:
   schedule:
     - cron: '37 3 * * *'
+    - cron: '47 */3 * * *'
   workflow_dispatch: {}
 
 jobs:
@@ -48,4 +55,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: python scripts/healthcheck.py
+        run: |
+          if [ "${{ github.event.schedule }}" = "47 */3 * * *" ]; then
+            python scripts/healthcheck.py --flood
+          else
+            python scripts/healthcheck.py
+          fi

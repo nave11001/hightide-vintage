@@ -1,7 +1,9 @@
 /* One family for the whole shop: Assistant, Hebrew and Latin, chosen by the
    owner in the October 2026 redesign for a lighter, finer line than Rubik and
-   Heebo, which it replaced. Flowers Kingdom stays for the loading screen. */
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700&display=swap');
+   Heebo, which it replaced. Flowers Kingdom stays for the loading screen.
+   It is linked from index.html, not @imported here: an @import is found only
+   once this stylesheet has arrived, a round trip later on a phone, and the
+   page draws in a fallback face until then. */
 @import "tailwindcss";
 
 /* Subset to printable ASCII and converted to WOFF2 by

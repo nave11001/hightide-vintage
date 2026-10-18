@@ -313,6 +313,58 @@ def check_usage():
                     "down, and it went down without warning" % (label, share * 100))
 
 
+# A flood, as opposed to growth: the database read many times more than on an
+# ordinary day. The rate limits on /api/catalogue and the product pages
+# (netlify/functions) turn one address hammering the shop away at the edge,
+# but they report nothing — so this is how a flood reaches you. Ten times the
+# usual day, and enough reads that the shop's own busy days never qualify.
+FLOOD_FACTOR = 10
+FLOOD_MIN_READS = 200_000
+
+
+def check_flood():
+    """Today and yesterday against the median day of the week before."""
+    account, _, token = d1.credentials()
+    since = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 9 * 86400))
+    query = ("query{viewer{accounts(filter:{accountTag:\"%s\"})"
+             "{d1AnalyticsAdaptiveGroups(limit:20,orderBy:[date_DESC]"
+             ",filter:{date_geq:\"%s\"})"
+             "{sum{rowsRead readQueries}dimensions{date}}}}}" % (account, since))
+    request = urllib.request.Request(
+        "https://api.cloudflare.com/client/v4/graphql",
+        data=json.dumps({"query": query}).encode("utf-8"),
+        headers={"Authorization": "Bearer %s" % token, "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            payload = json.load(response)
+    except Exception:
+        note("flood check         not checked (analytics unreadable)")
+        return
+    days = []
+    for acct in (payload.get("data") or {}).get("viewer", {}).get("accounts") or []:
+        days.extend(acct.get("d1AnalyticsAdaptiveGroups") or [])
+    days.sort(key=lambda g: g["dimensions"]["date"], reverse=True)
+    if len(days) < 4:
+        note("flood check         not enough history yet")
+        return
+    recent, before = days[:2], days[2:]
+    usual = sorted(g["sum"]["rowsRead"] for g in before)[len(before) // 2]
+    note("flood check         usual day %s rows read; today %s, yesterday %s"
+         % (f"{usual:,}", f"{recent[0]['sum']['rowsRead']:,}",
+            f"{recent[1]['sum']['rowsRead']:,}" if len(recent) > 1 else "-"))
+    for g in recent:
+        reads = g["sum"]["rowsRead"]
+        if reads >= FLOOD_MIN_READS and reads > FLOOD_FACTOR * max(usual, 1):
+            problem("the site may be flooded: on %s the database read %s rows, %.0f times "
+                    "a usual day (%s), in %s queries. The rate limits turn single "
+                    "addresses away; many addresses at once is an attack or a bot "
+                    "network, and Netlify's analytics show where it comes from."
+                    % (g["dimensions"]["date"], f"{reads:,}", reads / max(usual, 1),
+                       f"{usual:,}", f"{g['sum']['readQueries']:,}"))
+
+
 def check_fallback_drift(live):
     """How far the shipped copy has drifted from the database.
 
@@ -349,11 +401,21 @@ def check_fallback_drift(live):
 
 def main(argv):
     quiet = "--quiet" in argv
+    if "--flood" in argv:
+        # The frequent run: only the cheap question of whether someone is
+        # hammering the shop right now, so an alarm comes within hours.
+        check_flood()
+        check_usage()
+        return report(quiet)
     live = check_endpoint()
     check_database()
     check_usage()
+    check_flood()
     check_fallback_drift(live)
+    return report(quiet)
 
+
+def report(quiet):
     if not quiet:
         print("HighTide backend health\n")
         for line in notes:

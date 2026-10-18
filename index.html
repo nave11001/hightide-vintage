@@ -65,6 +65,11 @@
       document.documentElement.className = 'js splash-open';
     </script>
     <link rel="preload" as="image" href="/logo-loader.webp" />
+    <!-- The shop's typeface, asked for while the page is still parsing. One
+         variable font covers every weight from 200 to 800. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@200..800&display=swap" />
     <style>
       /* Deliberately mirrors LiquidVeil's column — same square, same 24px gaps,
          same 2px rule, same 28px reserved for the caption — so the logo does not

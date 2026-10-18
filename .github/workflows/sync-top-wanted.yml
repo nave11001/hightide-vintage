@@ -37,7 +37,12 @@ jobs:
       # standard library — the Supabase client was a package download on every
       # single run.
 
+      # PostHog being down must not hold up the snapshot below, which is the
+      # job that matters: the step retries, and if it still fails the run goes
+      # on, keeps the last view counts, and is marked failed at the end.
       - name: Pull view counts from PostHog into D1
+        id: views
+        continue-on-error: true
         env:
           POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -73,3 +78,9 @@ jobs:
             git commit -m "chore: rebuild the fallback catalogue from D1"
             git push
           fi
+
+      - name: Report a PostHog failure
+        if: steps.views.outcome == 'failure'
+        run: |
+          echo "::error::PostHog did not answer; the view counts were left as they were. The fallback catalogue was still rebuilt."
+          exit 1

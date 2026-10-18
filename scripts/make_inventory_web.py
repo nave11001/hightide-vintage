@@ -119,9 +119,29 @@ def keep_orphans():
     return keep
 
 
+def listed_photos():
+    """The photos the database lists ("boardies/104"), or None if it cannot
+    be asked — then every master is written, as before.
+
+    A sold garment leaves the database but keeps its master in
+    assets/inventory/, and every photo here ships with the site: in October 68
+    garments for sale carried the pictures of 68 more that were gone, 204 files
+    and 11.7 MB of the deploy. Only what the shop can show is written now; a
+    garment put back on sale gets its pictures on the next run."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from d1 import query
+        return {re.sub(r"\.[^./]+$", "", r["path"]) for r in query("SELECT path FROM item_photos")}
+    except BaseException as error:   # d1.credentials() exits when a key is missing
+        print(f"database not reachable ({error!r}); writing every master")
+        return None
+
+
 def main() -> None:
     before = after = full = count = 0
     skipped = []
+    listed = listed_photos()
+    unlisted = 0
 
     # Cleared, not merged. Every file below is rewritten from the masters on
     # each run, and a leftover is worse than missing: a variant this run decided
@@ -177,6 +197,10 @@ def main() -> None:
                 skipped.append(f"unreadable name '{folder}/{filename}'")
                 continue
 
+            if listed is not None and f"{category}/{num}{suffix}" not in listed:
+                unlisted += 1
+                continue
+
             source = os.path.join(source_dir, filename)
 
             with Image.open(source) as original:
@@ -206,7 +230,8 @@ def main() -> None:
             before += os.path.getsize(source)
             count += 1
 
-    print(f"{count} photos, {len(WIDTHS)} widths each")
+    print(f"{count} photos, {len(WIDTHS)} widths each"
+          + (f"  ({unlisted} masters of garments no longer listed left out)" if unlisted else ""))
     print(f"  {before / 1024 / 1024:6.1f} MB  ->  {after / 1024 / 1024:.1f} MB on disk"
           f"   ({100 - after * 100 // before}% lighter)")
     # What a visitor downloads is one width, not the set — and on a phone it is

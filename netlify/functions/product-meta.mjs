@@ -28,7 +28,14 @@ const SHOP = 'https://hightide-vintage.netlify.app';
 // last deploy has none, and falls back to the shop's cover.
 const OG_ITEMS = new Set((snapshot.items ?? []).map((row) => row.n));
 
-export const config = { path: ['/product/*', '/category/*'] };
+// Every garment and category page passes through here and reads the database,
+// so a scraper walking the shop is limited per address: 120 pages a minute is
+// well beyond a person and beyond Google's crawl, and the excess is answered
+// 429 at the edge. See catalogue.mjs for the other rule.
+export const config = {
+  path: ['/product/*', '/category/*'],
+  rateLimit: { windowLimit: 120, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
 
 const CATEGORY_WORD = {
   boardies: 'מכנסי גלישה וינטג׳',

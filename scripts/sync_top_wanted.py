@@ -20,6 +20,8 @@ Usage:
 import json
 import os
 import sys
+import time
+import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import d1
@@ -61,8 +63,22 @@ def posthog_counts(api_key):
         data=body,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=90) as r:
-        rows = json.load(r)["results"]
+    rows = None
+    # PostHog answers 503 now and then (twice in October), and is back a minute
+    # later; a run that gave up at once left the ranking a day stale.
+    for attempt, wait in enumerate((0, 20, 60, 120)):
+        time.sleep(wait)
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                rows = json.load(r)["results"]
+            break
+        except (urllib.error.URLError, TimeoutError) as e:
+            code = getattr(e, "code", None)
+            if code is not None and code < 500 and code != 429:
+                raise  # a bad key or a bad query will not mend by waiting
+            print(f"PostHog attempt {attempt + 1} failed: {e}")
+    if rows is None:
+        sys.exit("PostHog did not answer after four attempts; the view counts stay as they were.")
 
     counts = {}
     for item, people in rows:
