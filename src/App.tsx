@@ -1309,6 +1309,8 @@ export default function App() {
                 { id: 'all', label: tr('כל קטלוג המוצרים', 'All items') },
                 { id: 'boardies', label: tr('מכנסי גלישה (Boardshorts)', 'Boardshorts') },
                 { id: 'shirts', label: tr('חולצות וינטג׳', 'Vintage tees') },
+                { id: 'accessories', label: tr('אקססוריז', 'Accessories') },
+                { id: 'women', label: tr('נשים', 'Women') },
               ].map(({ id, label }) => (
                 <li key={id}>
                   <a
