@@ -313,8 +313,8 @@ def check_usage():
                     "down, and it went down without warning" % (label, share * 100))
 
 
-# A flood, as opposed to growth: the database read many times more than on an
-# ordinary day. The rate limits on /api/catalogue and the product pages
+# A flood, as opposed to growth: the shop's database read many times more than
+# on an ordinary day. The rate limits on /api/catalogue and the product pages
 # (netlify/functions) turn one address hammering the shop away at the edge,
 # but they report nothing — so this is how a flood reaches you. Ten times the
 # usual day, and enough reads that the shop's own busy days never qualify.
@@ -323,13 +323,19 @@ FLOOD_MIN_READS = 200_000
 
 
 def check_flood():
-    """Today and yesterday against the median day of the week before."""
-    account, _, token = d1.credentials()
+    """Today and yesterday against the median day of the week before.
+
+    The shop's own database only. The Cloudflare account holds other projects'
+    databases too, and on 3 November one of them read 1.1 million rows in an
+    afternoon; counted account-wide, that rang this alarm for a shop that had
+    an ordinary day. Usage against the free limits (check_usage) stays
+    account-wide, because those limits are shared."""
+    account, database, token = d1.credentials()
     since = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 9 * 86400))
     query = ("query{viewer{accounts(filter:{accountTag:\"%s\"})"
              "{d1AnalyticsAdaptiveGroups(limit:20,orderBy:[date_DESC]"
-             ",filter:{date_geq:\"%s\"})"
-             "{sum{rowsRead readQueries}dimensions{date}}}}}" % (account, since))
+             ",filter:{date_geq:\"%s\",databaseId:\"%s\"})"
+             "{sum{rowsRead readQueries}dimensions{date}}}}}" % (account, since, database))
     request = urllib.request.Request(
         "https://api.cloudflare.com/client/v4/graphql",
         data=json.dumps({"query": query}).encode("utf-8"),
