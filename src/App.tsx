@@ -973,7 +973,7 @@ export default function App() {
                 {
                   id: 'boardies',
                   name: 'גברים',
-                  subText: 'BOARDSHORTS',
+                  subText: 'MEN',
                   image: catBoardiesImg,
                   sizes: HALF_TILE_SIZES,
                   className: 'md:col-span-1 h-[280px] sm:h-[380px]'
