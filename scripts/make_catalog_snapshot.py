@@ -77,7 +77,7 @@ def main() -> None:
         return body["result"][0]["results"]
 
     rows = d1(
-        "SELECT id, num, category, name, size, price, original_price, drop_date, "
+        "SELECT id, num, category, name, model, size, price, original_price, drop_date, "
         "sold, waist_cm, length_cm, views FROM items ORDER BY num ASC"
     )
     # Photos in a second query rather than a join: SQLite would repeat every
@@ -115,6 +115,8 @@ def main() -> None:
             "ph": [p["path"] for p in photos],
             "v": row.get("views") or 0,
         }
+        if row.get("model"):
+            item["m"] = row["model"]
         if row.get("original_price"):
             item["o"] = row["original_price"]
         if row.get("sold"):

@@ -34,6 +34,7 @@ interface ItemRow {
   num: number;
   category: string | null;
   name: string;
+  model: string | null;
   size: string;
   price: number;
   original_price: number | null;
@@ -60,7 +61,7 @@ function toProduct(row: ItemRow, latestDropDate: string): Product | null {
   // see shared/brands.mjs. Links survive it: they end in the item number.
   // A model name, when the garment has one, becomes the name and the brand
   // moves above it. See modelNames.ts.
-  const { brand, name, maker } = brandAndModel(brandName(row.name), row.num);
+  const { brand, name, maker } = brandAndModel(brandName(row.name), row.model);
   return {
     id: `${category}-${row.num}`,
     num: row.num,
@@ -128,6 +129,7 @@ interface SnapshotRow {
   n: number; // catalogue number
   c: string; // category
   b: string; // brand
+  m?: string; // model, when the garment has one
   s: string; // size
   p: number; // price
   o?: number; // original price, when on sale
@@ -148,7 +150,7 @@ export function snapshotProducts(): Product[] {
       num: row.n,
       // Same spelling rules as the live catalogue, or the shop would rename
       // every garment the moment Supabase stopped answering.
-      ...brandAndModel(brandName(row.b), row.n),
+      ...brandAndModel(brandName(row.b), row.m),
       price: row.p,
       originalPrice: row.o,
       image: cutoutFor(row.ph[0]) ?? storageUrl(row.ph[0]),

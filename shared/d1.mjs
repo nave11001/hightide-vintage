@@ -82,7 +82,7 @@ export async function d1Query(sql, params = []) {
  */
 export async function loadCatalogue() {
   const items = await d1Query(
-    `SELECT id, num, category, name, size, price, original_price, drop_date,
+    `SELECT id, num, category, name, model, size, price, original_price, drop_date,
             sold, waist_cm, length_cm, views
        FROM items
       WHERE category IS NOT NULL

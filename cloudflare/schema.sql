@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS items (
   num            INTEGER NOT NULL,
   category       TEXT    CHECK (category IN ('boardies','shirts','accessories','women')),
   name           TEXT    NOT NULL DEFAULT 'HIGHTIDE',
+  -- The model name the shop prints under the brand ("Coral Square" under
+  -- QUIKSILVER). Leave it empty and the brand stands alone.
+  model          TEXT,
   size           TEXT    NOT NULL DEFAULT 'ONE SIZE',
   price          INTEGER NOT NULL DEFAULT 150,
   -- Fill this in to put an item on sale: the shop shows `price` beside
