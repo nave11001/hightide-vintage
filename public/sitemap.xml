@@ -142,17 +142,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hightide-vintage.netlify.app/product/rising-sun-145</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://hightide-vintage.netlify.app/product/rip-curl-146</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/billabong-147</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -183,11 +173,6 @@
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/o-neill-154</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/quiksilver-156</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -332,16 +317,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hightide-vintage.netlify.app/product/hawaiian-196</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://hightide-vintage.netlify.app/product/rusty-197</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://hightide-vintage.netlify.app/product/hang-ten-200</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -373,6 +348,181 @@
   </url>
   <url>
     <loc>https://hightide-vintage.netlify.app/product/quiksilver-211</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-212</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-213</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-214</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-215</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-216</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-217</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-218</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-219</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-220</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-221</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-222</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-223</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-224</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-225</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-226</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-227</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-228</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-229</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-230</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-231</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-232</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-233</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-234</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-235</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-236</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-237</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-238</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-239</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-240</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-241</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-242</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-243</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-244</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-245</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hightide-vintage.netlify.app/product/hightide-246</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
