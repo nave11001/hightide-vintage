@@ -57,7 +57,7 @@ export function tr(he: string, en: string): string {
 /** The shop's category names in English, by category id. */
 export const CATEGORY_EN: Record<string, string> = {
   all: 'All items',
-  boardies: 'Boardies',
+  boardies: 'Men',
   shirts: 'Tees',
   accessories: 'Accessories',
   women: 'Women',

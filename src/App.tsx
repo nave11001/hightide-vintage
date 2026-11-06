@@ -972,7 +972,7 @@ export default function App() {
               {[
                 {
                   id: 'boardies',
-                  name: 'בורדיז',
+                  name: 'גברים',
                   subText: 'BOARDSHORTS',
                   image: catBoardiesImg,
                   sizes: HALF_TILE_SIZES,

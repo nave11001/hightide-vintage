@@ -9,7 +9,7 @@ import { onPhotoError, srcSetFor } from '../photos';
 import { buyOnWhatsApp, englishOrder, fullName } from '../whatsapp';
 import { WhatsAppBadge } from './WhatsAppMark';
 import { useScrollLock } from '../useScrollLock';
-import { CATEGORY_EN, currentLang, money, setLang, tr } from '../i18n';
+import { CATEGORY_EN, currentLang, isEnglish, money, setLang, tr } from '../i18n';
 
 interface HeaderProps {
   searchTerm: string;
@@ -79,10 +79,13 @@ export default function Header({
           No fixed height: the row is the logo plus a little air above and
           almost none below, so the category row sits right under it. A fixed
           80px row left the logo floating in the middle of empty space. */}
-      <div className="px-4 sm:px-6 pt-3 pb-1 sm:pt-4 flex items-center justify-between relative">
-        
-        {/* Left Side: Hamburger (Three lines) & Search */}
-        <div className="flex items-center gap-3 md:gap-4 w-1/3 justify-start">
+      {/* The menu sits where the reading starts: on the right in Hebrew, on
+          the left in English (the owner, 2026-11-06). The page has no dir
+          attribute, so the row is mirrored here rather than by the browser. */}
+      <div className={`px-4 sm:px-6 pt-3 pb-1 sm:pt-4 flex items-center justify-between relative ${isEnglish() ? '' : 'flex-row-reverse'}`}>
+
+        {/* Hamburger (three lines) & search, the hamburger outermost */}
+        <div className={`flex items-center gap-3 md:gap-4 w-1/3 justify-start ${isEnglish() ? '' : 'flex-row-reverse'}`}>
           <button 
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -175,7 +178,7 @@ export default function Header({
           <div className="absolute inset-0 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsMobileMenuOpen(false)}></div>
           
           {/* Drawer Content */}
-          <div role="dialog" aria-modal="true" aria-label={tr('תפריט', 'Menu')} className="absolute inset-y-0 left-0 bg-[#fdfcf9] w-80 max-w-[85vw] h-dvh p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain text-right animate-drawer-in">
+          <div role="dialog" aria-modal="true" aria-label={tr('תפריט', 'Menu')} className={`absolute inset-y-0 ${isEnglish() ? 'left-0 animate-drawer-in' : 'right-0 animate-drawer-in-right'} bg-[#fdfcf9] w-80 max-w-[85vw] h-dvh p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain text-right`}>
             
             {/* Header of Drawer */}
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">

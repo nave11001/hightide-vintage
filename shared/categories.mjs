@@ -18,7 +18,9 @@ export const CATEGORIES = [
   },
   {
     id: 'boardies',
-    name: 'בורדיז',
+    // The tab says גברים since the November 2026 drop brought cargo pants in
+    // beside the boardshorts (the owner). The id stays, and so do the links.
+    name: 'גברים',
     title: 'מכנסי גלישה וינטג׳ — בורדשורטס מקוריים',
     description:
       'בורדשורטס וינטג׳ מקוריים של תור הזהב — Billabong, Quiksilver, O׳Neill, Rip Curl. כל פריט יחיד במלאי.',

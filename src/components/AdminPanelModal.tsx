@@ -577,7 +577,7 @@ export default function AdminPanelModal({
                       onChange={(e) => setCategory(e.target.value as any)}
                       className="w-full text-right p-2 border border-stone-200 bg-white text-xs outline-none focus:border-stone-900"
                     >
-                      <option value="boardies">בורדיז (Boardies)</option>
+                      <option value="boardies">גברים (Men)</option>
                       <option value="shirts">חולצות (Shirts/Hoodies)</option>
                       <option value="pants">מכנסיים (Pants/Denim)</option>
                       <option value="accessories">אקססוריז (Accessories)</option>
